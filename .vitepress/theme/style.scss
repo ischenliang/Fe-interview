@@ -10,3 +10,66 @@
   transition: top 0.25s cubic-bezier(0, 1, 0.5, 1), background-color 0.5s, opacity 0.25s;
   border-radius: 4px !important;
 }
+
+
+#app {
+  .Layout {
+    header {
+      // border-bottom: 1px solid rgba(60, 60, 60, .12) !important;
+    }
+    .indicator {
+      width: 4px !important;
+      border-radius: 4px !important;
+    }
+    .container {
+      .image {
+        display: none !important;
+      }
+      .main {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        // text-align: center !important;
+        .name, .text, .tagline {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .name {
+          font-size: 76px;
+          line-height: 1.25;
+          font-weight: 900;
+          letter-spacing: -1.5px;
+          color: -webkit-linear-gradient(315deg,#42d392 25%,#647eff) !important;
+        }
+      }
+    }
+    .VPNavBarSearch {
+      flex-grow: 1;
+      padding-left: 32px;
+      button.DocSearch-Button {
+        background: #f6f6f7;
+        justify-content: flex-start;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 0 10px 0 12px;
+        width: 100%;
+        height: 40px;
+      }
+    }
+    .main {
+      overflow: hidden !important;
+      .vp-doc {
+        width: 100%;
+        img {
+          box-shadow: 0 1px 4px -2px rgba(0, 0, 0, 0.13), 0 2px 8px 0 rgba(0, 0, 0, 0.08), 0 8px 16px 4px rgba(0, 0, 0, 0.04) !important;
+          margin: 10px 0;
+        }
+      }
+    }
+    .outline-link:hover, .outline-link.active {
+      font-weight: bold;
+    }
+  }
+}

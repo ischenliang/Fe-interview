@@ -12,10 +12,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/md5": "^2.3.2",
     "sass": "^1.58.0",
     "vitepress": "1.0.0-alpha.45"
   },
   "dependencies": {
-    "element-plus": "^2.2.29"
+    "element-plus": "^2.2.29",
+    "gitalk": "^1.8.0",
+    "md5": "^2.3.0",
+    "vite": "^4.1.1",
+    "vitepress-plugin-search": "^1.0.4-alpha.19",
+    "vue": "^3.2.47"
   }
 }

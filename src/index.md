@@ -5,9 +5,9 @@ title: Kitty
 titleTemplate: 一个Vue3组件库
 
 hero:
-  name: Kitty
-  text: 一个Vue3组件库
-  tagline: 没啥特点仅供学习
+  name: itchenliang
+  text: 一个提供前端学习的知识库
+  tagline: 其中包括前端学习路线整体、前端技术知识整体、前端面试题库等知识库。
   image:
     src: /logo.png
     alt: Kitty
