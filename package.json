@@ -1,0 +1,21 @@
+{
+  "name": "FE-interview",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vitepress dev .",
+    "build": "vitepress build .",
+    "serve": "vitepress serve ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sass": "^1.58.0",
+    "vitepress": "1.0.0-alpha.45"
+  },
+  "dependencies": {
+    "element-plus": "^2.2.29"
+  }
+}
