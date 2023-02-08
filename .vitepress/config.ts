@@ -1,4 +1,7 @@
 import interviewSide from './sidebar/interview'
+import footnote from 'markdown-it-footnote'
+// import gemoji from 'remark-gemoji'
+import mark from 'markdown-it-mark'
 
 export default {
   title: '前端进阶知识库',
@@ -9,6 +12,25 @@ export default {
   // 删除后部紧跟的.html
   cleanUrls: true,
   srcDir: 'src/',
+  outDir: 'dist/',
+
+  head: [
+    ['link', { rel: 'stylesheet', href: '//at.alicdn.com/t/c/font_3885313_5ymzb8w90tj.css' }],
+    ['script', { src: 'https://unpkg.com/mermaid@9.3.0/dist/mermaid.min.js' }],
+  ],
+
+  // markdown配置
+  markdown: {
+    config: (md) => {
+      // 脚标
+      md.use(footnote)
+      // github表情包
+      // md.use(gemoji)
+
+      // 标记
+      md.use(mark)
+    }
+  },
 
   // 主题配置
   themeConfig: {

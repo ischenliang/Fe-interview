@@ -14,7 +14,7 @@ const arr = [
         text: "CSS篇",
         items: [
           { text: 'CSS', link: "/interview/css" },
-          { text: 'CSS3', link: "/interview/css3" },
+          // { text: 'CSS3', link: "/interview/css3" },
           { text: 'Less', link: "/interview/less", },
           { text: 'Sass', link: "/interview/sass", },
           { text: 'Stylus', link: "/interview/stylus", }

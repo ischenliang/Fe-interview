@@ -1,7 +1,7 @@
 ---
 layout: home
 
-title: Kitty
+title: 前端知识库
 titleTemplate: 一个Vue3组件库
 
 hero:
@@ -10,7 +10,7 @@ hero:
   tagline: 其中包括前端学习路线整体、前端技术知识整体、前端面试题库等知识库。
   image:
     src: /logo.png
-    alt: Kitty
+    alt: 前端知识库
   actions:
     - theme: brand
       text: 开始
