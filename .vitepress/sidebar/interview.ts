@@ -29,11 +29,10 @@ const arr = [
         text: "JavaScript篇",
         items: [
           { text: 'JavaScript基础', link: '/interview/javascript-base' },
+          { text: 'ECMAScript', link: '/interview/javascript-es' },
           { text: 'websocket', link: '/interview/javascript-ws' },
           { text: 'json', link: '/interview/javascript-json' },
-          { text: 'axios', link: '/interview/javascript-axios' },
-          { text: 'fetch', link: '/interview/javascript-fetch' },
-          { text: 'ECMAScript', link: '/interview/javascript-es' },
+          { text: 'ajax', link: '/interview/javascript-ajax' },
           { text: '设计模式', link: '/interview/javascript-mode' },
           { text: '手写题', link: '/interview/javascript-write' }
         ]
@@ -53,7 +52,8 @@ const arr = [
       { text: "vue-router4.x", link: "/interview/vue-router4" },
       { text: "pinia", link: "/interview/pinia" },
       { text: "nuxt.js", link: "/interview/nuxt" },
-      { text: "uniapp", link: "/interview/uniapp" }
+      { text: "uniapp", link: "/interview/uniapp" },
+      { text: 'axios', link: '/interview/axios' },
     ],
   },
   {
