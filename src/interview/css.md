@@ -1,12 +1,23 @@
+---
+title: CSS面试题汇总
+editLink: true
+updated: 2023-02-09 14:47:30
+lastUpdated: true
+comment: true
+---
+<post-meta/>
+
 # CSS面试题汇总
 参考：
 - https://juejin.cn/post/7098689890933538853
 - https://www.yuque.com/cuggz/interview/evfmq3
+- https://github.com/yisainan/web-interview/blob/master/content/CSS.md
 
-## 1、🔥px和em的区别 -- 疑问
+## 1、🔥px、em、rem和vw的区别
+https://blog.csdn.net/weixin_70605166/article/details/126658517
 `px`全称`pixel`像素，是相对于屏幕分辨率而言的，它是一个绝对单位，但同时具有一定的相对性。因为在同一个设备上每个像素代表的物理长度是固定不变的，这点表现的是绝对性。但是在不同的设备之间每个设备像素所代表的物理长度是可以变化的，这点表现的是相对性。
 
-`em`是一个相对长度单位，具体的大小需要相对于父元素计算，比如父元素的字体大小为80px，那么子元素1em就表示大小和父元素一样为80px，0.5em就表示字体大小是父元素的一半为40px。
+`em`是一个相对长度单位，具体的大小需要相对于自身元素计算，比如自身元素的字体大小为80px，那么1em就表示大小和自身元素一样为80px，0.5em就表示字体大小是自身元素的一半为40px，如果自身元素未设置font-size，则继承父级元素的font-size属性，直到浏览器的默认字体大小。
 
 ## 2、🔥vw、vh是什么？
 `vw`和`vh`是 CSS3 新单位，即 view width 可视窗口宽度 和 view height 可视窗口高度。1vw 就等于可视窗口宽度的百分之一，1vh 就等于可视窗口高度的百分之一。
@@ -52,16 +63,21 @@ flex 是 Flexible Box 的缩写，意为"弹性布局"。指定容器`display: f
 ## 6、🔥grid布局如何使用？
 
 
-## 7、⭐分析比较 opacity: 0、visibility: hidden、display: none 优劣和适用场景
+## 7、⭐分析比较 opacity: 0、visibility: hidden、display: none区别、优劣和适用场景
+三个属性都是让元素隐藏，不可见，其区别在于：
+- `display: none`渲染树不会包含该渲染对象，因此该元素不会在页面中占据位置，也不会响应绑定的监听事件
+- `visibility: hidden`元素在页面中仍占据空间，但是不会响应绑定的监听事件
+- `opacity: 0`元素在页面中仍占据空间，同时也会响应绑定的监听事件
+
 优缺点：
-- 结构： display:none: 会让元素完全从渲染树中消失，渲染的时候不占据任何空间, 不能点击， visibility: hidden:不会让元素从渲染树消失，渲染元素继续占据空间，只是内容不可见，不能点击 opacity: 0: 不会让元素从渲染树消失，渲染元素继续占据空间，只是内容不可见，可以点击
-- 继承： display: none和opacity: 0：是非继承属性，子孙节点消失由于元素从渲染树消失造成，通过修改子孙节点属性无法显示。 visibility: hidden：是继承属性，子孙节点消失由于继承了hidden，通过设置visibility: visible;可以让子孙节点显式。
-- 性能： displaynone : 修改元素会造成文档回流,读屏器不会读取display: none元素内容，性能消耗较大 visibility:hidden: 修改元素只会造成本元素的重绘,性能消耗较少读屏器读取visibility: hidden元素内容 opacity: 0 ： 修改元素会造成重绘，性能消耗较少
+- 结构：`display:none`会让元素完全从渲染树中消失，渲染的时候不占据任何空间, 不能点击；`visibility: hidden`不会让元素从渲染树消失，渲染元素继续占据空间，只是内容不可见，不能点击；`opacity: 0`不会让元素从渲染树消失，渲染元素继续占据空间，只是内容不可见，可以点击
+- 继承：`display: none`和`opacity: 0`是非继承属性，子孙节点消失由于元素从渲染树消失造成，通过修改子孙节点属性无法显示。 `visibility: hidden`是继承属性，子孙节点消失由于继承了hidden，通过设置`visibility: visible`;可以让子孙节点显式。
+- 性能：`display: none`修改元素会造成文档回流,读屏器不会读取`display: none`元素内容，性能消耗较大`visibility:hidden`修改元素只会造成本元素的重绘,性能消耗较少读屏器读取`visibility: hidden`元素内容`opacity: 0`修改元素会造成重绘，性能消耗较少
 
 适用场景：
-- display: none (不占空间，不能点击)（场景，显示出原来这里不存在的结构）
-- visibility: hidden（占据空间，不能点击）（场景：显示不会导致页面结构发生变动，不会撑开）
-- opacity: 0（占据空间，可以点击）（场景：可以跟transition搭配）
+- `display: none` (不占空间，不能点击)（场景，显示出原来这里不存在的结构）
+- `visibility: hidden`（占据空间，不能点击）（场景：显示不会导致页面结构发生变动，不会撑开）
+- `opacity: 0`（占据空间，可以点击）（场景：可以跟transition搭配）
 
 ## 8、🔥如何用 css 或 js 实现多行文本溢出省略效果，考虑兼容性
 CSS 实现方式
@@ -122,7 +138,11 @@ sticky 属性值有以下几个特点：
 这个是`flex`布局的内容，其实就是一个边距的区别，按水平布局来说，`space-between`是两端对齐，在左右两侧没有边距，而`space-around`是每个子项目左右方向的`margin`相等，所以两个item中间的间距会比较大。
 
 
-## 12、⭐CSS3 中 transition 和 animation 的属性分别有哪些
+## 12、⭐CSS3 中transition和animation的区别，属性分别有哪些
+**区别**：
+- transition是过渡属性：强调过渡，它的实现需要触发一个事件(比如鼠标移入移出、焦点、点击等)才执行动画，它类似于flash的补间动画，设置一个开始关键帧，一个结束帧；
+- animation是动画属性：它的实现不需要触发事件，设定好时间之后可以自己执行，且可以循环一个动画；
+
 transition 过渡动画：
 - transition-property：指定过渡的 CSS 属性
 - transition-duration：指定过渡所需的完成时间
@@ -201,7 +221,18 @@ PNG图片的压缩，分两个阶段：
 ## 17、🔥说说两种盒模型以及区别
 盒模型也称为框模型，就是从盒子顶部俯视所得的一张平面图，用于描述元素所占用的空间。它有两种盒模型，W3C盒模型和IE盒模型（IE6以下，不包括IE6以及怪异模式下的IE5.5+）。
 
-理论上两者的主要区别是二者的盒子宽高是否包括元素的边框和内边距。当用CSS给给某个元素定义高或宽时，IE盒模型中内容的宽或高将会包含内边距和边框，而W3C盒模型并不会。
+![202302091538234.png](https://imgs.itchenliang.club/img/202302091538234.png)
+![2023020915383510.png](https://imgs.itchenliang.club/img/2023020915383510.png)
+
+盒模型都是由四个部分组成：margin、border、padding、content
+
+标准盒模型的IE盒模型的区别在于设置width和height时，所对应的范围不同：
+- 标准盒模型：width和height属性的范围只包含content
+- IE盒模型：width和height的范围包含了border、padding和content
+
+可以通过修改元素的`box-sizing`属性来改变元素的盒模型：
+- `box-sizing: content-box;`表示标准盒模型(默认值)
+- `box-sizing: border-box;`表示IE模型(怪异盒模型)
 
 ## 18、🔥如何触发重排和重绘？
 任何改变用来构建渲染树的信息都会导致一次重排或重绘：
@@ -244,12 +275,12 @@ PNG图片的压缩，分两个阶段：
 
 ## 22、🔥CSS3 新增了那些东西？
 CSS3 新增东西众多，这里列举出一些关键的新增内容：
-- 选择器
+- 选择器: :not(.input)
 - 盒子模型属性：border-radius、box-shadow、border-image
 - 背景：background-size、background-origin、background-clip
 - 文本效果：text-shadow、word-wrap
 - 颜色：新增 RGBA，HSLA 模式
-- 渐变：线性渐变、径向渐变
+- 渐变：线性渐变(linear-gradient)、径向渐变(radial-gradient)
 - 字体：@font-face
 - 2D/3D转换：transform、transform-origin
 - 过渡与动画：transition、@keyframes、animation
@@ -321,4 +352,298 @@ CSS3 新增东西众多，这里列举出一些关键的新增内容：
 
 ### 可继承属性
 - 字体系列属性：font-family(字体系列)、font-weight(字体粗细)、font-size(字体大小)、font-style(字体风格)
-- 文本系列属性：text-indent(文本缩进)、
+- 文本系列属性：text-indent(文本缩进)、text-align(文本水平对齐)、line-height(文本行高)、word-spacing(单词间距)、letter-spacing(中文或者字母间距)、text-transform(文本大小写，uppercase、lowercase、capitalize)、color(字体颜色)
+- 元素可见属性：visibility(元素显示隐藏)
+- 列表布局属性：list-style(列表风格)、list-style-type、list-style-image、list-style-position
+- 光标属性：cursor(光标显示状态)
+
+## 26、display的属性值及其作用
+![202302091453214.png](https://imgs.itchenliang.club/img/202302091453214.png)
+
+## 27、display的block、inline和inline-block的区别
+- **block**：元素会独占一行，多个元素会令其一行，可以设置width、height、margin和padding属性；
+- **inline**：元素不会独占一行，设置width、height属性无效，但可以设置水平方向的margin和padding属性，垂直方向设置无效；
+- **inline-block**：将元素设置为inline元素，但元素的内容作为block元素呈现，之后的内联元素会被排在同一行；
+
+对于行内元素和块级元素，特点如下：
+- **行内元素**
+  - 设置宽高无效
+  - 可以设置水平方向的margin和padding，垂直方向设置则无效
+  - 不会自动换行
+- **块级元素**
+  - 可以设置宽高
+  - 设置margin和padding都有效
+  - 会自动换行
+  - 多个块状，排列方式从上往下
+
+## 27、隐藏元素的方法有哪些？
+- `display: none`：渲染树不会包含该渲染对象，因此该元素不会在页面中占据位置，也不会响应绑定的监听事件
+- `visibility: hidden`：元素在页面中仍占据空间，但是不会响应绑定的监听事件
+- `opacity: 0`：将元素的透明度设置为0，以此隐藏元素，元素在页面中仍占据空间，同时也会响应绑定的监听事件
+- `z-index: 负值`：通过调整元素的层级，使其被其他元素遮盖
+- `position: absolute`：通过使用绝对定位将元素移除可视区域内
+- `clip/clip-path`：使用元素裁剪的方式，元素仍在页面中占据空间，但是不会响应绑定的监听事件
+- `transform: scale(0, 0)`：将元素缩放为0，元素仍在页面中占据空间，但是不会响应绑定的监听事件
+
+## 28、link和@import的区别
+两者都是引入外部css样式表的方式，区别如下：
+- `link`是XHTML标签，除了加载css外，还可以定义RSS等其他事物，`@import`属于css范畴，只能加载css；
+- `link`引入css时，在页面载入时同时加载；`@import`需要页面网页完全载入以后加载;
+- `link`是XHTML标签，无兼容问题；`@import`是css2.1提出的，低版本的浏览器不支持；
+- `link`支持使用JavaScript控制DOM改变样式；`@import`不支持；
+
+## 29、伪元素和伪类的区别和作用？
+### 伪元素
+即假元素，需要通过添加元素才能达到效果，在内容元素的前后插入额外的元素或样式，但是这些元素实际上并不在文档中生成，他们只在外部显示课件，但不会在文档的源代码中找到它们，因此称为“伪元素”，例如：
+```css
+p::before { content: '第一章' }
+p::after { content: '第一章' }
+p::first-line { background: red; }
+p::first-letter { font-size: 20px; }
+p::selection { color: #ccc; }
+```
+
+### 伪类
+即假的类，需要添加类来达到效果，将特殊的效果添加到特定选择器上，它是已有元素上添加类别的，不会产生新的元素，例如：
+```css
+a:hover { color: red }
+p:first-child { color: blue; }
+```
+**总结**：伪类是通过在元素选择器上加入伪类改变元素状态，而伪元素通过对元素的操作进行对元素的改变。
+
+## 30、对requestAnimation的理解
+
+
+## 31、为什么有时候用translate来改变位置而不是定位？
+`translate`是`transform`属性的一个值，改变`transform`或`opacity`不会触发浏览器重排(reflow)或重绘(repaint)，只会触发复合(compositions)，而改变绝对定位会触发重排，进而触发重绘和复合。
+
+`transform`使浏览器为元素创建一个GPU图层，但改变绝对定位会使用到CPU，因此`translate`更高效，可以缩短平滑动画的绘制时间，而translate改变位置时，元素依然会占据原始空间，绝对定位就不会发生这种情况。
+
+## 32、❓li与li之间有看不见的空白间隔是什么原因引起？如何解决？
+浏览器会把inline内联元素间的空白字符(空格、换行、tab等)渲染成一个空格，为了美观，通常是一个`<li>`放在一行，如下面所示：
+```html
+<li>
+  哈哈
+</li>
+```
+这样就导致产生了换行字符，它变成了一个空格，占用了一个字符的宽度。
+
+**解决方法**：
+- 为所有`<li>`设置`float: left`。不足：有些容器是不能设置浮动的，如左右切换的焦点图等
+- 将所有`<li>写在同一行`。不足：代码不美观
+- 将`<ul>`内的字符尺寸设为0，即`font-size: 0`。不足：`<ul>`中的其他字符尺寸也被设为0，需要额外重新设定其他字符尺寸，且在Safari浏览器依然会出现空白间隔
+- 消除`<ul>`的字符间隔`letter-spacing: -8px`。不足：这也设置了`<li>`内的字符间隔，一次需要将`<li>`内的字符间隔设置为默认`letter-spacing: normal`
+
+## 33、替换元素的概念及计算规则
+通过修改某个属性值呈现的内容就可以被替换的元素就成为“替换元素”。
+
+替换元素除了内容可替换这一特性以外，还有一下特性：
+- 内容的外观不受页面上的css影响：用专业的话讲就是在样式在css作用于之外，如何更改替换元素本身的外观需要类似appearance属性，或者浏览器自身暴露的一些样式接口
+- 有自己的尺寸：在web中，很多替换元素在没有明确尺寸设定的情况下，其默认的尺寸(不包含边框)是300px x 150px
+- 在css属性上呈现自己的表现规则：比较具有代表性的就是vertical-align属性，对于替换元素和非替换元素，vertical-align属性值的解释是不一样的。比方说vertical-align的默认值的baseline，很简单的属性值，基线之意，被定义为字符x的下边缘，而替换元素的基线却被硬生生定义成了元素的下边缘
+- 所有的替换元素都是内联水平元素：也就是替换元素和替换元素、替换元素和文字都是可以在一行显示的。但是，替换元素默认的display值却是不一样的，有的是inline，有的是inline-block
+
+替换元素的尺寸从内而外分为三类：
+- 固有尺寸：指的是替换内容原本的尺寸。例如，图片、视频作为一个独立文件存在的时候，都是有着自己的宽度和高度的。
+- HTML尺寸：只能通过HTML原生属性改变，这些HTML原生属性包括的width和height属性、的size属性。
+- CSS尺寸：特指可以通过CSS的width和height或者max-width/min-width和max-height/min-height设置的尺寸，对应盒尺寸中的content box。
+
+这三层结构的计算规则具体如下：
+- （1）如果没有CSS尺寸和HTML尺寸，则使用固有尺寸作为最终的宽高。
+- （2）如果没有CSS尺寸，则使用HTML尺寸作为最终的宽高。
+- （3）如果有CSS尺寸，则最终尺寸由CSS属性决定。
+- （4）如果“固有尺寸”含有固有的宽高比例，同时仅设置了宽度或仅设置了高度，则元素依然按照固有的宽高比例显示。
+- （5）如果上面的条件都不符合，则最终宽度表现为300像素，高度为150像素。
+- （6）内联替换元素和块级替换元素使用上面同一套尺寸计算规则。
+
+## 34、常见的图片格式及使用场景
+1. BMP
+  是无损的、既支持索引色也支持直接色的点阵图。这种图片格式几乎没有对数据进行压缩，所以BMP格式的图片通常是较大的文件。
+2. GIF
+  是无损的、采用索引色的点阵图。采用LZW压缩算法进行编码。文件小，是GIF格式的优点，同时，GIF格式还具有支持动画以及透明的优点。但是GIF格式仅支持8bit的索引色，所以GIF格式适用于对色彩要求不高同时需要文件体积较小的场景。
+3. JPEG
+  是有损的、采用直接色的点阵图。JPEG的图片的优点是采用了直接色，得益于更丰富的色彩，JPEG非常适合用来存储照片，与GIF相比，JPEG不适合用来存储企业Logo、线框类的图。因为有损压缩会导致图片模糊，而直接色的选用，又会导致图片文件较GIF更大。
+4. PNG-8
+  是无损的、使用索引色的点阵图。PNG是一种比较新的图片格式，PNG-8是非常好的GIF格式替代者，在可能的情况下，应该尽可能的使用PNG-8而不是GIF，因为在相同的图片效果下，PNG-8具有更小的文件体积。除此之外，PNG-8还支持透明度的调节，而GIF并不支持。除非需要动画的支持，否则没有理由使用GIF而不是PNG-8。
+5. PNG-24
+  是无损的、使用直接色的点阵图。PNG-24的优点在于它压缩了图片的数据，使得同样效果的图片，PNG-24格式的文件大小要比BMP小得多。当然，PNG24的图片还是要比JPEG、GIF、PNG-8大得多。
+6. SVG
+  是无损的矢量图。SVG是矢量图意味着SVG图片由直线和曲线以及绘制它们的方法组成。当放大SVG图片时，看到的还是线和曲线，而不会出现像素点。SVG图片在放大时，不会失真，所以它适合用来绘制Logo、Icon等。
+7. Webp
+  是谷歌开发的一种新图片格式，WebP是同时支持有损和无损压缩的、使用直接色的点阵图。从名字就可以看出来它是为Web而生的，什么叫为Web而生呢？就是说相同质量的图片，WebP具有更小的文件体积。现在网站上充满了大量的图片，如果能够降低每一个图片的文件大小，那么将大大减少浏览器和服务器之间的数据传输量，进而降低访问延迟，提升访问体验。
+
+  目前只有Chrome浏览器和Opera浏览器支持WebP格式，兼容性不太好。
+  - 在无损压缩的情况下，相同质量的WebP图片，文件大小要比PNG小26%；
+  - 在有损压缩的情况下，具有相同图片精度的WebP图片，文件大小要比JPEG小25%~34%；
+  - WebP图片格式支持图片透明度，一个无损压缩的WebP图片，如果要支持透明度只需要22%的格外文件大小。
+
+## 34、对 CSSSprites 的理解
+CSSSprites（精灵图），将一个页面涉及到的所有图片都包含到一张大图中去，然后利用CSS的 background-image，background-repeat，background-position属性的组合进行背景定位。
+
+优点：
+- 利用 css sprites 能很好地减少网页的http请求，从而大大提高了页面的性能
+- css sprites 能减少图片的字节，把3张图片合并成1张图片的字节总是小于这3张图片的字节总和
+
+缺点：
+- 在图片合并时，要把多张图片有序的、合理的合并成一张图片，还要留好足够的空间，防止板块内出现不必要的背景。在宽屏及高分辨率下的自适应页面，如果背景不够宽，很容易出现背景断裂；
+- 在开发的时候相对来说有点麻烦，需要借助 photoshop或其他工具来对每个背景单元测量其准确的位置；
+- 在维护的时候比较麻烦，页面背景有少许改动时，就要改这张合并的图片，无需改的地方尽量不要动，这样避免改动更多的 css，如果在原来的地方放不下，又只能（最好）往下加图片，这样图片的字节就增加了，还要改动css；
+
+## 35、什么是物理像素，逻辑像素和像素密度，为什么在移动端开发时需要用到@3x, @2x这种图片？
+以 iPhone XS 为例，当写 CSS 代码时，针对于单位 px，其宽度为 414px & 896px，也就是说当赋予一个 DIV元素宽度为 414px，这个 DIV 就会填满手机的宽度；
+
+而如果有一把尺子来实际测量这部手机的物理像素，实际为 1242*2688 物理像素；经过计算可知，1242/414=3，也就是说，在单边上，一个逻辑像素=3个物理像素，就说这个屏幕的像素密度为 3，也就是常说的 3 倍屏。
+
+对于图片来说，为了保证其不失真，1 个图片像素至少要对应一个物理像素，假如原始图片是 500300 像素，那么在 3 倍屏上就要放一个 1500900 像素的图片才能保证 1 个物理像素至少对应一个图片像素，才能不失真。
+![202302091615558.png](https://imgs.itchenliang.club/img/202302091615558.png)
+
+当然，也可以针对所有屏幕，都只提供最高清图片。虽然低密度屏幕用不到那么多图片像素，而且会因为下载多余的像素造成带宽浪费和下载延迟，但从结果上说能保证图片在所有屏幕上都不会失真。
+
+还可以使用 CSS 媒体查询来判断不同的像素密度，从而选择不同的图片：
+```css
+#my-image { background: (low.png); }
+@media only screen and (min-device-pixel-ratio: 1.5) {
+  #my-image { background: (high.png); }
+}
+```
+
+## 36、margin和padding的使用场景
+- 需要在border外侧添加空白，且空白处不需要背景（色）时，使用 margin；
+- 需要在border内测添加空白，且空白处需要背景（色）时，使用 padding；
+
+## 37、对 line-height 的理解及其赋值方式
+line-height的概念：
+- line-height指一行文本的高度，包含了字间距，实际上是下一行基线到上一行基线距离；
+- 如果一个标签没有定义 height 属性，那么其最终表现的高度由 line-height 决定；
+- 把 line-height 值设置为 height 一样大小的值可以实现单行文字的垂直居中；
+- line-height 和 height 都能撑开一个高度；
+
+line-height的赋值方式：
+- 带单位：px 是固定值，而 em 会参考自身元素 font-size 值计算自身的行高
+- 纯数字：会把比例传递给后代。例如，父级行高为 1.5，子元素字体为 18px，则子元素行高为 1.5 * 18 = 27px
+- 百分比：将计算后的值传递给后代
+
+
+## 38、实现三列布局，side1 和 side2 左右两列宽度固定（200px）,main 中间宽度自适应（不能用弹性盒）
+```html
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    font-size: 50px;
+  }
+
+  .main {
+    position: relative;
+    width: 100%;
+    height: 500px;
+  }
+
+  .left {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100%;
+    background-color: #3898b1;
+  }
+
+  .right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    background-color: #ce7486;
+  }
+
+  .middle {
+    margin: 0 200px;
+    height: 100%;
+    background-color: #cbaf91;
+  }
+</style>
+<div class="main">
+  <div class="left">left</div>
+  <div class="middle">middle</div>
+  <div class="right">right</div>
+</div>
+```
+效果如下：
+![202302091635511.png](https://imgs.itchenliang.club/img/202302091635511.png)
+
+## 39、使用 CSS3 设计一个立起的圆形，并围绕自身中轴线做 360° 持续旋转
+
+## 40、要求实现以下效果：字体颜色在 IE6 下为黑色（#000000）；IE7下为红色（#ff0000）; 而其他浏览器下为绿色（#00ff00）
+
+## 41、position 属性有哪些值，分别代表什么意思？ 使用与什么场景？
+- static: 正常文档流定位，此时 top, right, bottom, left 和 z-index 属性无效，块级元素从上往下纵向排布，行级元素从左向右排列。
+- relative：相对定位，此时的『相对』是相对于正常文档流的位置。
+- absolute：相对于最近的非 static 定位祖先元素的偏移，来确定元素位置，比如一个绝对定位元素它的父级、和祖父级元素都为relative，它会相对他的父级而产生偏移。
+- fixed：指定元素相对于屏幕视口（viewport）的位置来指定元素位置。元素的位置在屏幕滚动时不会改变，比如那种回到顶部的按钮一般都是用此定位方式。
+- sticky：粘性定位，特性近似于relative和fixed的合体，其在实际应用中的近似效果就是IOS通讯录滚动的时候的『顶屁股』。
+
+## 42、style 标签写在 body 后和 body 前有什么区别？
+
+## 43、::bofore 和 :after 中双冒号和单冒号有什么区别？
+
+## 44、有哪些手段可以优化 CSS, 提高性能
+
+## 45、说下 CSS3 中一些样式的兼容，分别指兼容哪些浏览器
+
+## 46、怎么样实现边框 0.5 个像素？
+
+## 47、如何理解z-index？
+CSS 中的z-index属性控制重叠元素的垂直叠加顺序，默认元素的z-index为0，我们可以修改z-index来控制元素的图层位置，而且z-index只能影响设置了position值的元素。
+
+CSS 中的z-index属性控制重叠元素的垂直叠加顺序，默认元素的z-index为0，我们可以修改z-index来控制元素的图层位置，而且z-index只能影响设置了position值的元素。
+
+
+## 48、如何理解层叠上下文？
+层叠上下文是HTML元素的三维概念，这些HTML元素在一条假想的相对于面向（电脑屏幕的）视窗或者网页的用户的z轴上延伸，HTML元素依据其自身属性按照优先级顺序占用层叠上下文的空间。
+
+**产生条件**
+- 根元素 (HTML),
+- z-index 值不为 "auto"的 绝对/相对定位，
+- 一个 z-index 值不为 "auto"的 flex 项目 (flex item)，即：父元素 display: flex|inline-flex，
+- opacity 属性值小于 1 的元素（参考 the specification for opacity），
+- transform 属性值不为 "none"的元素，
+- mix-blend-mode 属性值不为 "normal"的元素，
+- filter值不为“none”的元素，
+- perspective值不为“none”的元素，
+- isolation 属性被设置为 "isolate"的元素，
+- position: fixed
+- 在 will-change 中指定了任意 CSS 属性，即便你没有直接指定这些属性的值（参考 这篇文章）
+- -webkit-overflow-scrolling 属性被设置 "touch"的元素
+
+## 49、你对媒体查询的理解？
+媒体查询由一个可选的媒体类型和零个或多个使用媒体功能的限制了样式表范围的表达式组成，例如宽度、高度和颜色。媒体查询，添加自CSS3，允许内容的呈现针对一个特定范围的输出设备而进行裁剪，而不必改变内容本身,非常适合web网页应对不同型号的设备而做出对应的响应适配。
+
+**如何使用？**
+媒体查询包含一个可选的媒体类型和，满足CSS3规范的条件下，包含零个或多个表达式，这些表达式描述了媒体特征，最终会被解析为true或false。如果媒体查询中指定的媒体类型匹配展示文档所使用的设备类型，并且所有的表达式的值都是true，那么该媒体查询的结果为true.那么媒体查询内的样式将会生效。
+```html
+<!-- link元素中的CSS媒体查询 -->
+<link rel="stylesheet" media="(max-width: 800px)" href="example.css" />
+
+<!-- 样式表中的CSS媒体查询 -->
+<style>
+@media (max-width: 600px) {
+  .facet_sidebar {
+    display: none;
+  }
+}
+</style>
+```
+[扩展阅读](https://www.cnblogs.com/xiaohuochai/p/5848612.html)
+
+
+
+
+
+
+
+
+
+
+<!-- ======================================== 评论区 ======================================== -->
+<valine-comment/>

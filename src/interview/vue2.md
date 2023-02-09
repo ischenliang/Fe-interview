@@ -1,0 +1,12 @@
+参考：
+- https://github.com/yisainan/web-interview/blob/master/content/vue/vue.md
+- https://github.com/yisainan/web-interview/blob/master/content/vue/fe-interview-vue.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/framework.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/vue.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/virtualDom.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/devsProxy.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/setState.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/router.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/componentCli.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/component.md
+- https://github.com/elecrabbit/front-end-interview/blob/master/docs/guide/carousel.md

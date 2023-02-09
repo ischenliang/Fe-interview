@@ -12,6 +12,7 @@ comment: true
 参考：
 - https://www.yuque.com/cuggz/interview/gme0bw
 - https://juejin.cn/post/7095899257072254989
+- https://github.com/yisainan/web-interview/blob/master/content/HTML.md
 
 ## 1、🔥src和href的区别
 src和href都是HTML中特定元素的属性，都可以用来引入外部的资源。两者区别如下：
@@ -45,6 +46,13 @@ DOCTYPE是HTML5中一种标准通用标记语言的文档类型声明，它的�
 浏览器渲染页面的两种模式（可通过document.compatMode获取）：
 - **CSS1Compat**：标准模式（Strick mode）默认模式，浏览器使用W3C的标准解析渲染页面。在标准模式中，浏览器以其支持的最高标准呈现页面。
 - **BackCompat**：怪异模式(混杂模式)(Quick mode)，浏览器使用自己的怪异模式解析渲染页面。在怪异模式中，页面以一种比较宽松的向后兼容的方式显示。
+
+> IE8还有一种介乎于上述两者之间的近乎标准的模式，但是基本淘汰了。
+
+### 这三种模式的区别是什么？
+- 标准模式(standards mode)：页面按照 HTML 与 CSS 的定义渲染
+- 怪异模式(quirks mode)模式： 会模拟更旧的浏览器的行为
+- 近乎标准(almost standards)模式： 会实施了一种表单元格尺寸的怪异行为（与IE7之前的单元格布局方式一致），除此之外符合标准定义
 
 ## 4、script标签中defer和async的区别
 如果没有`defer`或`async`属性，浏览器会立即加载并执行相应的脚本。它不会等待后续加载的文档元素，读取到就会开始加载和执行，这样就阻塞了后续文档的加载。
@@ -240,6 +248,20 @@ sizes语法如下：
 sizes="[media query] [length], [media query] [length], ..."
 ```
 sizes就是指默认显示128px，如果宽度大于360px，则显示340px。
+
+**还有哪一个标签能起到跟srcset相似作用？**
+
+`<picture>`元素通过包含零或多个`<source>`元素和一个`<img>`元素来为不同的显示/设备场景提供图像版本。浏览器会选择最匹配的子 `<source>`元素，如果没有匹配的，就选择`<img>`元素的 src 属性中的URL。然后，所选图像呈现在`<img>`元素占据的空间中
+> picture同样可以通过不同设备来匹配不同的图像资源
+
+```html
+<picture>
+    <source srcset="/media/examples/surfer-240-200.jpg"
+            media="(min-width: 800px)">
+    <img src="/media/examples/painted-hand-298-332.jpg" />
+</picture>
+```
+
 
 ## 8、🔥行内元素有哪些？块级元素有哪些？空(void)元素有哪些？有何区别？怎样转换？
 - 行内元素：`a b span img input select strong label cite code`
@@ -596,7 +618,7 @@ HTML5 提供的应用程序 API 主要有：
 </map>
 ```
 注意：上面代码中可以点击的区域是有👆手势，如下图所示
-![2023020816023810.png](https://imgs.itchenliang.club/img/2023020816023810.png)
+![202302090916219.png](https://imgs.itchenliang.club/img/202302090916219.png)
 
 ## 37、🔥a元素除了用于导航外，还有什么作用？
 href属性中的url可以是浏览器支持的任何协议，所以a标签可以用来手机拨号`<a href="tel:110">110</a>`，也可以用来发送短信`<a href="sms:110">110</a>`，还有邮件等等。
@@ -609,6 +631,22 @@ href属性中的url可以是浏览器支持的任何协议，所以a标签可以
 
 ## 38、🔥你知道SEO中的TDK吗？
 在SEO中，TDK其实就是`title`、`description`、`keywords`这三个标签，`title`表示标题标签，`description`是描述标签，`keywords`是关键词标签。
+
+## 39、什么是data-属性？
+HTML的数据属性，用于将数据储存于标准的HTML元素中作为额外信息,我们可以通过js访问并操作它，来达到操作数据的目的。
+```html
+<article
+  id="electriccars"
+  data-columns="3"
+  data-index-number="12314"
+  data-parent="cars">
+...
+</article>
+```
+## 40、TML、XHTML、XML有什么区别
+- HTML(超文本标记语言): 在html4.0之前HTML先有实现再有标准，导致HTML非常混乱和松散
+- XML(可扩展标记语言): 主要用于存储数据和结构，可扩展，大家熟悉的JSON也是相似的作用，但是更加轻量高效，所以XML现在市场越来越小了
+- XHTML(可扩展超文本标记语言): 基于上面两者而来，W3C为了解决HTML混乱问题而生，并基于此诞生了HTML5，开头加入`<!DOCTYPE html>`的做法因此而来，如果不加就是兼容混乱的HTML，加了就是标准模式。
 
 <!-- ======================================== 评论区 ======================================== -->
 <valine-comment/>
