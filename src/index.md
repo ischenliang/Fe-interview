@@ -14,9 +14,9 @@ hero:
   actions:
     - theme: brand
       text: 开始
-      link: /guide/installation
+      link: /interview/guide
     - theme: alt
-      text: 在 Gitee 上查看
+      text: 在Gitee上查看
       link: https://gitee.com/itchenliang/FE-interview
 
 features:

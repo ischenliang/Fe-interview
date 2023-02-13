@@ -7,22 +7,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <style>
-    #page { width: 520px; }
-    .nav { width: 200px; float: right }
-    .main { width:200px; float: left; padding-left: 110px; }
-    .sub { width: 100px; float: left; margin: 10px 0 10px -100px; }
-    .main { border: 1px solid #000; }
-    .nav, .sub{ border: 1px dashed #000; height: 300px }
-    .sub { height: 280px }
+    .parent {
+      overflow: hidden;
+      zoom: 1;
+    }
+    .left {
+      float: left;
+    }
+    .right {
+      overflow: hidden;
+      zoom: 1;
+    }
   </style>
 </head>
 
 <body>
-  <div id="page">
-    <div class="main">
-        <div class="sub"></div>
+  <div class="parent" style="background-color: lightgrey;">
+    <div class="left" style="background-color: lightblue;">
+      <p>left</p>
     </div>
-    <div class="nav"></div>
+    <div class="right"  style="background-color: lightgreen;">
+        <p>right</p>
+        <p>right</p>
+    </div>        
   </div>
 </body>
 
