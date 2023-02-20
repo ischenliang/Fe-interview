@@ -51,6 +51,7 @@ const arr = [
       { text: 'pinia', link: "/interview/pinia" },
       { text: 'nuxt.js', link: "/interview/nuxt" },
       { text: 'uniapp', link: "/interview/uniapp" },
+        { text: 'axios', link: '/interview/axios' },
     ]
     // items: [
     //   { text: "vue2.x", link: "/interview/vue2" },
