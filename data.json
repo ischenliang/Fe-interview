@@ -1,0 +1,11 @@
+{
+  "light_count": 23, // 光照强度
+  "light_status": true, // 灯开关状态
+  "air_count": 20, // 空气温度
+  "co2_count": 57, // CO2浓度
+  "nutrition_water_count": 5, // 营养液水位
+  "nutrition_water_status": false, // 营养液水位开关
+  "nutrition_ec_count": 1.6, // 营养液EC
+  "nutrition_ec_status": true, // 营养液EC开关
+  "nutrition_ph_count": 5 // 营养液PH值
+}
