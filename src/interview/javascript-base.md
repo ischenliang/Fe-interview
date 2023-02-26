@@ -1,11 +1,43 @@
 参考：❓
 
 # JavaScript基础面试题汇总
-## 1、❓document load 和 document ready 的区别
-https://www.mianshigee.com/question/28790oto/
+## 1、document load 和 document ready 的区别
+DOM文档解析：
+1. 解析html结构
+2. 加载脚本和样式文件
+3. 解析并执行脚本
+4. 构造html的DOM模型 `ready`
+5. 加载图片等外部资源文件
+6. 页面加载完毕`load`
+
+页面加载完成有两种事件
+- `load`是当页面所有资源全部加载完成后（包括DOM文档树，css文件，js文件，图片资源等），执行一个函数，load方法就是`onload`事件。<br>
+    缺点：如果图片资源较多，加载时间较长，onload后等待执行的函数需要等待较长时间，所以一些效果可能受到影响<br>
+    代码形式：
+    ```js
+    //document load
+    $(document).load(function(){
+      ...code...
+    })
+    ```
+- `$(document).ready()`是当DOM文档树加载完成后执行一个函数 （不包含图片，css等）所以会比load较快执行，在原生的jS中不包括`ready()`这个方法，Jquery才有，jquery中有`$().ready(function)`。
+    代码形式：
+    ```js
+    //document ready
+    $(document).ready(function(){
+        ...code...
+    })
+    //document ready 简写
+    $(function(){
+        ...code...
+    })
+    ```
+
+**总结**：如果页面中要是没有图片之类的媒体文件的话ready与load是差不多的，但是页面中有文件就不一样了，所以还是推荐大家在工作中用ready。
+ 
 
 
-## 2、❓JavaScript 中如何检测一个变量是一个 String 类型？
+## 2、JavaScript 中如何检测一个变量是一个 String 类型？
 三种方法（`typeof`、`constructor`、`Object.prototype.toString.call()`）
 ```js
 // typeof
@@ -50,14 +82,18 @@ Object.prototype.toString.call('123') === '[object String]' // true
   ```
 
 
-## 4、❓JavaScript是一门怎样的语言，它有什么特点
+## 4、JavaScript是一门怎样的语言，它有什么特点
 > 脚本语言。JavaScript 是一种解释型的脚本语言, C、C++等语言先编译后执行, 而 JavaScript 是在程序的运行过程中逐行进行解释。
 
 特点：
-- 基于对象。JavaScript 是一种基于对象的脚本语言, 它不仅可以创建对象, 也能使用现有的对象。
-- 简单。JavaScript 语言中采用的是弱类型的变量类型, 对使用的数据类型未做出严格的要求, 是基于 Java 基本语句和控制的脚本语言, 其设计简单紧凑。
-- 动态性。JavaScript 是一种采用事件驱动的脚本语言, 它不需要经过 Web 服务器就可以对用户的输入做出响应。
-- 跨平台性。JavaScript 脚本语言不依赖于操作系统, 仅需要浏览器的支持
+- 基于对象。<br>
+  JavaScript 是一种基于对象的脚本语言, 它不仅可以创建对象, 也能使用现有的对象。
+- 简单。<br>
+  JavaScript 语言中采用的是弱类型的变量类型, 对使用的数据类型未做出严格的要求, 是基于 Java 基本语句和控制的脚本语言, 其设计简单紧凑。
+- 动态性。<br>
+  JavaScript 是一种采用事件驱动的脚本语言, 它不需要经过 Web 服务器就可以对用户的输入做出响应。
+- 跨平台性。<br>
+  JavaScript 脚本语言不依赖于操作系统, 仅需要浏览器的支持
 
 
 ## 5、== 和 === 的不同
@@ -276,13 +312,264 @@ node编程中最重要的思想就是模块化，import 和 require 都是被模
   ```
 
 
-## 10、❓JavaScript 继承的方式和优缺点
+## 10、JavaScript 继承的方式和优缺点
+js中的继承与其说是对象的继承，但更像是让函数的功能和用法的复用。首先定义一个父类：
+```js
+function Father (name) {
+  this.name = name || '->father'
+  this.sayName = function () {
+    console.log(this.name)
+  }
+}
+// 原型属性和方法
+Father.prototype.age = 18;
+Father.prototype.sayAge = function() {
+  console.log(this.age)
+}
+```
+
 ### 原型链继承
-### 构造函数(经典继承)
+将父类的实例作为子类的原型
+**优点**
++ 纯粹的继承关系，实例是子类的实例，也是父类的实例
++ 父类新增原型方法、原型属性，子类都能访问到
++ 简单，易于实现
+
+**缺点**
++ 可以在`Son`构造函数中，为`Son`实例增加实例属性。新增的属性和方法必须放在`new Father()`这样的语句之后执行
++ 无法实现多继承，因为原型一次只能被一个实例更改
++ 来自原型对象的所有属性被所有实例共享
++ 创建子类实例时，无法向父构造函数传参
+```js
+function Son (name) {
+  // Father.call(this, name)
+  this.name = name || '->son'
+}
+Son.prototype = new Father()
+const son = new Son('son')
+console.log(son.name) // son
+son.sayAge() // 18
+son.sayName() // son
+console.log(son.age) // 18
+console.log(son instanceof Father) // true
+console.log(son instanceof Son) // true
+```
+缺点第一点测试
+```js
+function Son (name) {
+  this.name = name || '->son'
+}
+Son.prototype.gender = 'male'
+Son.prototype = new Father()
+const son = new Son('son')
+console.log(son.gender) // undefined
+
+// 正确做法
+function Son (name) {
+  this.name = name || '->son'
+}
+Son.prototype = new Father()
+Son.prototype.gender = 'male'
+const son = new Son('son')
+console.log(son.gender) // male
+```
+
+### 构造继承
+复制父类的实例属性给子类
+**优点**
++ 解决了原型链继承中子类实例共享父类引用属性的问题
++ 创建子类实例时，可以向父类传递参数
++ 可以实现多继承（call多个父类对象）
+
+**缺点**
++ 实例并不是父类实例，只是子类的实例
++ 只能继承父类实例的属性和方法，不能继承其原型上的属性和方法
++ 无法实现函数复用，每个子类都有父类实例的副本，影响性能
+```js
+function Son (name, gender) {
+  Father.call(this, name)
+  this.gender = gender || 'male'
+  this.sayGender = function () {
+    console.log(this.gender)
+  }
+}
+const son = new Son('son', 'male')
+console.log(son.name, son.age, son.gender) // son undefined male
+son.sayName() // son
+// son.sayAge() 抛出错误：TypeError: son.sayAge is not a function
+son.sayGender() // male
+console.log(son instanceof Father) // false
+console.log(son instanceof Son) // true
+```
+
+### 实例继承
+为父类实例添加新特征，作为子类实例返回
+**优点**
++ 不限制调用方法，不管是new子类()还是子类()，返回的对象具有相同的效果
+
+**缺点**
++ 实例是父类的实例，不是子类的实例
++ 不支持多继承
+```js
+function Son (name, gender) {
+  const f = new Father()
+  f.name = name
+  f.gender = gender
+  return f
+}
+const son = new Son('son', 'male')
+console.log(son.name, son.age, son.gender) // son 18 male
+son.sayName() // son
+son.sayAge() // 18
+console.log(son instanceof Father) // true
+console.log(son instanceof Son) // false
+```
+
+### 拷贝继承
+对父类实例中的的方法与属性拷贝给子类的原型
+**优点**
++ 支持多继承
+
+**缺点**
++ 效率低，性能差，占用内存高（因为需要拷贝父类属性）
++ 无法获取父类不可枚举的方法（不可枚举的方法，不能使用`for-in`访问到)
+```js
+function Son (name, gender) {
+  const f = new Father()
+  for (var key in f) {
+    Son.prototype[key] = f[key]
+  }
+  this.name = name
+  this.gender = gender
+}
+const son = new Son('son', 'male')
+console.log(son.name, son.age, son.gender) // son 18 male
+son.sayName() // son
+son.sayAge() // 18
+console.log(son instanceof Father) // false
+console.log(son instanceof Son) // true
+```
+无法获取父类不可枚举的方法缺点演示
+```js
+class Father {
+  constructor (name) {
+    this.name = name || '->father'
+  }
+  sayName () {
+    console.log(this.name)
+  }
+}
+Father.prototype.age = 18
+Father.prototype.sayAge = function () {
+  console.log(this.age)
+}
+function Son (name, gender) {
+  const f = new Father()
+  for (var key in f) {
+    console.log(key) // name age sayAge
+    Son.prototype[key] = f[key]
+  }
+  this.name = name
+  this.gender = gender
+}
+const son = new Son('son', 'male')
+```
+你会发现我们在class中定义的`sayName`方法并没有输出。
+
 ### 组合继承
-### 原型式继承
-### 寄生式继承
-### 寄生组合式继承
+通过调用父类构造，继承父类的属性并保留传参的优点，然后通过将父类实例作为子类原型，实现函数复用
+这里其实就是**原型链继承 + 构造继承**
+**优点**
++ 弥补了构造继承的缺点，现在既可以继承实例的属性和方法，也可以继承原型的属性和方法
++ 既是子类的实例，也是父类的实例
++ 不存在引用属性共享问题
++ 可传参
++ 函数可以复用
+
+**缺点**
++ 调用了两次父类构造函数，生成了两份实例（子类实例将子类原型上的那份屏蔽了)
+```js
+function Son (name, gender) {
+  Father.call(this, name)
+  this.gender = gender
+}
+Son.prototype = new Father()
+console.log(Son.prototype.constructor) // [Function: Father]
+// 修复构造函数指向
+Son.prototype.constructor = Son
+const son = new Son('son', 'male')
+console.log(son.name, son.age, son.gender) // son 18 male
+son.sayName() // son
+son.sayAge() // 18
+console.log(son instanceof Father) // true
+console.log(son instanceof Son) // true
+console.log(Son.prototype.constructor) // [Function: Son]
+```
+
+### 寄生组合继承
+通过寄生方式，砍掉父类的实例属性，避免了组合继承生成两份实例的缺点
+**优点**
++ 堪称完美
+
+**缺点**
++ 实现起来较为复杂
+```js
+// 方式一
+function Son (name, gender) {
+  Father.call(this, name)
+  this.gender = gender
+}
+;(function() {
+  // 创建一个没有实例方法的类
+  var None = function() {}
+  None.prototype = Father.prototype
+  // 将实例作为子类的原型
+  Son.prototype = new None()
+  // 修复构造函数指向
+  Son.prototype.constructor = Son
+})()
+const son = new Son('son', 'male')
+console.log(son.name, son.age, son.gender) // son 18 male
+son.sayName() // son
+son.sayAge() // 18
+console.log(son instanceof Father) // true
+console.log(son instanceof Son) // true
+
+// 方式二
+function Son (name, gender) {
+  Father.call(this, name)
+  this.gender = gender
+}
+Son.prototype = Object.create(Father.prototype)
+// 修复constructor的指向
+Son.prototype.constructor = Son
+Son.prototype.sayGender = function () {
+  console.log(this.gender)
+}
+const son = new Son('son', 'male')
+console.log(son.name, son.age, son.gender) // son 18 male
+son.sayName() // son
+son.sayAge() // 18
+console.log(son instanceof Father) // true
+console.log(son instanceof Son) // true
+```
+
+### Class继承
+使用`extends`表明继承自哪个父类，并且在子类构造函数中必须调用`super`
+```js
+class Son extends Father {
+  constructor (name, gender) {
+    super(name)
+    this.gender = gender
+  }
+}
+const son = new Son('son', 'male')
+console.log(son.name, son.age, son.gender) // son 18 male
+son.sayName() // son
+son.sayAge() // 18
+console.log(son instanceof Father) // true
+console.log(son instanceof Son) // true
+```
 
 
 ## 11、什么是原型链？
@@ -469,6 +756,162 @@ console.log(2 - '1') // 1
 - 函数内部可以引用外部的参数和变量。
 - 参数和变量不会被垃圾回收机制回收。
 
+例如在javascript中，只有函数内部的子函数才能读取局部变量，所以闭包可以理解成“**定义在一个函数内部的函数**”，在本质上，闭包是将函数内部和函数外部连接起来的桥梁。
+
+**所谓闭包，要拆成闭和包，闭指代不想暴露给外部的数据，包指代将数据打包出去暴露给外部**<br>
+
+在于JS的函数作用域，**函数内部的变量函数外部无法访问，这形成了闭**；**函数外部想得到函数内部的变量，可以通过某些方法譬如通过return等语句将内部的变量暴露出去，这形成了包**；
+
+### 16.1、闭包理解
+要理解闭包，首先必须理解Javascript特殊的变量作用域。变量的作用域无非就是两种：**全局变量和局部变量**。
+```js
+// 全局变量
+var n = 999
+function f1 () {
+  console.log(n)
+}
+f1() // 999
+
+// 局部变量
+function f2 () {
+  var n = 123
+  console.log(n)
+}
+f2() // 123
+```
+注意：在函数内部声明变量一定要加上关键字，否则实际上声明了一个全局变量。<br>
+**如何从外部读取局部变量？**
+出于种种原因，我们有时候需要得到函数内的局部变量。但是，前面已经说过了，正常情况下，这是办不到的，只有通过变通方法才能实现(在函数的内部，再定义一个函数)
+```js
+function f1 () {
+  var n = 123
+  function f2 () {
+    console.log(n)
+  }
+}
+```
+在上面的代码中，函数f2就被包括在函数f1内部，这时f1内部的所有局部变量，对f2都是可见的。但是反过来就不行，f2内部的局部变量，对f1就是不可见的。这就是Javascript语言特有的"链式作用域"结构（chain scope），子对象会一级一级地向上寻找所有父对象的变量。所以，父对象的所有变量，对子对象都是可见的，反之则不成立。
+
+既然f2可以读取f1中的局部变量，那么只要把f2作为返回值，我们不就可以在f1外部读取它的内部变量了
+```js
+function f1 () {
+  var n = 123
+  function f2 () {
+    console.log(n)
+  }
+  return f2
+}
+var result = f1()
+result() // 123
+```
+我们来看下最简单的闭包：
+```js
+var local = '变量'
+function foo () {
+  console.log(local)
+}
+foo() // 变量
+```
+其实这就是一个闭包：**「函数」和「函数内部能访问到的变量」的总和，就是一个闭包**<br>
+有的同学就疑惑了，闭包这么简单么？听说**闭包是需要函数套函数，然后 return 一个函数的呀**，比如：
+```js
+function foo(){
+  var local = 1
+  function bar(){
+    console.log(++local)
+  }
+  return bar
+}
+const func = foo()
+func()
+```
+这里面确实有闭包，**local变量和bar函数就组成了一个闭包（Closure）**
+
+### 16.2、闭包的用途
+闭包可以用在许多地方，但是它的最大用处有两个：
++ 一个是前面提到的可以读取函数内部的变量；
++ 另一个就是让这些变量的值始终保持在内存中；
+
+上面两句话可以使用下面的例子来体现：
+```js
+function f1 () {
+  var n = 123
+  increment = function () {
+    n += 1
+  }
+  function f2 () {
+    console.log(n)
+  }
+  return f2
+}
+var result = f1()
+result() // 123
+increment()
+result() // 124
+```
+上面代码中`result`实际上就是**闭包f2函数**。它一共运行了两次，第一次的值是999，第二次的值是1000。这证明了，函数f1中的局部变量n一直保存在内存中，并没有在f1调用后被自动清除。
+变量的值始终保存在内存中的演示：
+```js
+function f1 () {
+  var num = 3
+  return function () {
+    var n = 0
+    console.log(++n)
+    console.log(++num)
+  }
+}
+var result = f1()
+result() // 1 4
+result() // 1 5
+```
+
+### 16.3、使用闭包的注意点
++ 由于闭包会使得函数中的变量都被保存在内存中，内存消耗很大，所以不能滥用闭包，否则会造成网页的性能问题，在IE中可能导致内存泄露。解决方法是，在退出函数之前，将不使用的局部变量全部删除。
++ 闭包会在父函数外部，改变父函数内部变量的值。所以，如果你把父函数当作对象（object）使用，把闭包当作它的公用方法（Public Method），把内部变量当作它的私有属性（private value），这时一定要小心，不要随便改变父函数内部变量的值。
+
+### 16.4、思考题
+**思考题一**
+```html
+<script>
+var name = "The Window"
+var object = {
+  name: "My Object",
+  getNameFunc: function () {
+    return function () {
+      return this.name
+    }
+  }
+}
+console.log(object.getNameFunc()())
+</script>
+```
+上面输出`The Window`，为什么呢？
+因为`object.getNameFunc()()`其实等价于下面两行代码
+```js
+var result = object.getNameFunc() // 全局定义的变量其实就挂载在window对象上
+console.log(result()) // 谁调用this就指向谁
+```
+
+**思考题二**
+```html
+<sctipt>
+var name = "The Window"
+var object = {
+  name: "My Object",
+  getNameFunc: function () {
+    var that = this
+    return function () {
+      return that.name
+    }
+  }
+}
+console.log(object.getNameFunc()())
+</script>
+```
+上面代码输出`My Object`，为什么呢？
+因为这里的`var that = this`，此时的`this`就是我们的`object`，所以`that`也就指向`object`，然后由于闭包会使得这些变量的值始终保持在内存中，所以当再次访问的时候`that`还是指向`object`，所以就输出`My Object`了。
+
+### 16.5、优缺点
 优点：
 - 希望一个变量长期存储在内存中。
 - 避免全局变量的污染。
@@ -1396,11 +1839,80 @@ console.log(d); // 5
 </script>
 ```
 
-var、let、const 的区别
+### var、let、const 的区别
 - var 定义的变量，没有块的概念，可以跨块访问, 不能跨函数访问。
 - let 定义的变量，只能在块作用域里访问，不能跨块访问，也不能跨函数访问。
 - const 用来定义常量，使用时必须初始化(即必须赋值)，只能在块作用域里访问，而且不能修改。
 - 同一个变量只能使用一种方式声明，不然会报错
+
+1. var在js中是支持预解析的，而let不支持预解析，也就是变量提升的区别
+  ```js
+  console.log(a) // undefined
+  var a = 22
+
+  console.log(b) // ReferenceError: Cannot access 'b' before initialization
+  let b = 22
+  ```
+2. var可以重复定义同一个变量，但是let不可以
+  ```js
+  var a = 1
+  var a = 2
+  console.log(a)
+
+  let b = 1
+  let b = 2 // SyntaxError: Identifier 'b' has already been declared
+  console.log(b)
+  ```
+3. const是用来定义常量的，常量定义之后是不允许改变的，而且必须初始化
+  ```js
+  const b = 2
+  b = 3 // TypeError: Assignment to constant variable.
+  const a // SyntaxError: Missing initializer in const declaration
+  ```
+  **注意**：引用变量与普通变量的区别，所以用const定义的常量只要是引用类型数据，改变这个引用类型数据的结构或属性，都是允许的
+  ```js
+  const obj = {}
+  obj.name = '123'
+  ```
+4. let具有块级作用域，函数内部使用let定义后，对函数外部无影响<br>
+  在es6之前实现块级作用域使用立即执行函数
+  ```js
+  // Es6之前
+  (function () {
+    var a = 200
+  })()
+  console.log(a) // ReferenceError: a is not defined
+
+  // ES6的块级作用域
+  {
+    let a = 1
+  }
+  console.log(a) // ReferenceError: a is not defined
+  ```
+  块级作用域常见使用场景
+  ```js
+  for (let i = 0; i < 10; i++) {
+    // ...
+  }
+  console.log(i) // ReferenceError: i is not defined
+
+  for (var i = 0; i < 10; i++) {
+    // ...
+  }
+  console.log(i) // ReferenceError: i is not defined
+
+  // 函数中的变量污染了全局环境
+  function run() {
+    web = 'houlaizhe' // 等价于 window.web = 'houlaizhe'
+  }
+  run()
+  console.log(web) // houlaizhe 等价于 console.log(window.web)
+  ```
+5. var定义的全局变量会挂载到window对象上，使用window可以访问，let定义的全局变量则不会挂载到window对象上
+  ```js
+  var a = 1
+  console.log(window.a)
+  ```
 
 ```html
 <script type = "text/javascript">
@@ -1652,6 +2164,292 @@ new 共经过了 4 几个阶段
 
 
 ## 43、❓bind()、call()与apply()的作用与区别？
+### 43.1、作用
+`call`、`apply`、`bind`作用是**改变函数执行时的上下文**，简而言之就是**改变函数运行时的this指向**。
+那么什么情况下需要改变this的指向呢？下面举个例子
+```html
+<script>
+  var name = 'lucy' // 其实等价于window.name = 'lucy'
+  const obj = {
+    name: 'martin',
+    say: function () {
+      console.log(this.name)
+    }
+  }
+  obj.say() // martin，this指向obj对象
+  setTimeout(obj.say, 1000) // lucy，this指向window对象
+</script>
+```
++ 正常情况`say`方法输出`martin`;
++ 把`say`放在`setTimeout`方法中，在定时器中是作为回调函数来执行的，因此回到主栈执行时是在全局执行上下文的环境中执行的，这时候`this`指向`window`，所以输出`luck`;
+
+但是我们实际需要的是`this`指向`obj`对象，输出`martin`，这时候就需要该改变`this`指向了
+```js
+setTimeout(obj.say.bind(obj), 0) //martin，this指向obj对象
+```
+
+### 43.2、区别
+#### apply
+`apply`接受两个参数，第一个参数是`this`的指向，第二个参数是函数接受的参数，改变`this`指向后**原函数会立即执行**，且此方法只是临时改变`this`指向一次
+```js
+// 定义
+fn.apply('this指向', [参数一, 参数二, 参数三, ... , 参数n])
+```
+**返回值**：使用调用者提供的`this`值和参数调用该函数的返回值。若该方法没有返回值，则返回`undefined`(**简单来说就是调用者那个方法`fn`的返回值，如果没有返回值就返回`undefined`**)。
+例子：
+```js
+function fn (...args) {
+  console.log('this:', this)
+  console.log('args:', args)
+  return { name: '小黑', age: 12 }
+}
+const obj = {
+  name: '张三'
+}
+const res = fn.apply(obj, ['小三', 24]) // this指向传入的obj 
+console.log(res) // { name: '小黑', age: 12 }
+// this: { name: '张三' }
+// args: [ '小三', 24 ]
+fn('小三', 24) // this指向window
+```
+当第一个参数为`null`、`undefined`的时候，默认指向`window`(在浏览器中)
+```html
+<script>
+  function fn (...args) {
+    console.log('this:', this)
+    console.log('args:', args)
+  }
+  fn.apply(null, ['小三', 24]) // this指向window
+  fn.apply(undefined, ['小三', 24]) // this指向window
+</script>
+```
+**使用场景**：在面向对象继承特点时会使用到，使子函数继承父函数的私有属性和方法（但原型对象的属性和方法不继承）
+```js
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+  this.gender = 'male'
+}
+Animal.prototype.type = '狗类'
+
+function Dog (name, age, color) {
+  Animal.apply(this, [name, age]) // 这个来继承父类: 继承父函数的私有属性和方法, 但原型对象的属性和方法不继承
+  this.color = color
+}
+const dog = new Dog('小灰', 3 , 'black')
+console.log(dog) // Dog { name: '小灰', age: 3, gender: 'male', color: 'black' }
+```
+
+#### call
+`call`方法的第一个参数也是`this`的指向，后面传入的是一个参数列表，改变`this`指向后**原函数会立即执行**，且此方法只是临时改变`this`指向一次
+```js
+// 定义
+fn.call('this指向', 参数一, 参数二, 参数三, ... , 参数n)
+```
+**返回值**：使用调用者提供的`this`值和参数调用该函数的返回值。若该方法没有返回值，则返回`undefined`(**简单来说就是调用者那个方法`fn`的返回值，如果没有返回值就返回`undefined`**)。
+例子：
+```js
+function fn (...args) {
+  console.log('this:', this)
+  console.log('args:', args)
+  return { name: '小黑', age: 12 }
+}
+const obj = {
+  name: '张三'
+}
+const res = fn.call(obj, '小三', 24) // this指向传入的obj 
+console.log(res) // { name: '小黑', age: 12 }
+// this: { name: '张三' }
+// args: [ '小三', 24 ]
+fn('小三', 24) // this指向window
+```
+当第一个参数为`null`、`undefined`的时候，默认指向`window`(在浏览器中)
+```html
+<script>
+  function fn (...args) {
+    console.log('this:', this)
+    console.log('args:', args)
+  }
+  fn.call(undefined, '小三', 24) // this指向window
+  fn.call(null, '小三', 24) // this指向window
+</script>
+```
+**使用场景**：在面向对象继承特点时会使用到，使子函数继承父函数的私有属性和方法（但原型对象的属性和方法不继承）
+```js
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+  this.gender = 'male'
+}
+Animal.prototype.type = '狗类'
+
+function Dog (name, age, color) {
+  Animal.call(this, name, age)
+  this.color = color
+}
+const dog = new Dog('小灰', 3 , 'black')
+console.log(dog) // Dog { name: '小灰', age: 3, color: 'black' }
+```
+
+#### bind
+`bind`方法和`call`很相似，第一参数也是`this`的指向，后面传入的也是一个参数列表(但是这个参数列表可以分多次传入)，改变`this`指向后不会立即执行，而是返回一个**永久改变`this`指向**的函数。
+```js
+// 定义
+const newFn = fn.bind('this指向', 参数一, 参数二, 参数三, ... , 参数n)
+```
+**返回值**：返回一个原函数的拷贝，并拥有指定的 this 值和初始参数(**绑定函数(bound function简称BF)**)，调用**绑定函数**通常会导致执行**包装函数**。
+**绑定函数的返回值**：**调用者方法`fn`的返回值，如果没有返回值就返回`undefined`**。
+例子：
+```js
+function fn (...args) {
+  console.log('this:', this)
+  console.log('args:', args)
+  return { name: '小黑', age: 12 }
+}
+const obj = {
+  name: '张三'
+}
+const newFn = fn.bind(obj, '小三')
+const res = newFn(24, 'red') // this指向传入的obj，args: ["小三", 24, "red"]
+console.log(res) // { name: '小黑', age: 12 }
+fn('小三', 24) // this指向window
+```
+当第一个参数为`null`、`undefined`的时候，默认指向`window`(在浏览器中)
+```html
+<script>
+function fn (...args) {
+  console.log('this:', this)
+  console.log('args:', args)
+}
+fn.bind(null, '小三', 24, 'red')() // this指向window
+fn.bind(undefined, '小三', 24, 'red')() // this指向window
+</script>
+```
+**使用场景**：在面向对象继承特点时会使用到，使子函数继承父函数的私有属性和方法（但原型对象的属性和方法不继承）
+```js
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+  this.gender = 'male'
+}
+Animal.prototype.type = '狗类'
+
+function Dog (name, age, color) {
+  Animal.bind(this, name, age)()
+  this.color = color
+}
+const dog = new Dog('小灰', 3 , 'black')
+console.log(dog) // Dog { name: '小灰', age: 3, color: 'black' }
+```
+**注意**：绑定函数(`bind`函数返回的新函数)不可以再通过`apply`和`call`改变其`this`指向，即当绑定函数调用`apply`和`call`改变其`this`指向时，并不能达到预期效果。
+```js
+var obj = {}
+function test() {
+    console.log(this === obj)
+}
+var testObj = test.bind(obj)
+testObj()  //true
+
+var objTest = {
+    "作者": "chengbo"
+}
+/**
+ * 预期返回false, 但是testObj是个绑定函数，所以不能改变其this指向
+ */
+testObj.apply(objTest) //true
+testObj.call(objTest) //true
+```
+
+#### 总结
+从上面可以看到，`apply`、`call`、`bind`三者的区别在于：
++ 三者都可以改变函数的`this`对象指向;
++ 三者第一个参数都是`this`要指向的对象，如果如果没有这个参数或参数为`undefined`或`null`，则默认指向全局`window`;
++ 三者都可以传参，但是`apply`是数组，而`call`是参数列表，且`apply`和`call`是一次性传入参数，而`bind`可以分为多次传入;
++ `bind`是返回绑定`this`之后的函数，`apply`、`call`则是立即执行;
+
+### 43.3、手写实现`bind`、`call`、`apply`
+参考：https://mp.weixin.qq.com/s/gpZmJ2ZljlW83Pb-TCnm3A
+实现的步骤，我们可以分解成为三部分：
++ 修改`this`指向
++ 动态传递参数
++ 兼容`new`关键字
+
+#### bind
+```js
+Function.prototype.myBind = function() {
+    var _this = this;
+    var context = [].shift.call(arguments);// 保存需要绑定的this上下文
+    var args = [].slice.call(arguments); //剩下参数转为数组
+    console.log(_this, context, args);
+    return function() {
+        return _this.apply(context, [].concat.call(args, [].slice.call(arguments)));
+    }
+}
+
+// 或者
+Function.prototype.myBind = function (context) {
+  // 判断调用对象是否为函数
+  if (typeof this !== "function") {
+    throw new TypeError("Error")
+  }
+  // 获取参数
+  const args = [...arguments].slice(1), fn = this
+
+  return function Fn() {
+    // 根据调用方式，传入不同绑定值
+    return fn.apply(this instanceof Fn ? new fn(...arguments) : context, args.concat(...arguments))
+  }
+}
+```
+
+#### call
+```js
+/**
+ * 每个函数都可以调用call方法，来改变当前这个函数执行的this关键字，并且支持传入参数
+ */
+Function.prototype.myCall = function(context) {
+    //第一个参数为调用call方法的函数中的this指向
+    var context = context || global;
+    //将this赋给context的fn属性
+    context.fn = this;//此处this是指调用myCall的function
+
+    var arr = [];
+    for (var i=0,len=arguments.length;i<len;i++) {
+        arr.push("arguments[" + i + "]");
+    }
+    //执行这个函数，并返回结果
+    var result = eval("context.fn(" + arr.toString() + ")");
+    //将this指向销毁
+    delete context.fn;
+    return result;
+}
+```
+
+#### apply
+```js
+/**
+ * apply函数传入的是this指向和参数数组
+ */
+Function.prototype.myApply = function(context, arr) {
+    var context = context || global;
+    context.fn = this;
+    var result;
+    if (!arr) {
+        result = context.fn(); //直接执行
+    } else {
+        var args = [];
+        for (var i=0,len=arr.length;i<len;i++) {
+            args.push("arr[" + i + "]");
+        }
+        result = eval("context.fn([" + args.toString() + "])");
+    }
+    //将this指向销毁
+    delete context.fn;
+    return result;
+}
+```
+
+
 
 
 ## 44、❓sort 排序原理
@@ -4173,7 +4971,119 @@ document.addEventListener('WeixinJSBridgeReady', function onBridgeReady() {
 
 
 ## 242、prototype、__proto__与constructor的关系
-区分：
+**`__proto__`被称为隐式原型，`prototype`被称为显式原型。**<br>
+### 牢记两点
+-  ①`__proto__`和`constructor`属性是对象所独有的，`prototype`属性是函数所独有的，万物皆对象，方法/函数`Function`是对象(`Function instanceof Object ==> true`)，方法的原型`Function.prototype`是对象(`Function.prototype instanceof Object ==> true`)，因此，它们都会具有对象共有的特点。所以函数也拥有`__proto__`和`constructor`属性;
+-  ②`__proto__`指向创建这个对象的函数的显式原型，构造函数除了是函数也是对象，所以它也有`__proto__`属性，它指向它的构造函数的原型对象(函数的构造函数是`Function`)，所以此时的`__proto__`指向`Function.prototype`。`prototype`指向该方法的原型对象，在原型对象上有所有实例**共享的一些属性和方法**，原型对象上有一个属性 constructor 指向其构造函数；
+```js
+// _proto__指向
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+}
+const animal = new Animal('小灰', 2)
+console.log(animal.__proto__ === Animal.prototype) // true
+console.log(Animal.__proto__ === Function.prototype) // true
+
+// prototype指向
+// ES5：需要先定义构造函数，然后通过prototype的方式来添加方法
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+}
+console.log(Animal.prototype) // {}
+Animal.prototype.x = '123'
+Animal.prototype.getX = function () {
+  return this.x
+}
+console.log(Animal.prototype) // { x: '123', getX: [Function (anonymous)] }
+
+const animal = new Animal('小三', 4)
+console.log(animal.getX()) // 123
+
+// ES6：方法直接定义在class里面即可
+class Dog {
+  type = '小狗'
+  constructor (name, age) {
+    this.name = name
+    this.age = age
+  }
+  getX () { // 直接定义在这里就行
+    return '234'
+  }
+}
+console.log(Dog.prototype) // {}，输出能看到是一个空对象，但是实际上，上面有方法，下面一行代码能够表示
+console.log(Dog.prototype.getX()) // 234
+const dog = new Dog('小灰', 5)
+console.log(dog.type) // 小狗
+```
+
+### `__proto__`隐式原型
+JavaScript中任意对象都有一个内置属性`[[prototype]]`，在ES5之前没有标准的方法访问这个内置属性，但是大多数浏览器都支持通过`__proto__`来访问。ES5中有了对于这个内置属性标准的Get方法`Object.getPrototypeOf()`。**一个对象的隐式原型指向构造该对象的构造函数的原型(一个对象的隐式原型指向创建这个对象的函数的显式原型)**，这也保证了实例能够访问在构造函数原型中定义的属性和方法。
+作用：构成原型链，同样用于实现基于原型的继承。例子：当我们访问obj这个对象中的x属性时，如果在obj中找不到，那么就会沿着`__proto__`依次查找，直到最顶层，如果最顶层还未查找到则返回`undefined`
+```js
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+}
+const animal = new Animal('小三', 4)
+console.log(animal.x) //undefined
+Object.prototype.x = '123'
+console.log(animal.x) // 123
+```
+> `Object.prototype`这个对象是个例外，它的`__proto__`值为`null`
+```js
+// ES5
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+}
+const animal = new Animal('小灰', 2)
+console.log(animal.__proto__ === Animal.prototype) // true
+
+// ES6
+class Dog {
+  constructor (name, age) {
+    this.name = name
+    this.age = age
+  }
+}
+const dog = new Dog('小强', 3)
+console.log(dog.__proto__ === Dog.prototype) // true
+```
+
+### `prototype`显式原型
+每一个函数在创建之后都会拥有一个名为`prototype`的属性，这个属性指向函数的原型对象。
+作用：用来实现基于原型的继承与属性的共享。
+> 通过`Function.prototype.bind`方法构造出来的函数是个例外，它没有`prototype`属性。
+```js
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+}
+console.log(Animal.prototype) // {}
+Animal.prototype.x = '123'
+Animal.prototype.getX = function () {
+  return this.x
+}
+console.log(Animal.prototype) // { x: '123', getX: [Function (anonymous)] }
+
+const animal = new Animal('小三', 4)
+console.log(animal.getX()) // 123
+```
+
+**`__proto__`隐式原型和`prototype`显式原型两者的关系**
+> 隐式原型指向创建这个对象的函数(`constructor`)的`prototype`
+```js
+function Animal (name, age) {
+  this.name = name
+  this.age = age
+}
+const animal = new Animal('小灰', 2)
+console.log(animal.__proto__ === Animal.prototype) // true
+```
+
+### 总结
 - ① `__proto__` 和 `constructor`属性是**对象**所独有的；
 - ② `prototype`属性是函数所独有的，因为函数也是一种对象，所以函数也拥有`__proto__`和`constructor`属性。
 
@@ -4182,7 +5092,9 @@ document.addEventListener('WeixinJSBridgeReady', function onBridgeReady() {
 - `constructor`属性的含义就是指向该对象的构造函数，所有函数（此时看成对象了）最终的构造函数都指向`Function`。
 
 
+
 ## 243、❓setTimeout和setImmediate以及process.nextTick的区别
+https://www.cnblogs.com/cdwp8/p/4065846.html
 
 
 ## 244、JS运行机制（Event Loop）

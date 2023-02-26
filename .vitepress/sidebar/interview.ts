@@ -4,6 +4,10 @@ const arr = [
     link: "/interview/guide",
   },
   {
+    text: "面试经历",
+    link: "/interview/process",
+  },
+  {
     text: "HTML/CSS",
     items: [
       {

@@ -37,8 +37,8 @@ vue用来写路由的一个插件。router-link、router-view
 
 
 ## 6、$route 和 $router 的区别
-- `$route`为当前router跳转对象，里面可以获取name、path、query、params等
-- `$router`为VueRouter实例，想要导航到不同URL，则使用`$router.push`方法
+- `$router`为VueRouter的实例，是一个全局路由对象，包含了路由跳转的方法`$router.push`、钩子函数等。
+- `$route`是路由信息对象||跳转的路由对象，每一个路由都会有一个route对象，是一个局部对象，包含path,params,hash,query,fullPath,matched,name等路由信息参数。
 
 
 
@@ -128,3 +128,52 @@ const router = new VueRouter({
   ]
 })
 ```
+
+
+## 28、能说下 vue-router 中常用的 hash 和 history 路由模式实现原理吗？
+### hash 模式的实现原理
+早期的前端路由的实现就是基于`location.hash`来实现的。其实现原理很简单，`location.hash`的值就是`URL`中`#`后面的内容。比如下面这个网站，它的`location.hash`的值为`#search`：
+```
+https://www.word.com#search
+```
+hash 路由模式的实现主要是基于下面几个特性：
++ URL 中 hash 值只是客户端的一种状态，也就是说当向服务器端发出请求时，hash 部分不会被发送；
++ hash 值的改变，都会在浏览器的访问历史中增加一个记录。因此我们能通过浏览器的回退、前进按钮控制hash 的切换；
++ 可以通过 a 标签，并设置 href 属性，当用户点击这个标签后，URL 的 hash 值会发生改变；或者使用 JavaScript 来对 loaction.hash 进行赋值，改变 URL 的 hash 值；
++ 我们可以使用 hashchange 事件来监听 hash 值的变化，从而对页面进行跳转（渲染）;
+
+### history 模式的实现原理
+HTML5 提供了 History API 来实现 URL 的变化。其中做最主要的 API 有以下两个：`history.pushState()`和`history.repalceState()`。这两个API可以在不进行刷新的情况下，操作浏览器的历史纪录。唯一不同的是，前者是新增一个历史记录，后者是直接替换当前的历史记录，如下所示：
+```js
+window.history.pushState(null, null, path);
+window.history.replaceState(null, null, path);
+```
+history 路由模式的实现主要基于存在下面几个特性：
++ `pushState`和`repalceState`两个API来操作实现URL的变化 ；
++ 我们可以使用 popstate 事件来监听url的变化，从而对页面进行跳转（渲染）；
++ `history.pushState()`或`history.replaceState()`不会触发`popstate`事件，这时我们需要手动触发页面跳转（渲染）;
+
+
+## 29、vue-router 路由模式有几种？
+vue-router有3种路由模式：`hash`、`history`、`abstract`，对应的源码如下所示：
+```js
+switch (mode) {
+  case 'history':
+ this.history = new HTML5History(this, options.base)
+ break
+  case 'hash':
+ this.history = new HashHistory(this, options.base, this.fallback)
+ break
+  case 'abstract':
+ this.history = new AbstractHistory(this, options.base)
+ break
+  default:
+ if (process.env.NODE_ENV !== 'production') {
+   assert(false, `invalid mode: ${mode}`)
+ }
+}
+```
+其中，3 种路由模式的说明如下：
++ **hash**: 使用 URL hash 值来作路由。支持所有浏览器，包括不支持 HTML5 History Api 的浏览器；
++ **history**: 依赖 HTML5 History API 和服务器配置。具体可以查看 HTML5 History 模式；
++ **abstract**: 支持所有 JavaScript 运行环境，如 Node.js 服务器端。如果发现没有浏览器的 API，路由会自动强制进入这个模式;

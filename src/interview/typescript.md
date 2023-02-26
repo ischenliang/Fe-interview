@@ -61,6 +61,8 @@ Typescript由 Anders Hejlsberg 开发，他也是 C# 语言开发团队的核心
 
 
 ## 5、TypeScript 中的接口是什么？
+> 接口是一系列抽象方法的声明，是一些方法特征的集合。，这些方法都应该是抽象的，需要由具体的「类」去实现，然后第三方就可以通过这组抽象方法调用，让具体的类执行具体的方法。**简单来讲，一个接口所描述的是一个对象相关的属性和方法，但并不提供具体创建此对象实例的方法。**
+
 接口是在应用程序中充当合约的结构。它定义了类要遵循的语法，这意味着实现接口的类必须实现其所有成员。它不能被实例化，但可以被实现它的类对象引用。TypeScript 编译器使用接口进行类型检查(也称为“鸭子类型”或“结构子类型”)，无论对象是否具有特定结构。
 ```ts
 interface IEmployee {
@@ -74,13 +76,32 @@ interface IEmployee {
 
 
 ## 6、TypeScript 中的模块是什么？
-T模块是创建一组相关变量、函数、类和接口等的强大方法。它可以在自己的范围内执行，而不是在全局范围内执行。换句话说，模块中声明的变量、函数、类和接口不能在模块外部直接访问。
+模块是创建一组相关变量、函数、类和接口等的强大方法。它可以在自己的范围内执行，而不是在全局范围内执行。换句话说，模块中声明的变量、函数、类和接口不能在模块外部直接访问。
 ```ts
 module module_name {
   class xyz {
     export sum(x, y){
       return x+y;
     }
+  }
+}
+```
+```ts
+// 02.ts
+namespace Drawing { 
+  export interface IShape { 
+    draw(): void
+  }
+  export class Animal {}
+}
+// 01.ts
+/// <reference path = "02.ts" />
+Drawing.Animal
+namespace Drawing {
+  export class Circle implements IShape { 
+    public draw() { 
+      console.log("Circle is drawn"); 
+    }  
   }
 }
 ```
@@ -258,6 +279,8 @@ TypeScript Map 文件是一个源映射文件，其中包含有关原始文件�
 
 
 ## 17、TypeScript 中的类是什么？你如何定义它们？
+> 类描述了所创建的对象共同的属性和方法。**可以认为是为描述某种抽象而自定义的一种类型。该类型通常会包含三种成员，即：用以生产类实例构造函数，用于描述特征的属性，以及用于完成某种行为的方法。**
+
 我们知道，TypeScript 是一种面向对象的 JavaScript 语言，支持类、接口等 OOP 编程特性。与 Java 一样，类是用于创建可重用组件的基本实体。它是一组具有共同属性的对象。类是用于创建对象的模板或蓝图。它是一个逻辑实体。class关键字用于在 Typescript 中声明一个类。
 ```ts
 class Student {    
@@ -820,12 +843,21 @@ $(document).ready(function() { //Your jQuery code });
 
 ## 57、TypeScript声明(declare)关键字是什么？
 知道所有 JavaScript 库/框架都没有 TypeScript 声明文件，但希望在 TypeScript 文件中使用它们而不会出现任何编译错误。为此，使用 declare 关键字。declare 关键字用于环境声明和想要定义可能存在于别处的变量的方法。
-
-例如，假设有一个名为 `myLibrary` 的库，它没有 TypeScript 声明文件，并且在全局命名空间中有一个名为 `myLibrary` 的命名空间。如果想在 TypeScript 代码中使用该库，可以使用以下代码：
+`z
+在TypeScript中，我们并不知道`$`或`jQuery`是什么东西：
 ```ts
-declare var myLibrary;
+jQuery('#foo'); // index.ts(1,1): error TS2304: Cannot find name 'jQuery'.
 ```
-TypeScript 运行时会将 `myLibrary` 变量分配为任何类型。这是一个问题，不会在设计时获得 `Intellisense`，但将能够在代码中使用该库。
+这时，我们需要使用`declare`关键字来定义它的类型，帮助TypeScript判断我们传入的参数类型对不对：
+```ts
+declare var jQuery: (selector: string) => any;
+jQuery('#foo')
+```
+**`declare`定义的类型只会用于编译时的检查，编译结果中会被删除。**
+上例的编译结果是：
+```ts
+jQuery('#foo');
+```
 
 
 ## 58、如何从任何 .ts 文件生成 TypeScript 定义文件？
@@ -1085,3 +1117,208 @@ declare global {
 
 ## 84、复杂的类型推导题目
 参考：https://segmentfault.com/a/1190000040403067?sort=votes
+
+
+## 85、.d.ts和.ts文件的区别
+`TypeScript`是`JavaScript`类型的超集，它的扩展名是`.ts`，`TypeScript`可以将大量变量的类型声明统一提取到单独的文件，此类文件被称为**类型定义文件/描述文件**，它的文件扩展名是`.d.ts`，它可以被`TypeScript`解释器读取，并且能直观地表示出各种变量的使用方式。
+`npm`仓库里有一个`@types`组织，专门用来存放库的声明文件，引用时只需要安装`npm install --save-dev @types/库名`即可，比如在使用`jquery`的时候，最好同时安装`npm install @types/jquery`来实现代码的智能提示。
+
+### 用法
+注意这种方式是在`es6` + `ts`下使用
+```ts
+// types.d.ts
+export type TitleInfo = {
+  value: string
+  color: string
+}
+export type ContentInfo = {
+  value: string
+  color: string
+}
+export type Todo = {
+  id: number
+  name: string
+  completed: boolean
+}
+```
+```ts
+// index.ts
+import type { Todo } from './types'
+const todo: Todo = {
+  id: 1,
+  name: 'vue3学习',
+  completed: false
+}
+```
+效果如下：
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902160122.png)
+
+### 如何定义自己的类型定义文件
+#### 全局类型
+**变量**
+```js
+declare var aaa: number
+declare const max:200
+declare var aaa: number|string //注意这里用的是一个竖线表示"或"的意思
+```
+其中关键字`declare`表示声明的意思。全局变量是aaa,类型是数字类型（number）
+
+**函数**
+由上面的全局变量的写法我们很自然的推断出一个全局函数的写法如下：
+```js
+/** id是用户的id，可以是number或者string */
+decalre function getName(id:number|string):string
+```
+最后的那个`string`表示的是函数的返回值的类型。如果函数没有返回值可以用`void`表示。
+在js中调用就会有如下的提示（上面写的注释，写js的时候还可以提示）：
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902153750.png)
+
+有时候同一个函数有若干种写法：
+```js
+get(1234)
+get("zhangsan",18)
+```
+对应的`d.ts`文件的写法：
+```js
+declare function get(id: string | number): string
+declare function get(name:string,age:number): string
+```
+如果有些参数可有可无，可以加个`?`表示非必须。
+```js
+declare function render(callback?:() => void): string
+```
+在调用时不传都可以：
+```js
+render()
+render(function () {
+ alert('finish.')
+})
+```
+
+**class**
+除了变量和函数外，我们还有类（class）
+```js
+declare class Person {
+ static maxAge: number //静态变量
+ static getMaxAge(): number //静态方法
+ constructor(name: string, age: number) //构造函数
+ getName(id: number): string 
+}
+```
+
+**对象**
+```js
+declare namespace OOO{
+ var aaa: number | string
+ function getName(id: number | string): string
+ class Person {
+   static maxAge: number //静态变量
+   static getMaxAge(): number //静态方法
+   constructor(name: string, age: number) //构造函数
+   getName(id: number): string //实例方法
+ }
+}
+```
+其实就是把上面的那些写法放到这个`namespace`包起来的大括号里面，注意括号里面就不需要`declare`关键字了。
+对象里面套对象也是可以的：
+```js
+declare namespace OOO{
+ var aaa: number | string
+ // ...
+ namespace O2{
+ let b:number
+ }
+}
+```
+
+**混合类型**
+有时候有些值既是`函数`又是`class`又是`对象`的复杂对象。比如我们常用的jquery有各种用法：
+```js
+new $()
+$.ajax()
+$()
+```
+既是函数又是对象
+```js
+declare function $2(s:string): void
+declare namespace $2{
+ let aaa:number
+}
+```
+既是函数，又是类（可以new出来）
+```js
+// 实例方法 
+interface People{
+ name: string
+ age: number
+ getName(): string
+ getAge():number
+}
+interface People_Static{
+ new (name: string, age: number): People
+ /** 静态方法 */
+ staticA():number
+ 
+ (w:number):number
+}
+declare var People:People_Static
+```
+
+#### 模块化
+除了上面的全局的方式，我们有时候还是通过`require`的方式引入模块化的代码。
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902154838.png)
+对应的`d.ts`写法是这样的：
+```js
+declare module 'jquery' {
+  export let a: number
+  export function b(): number
+  export namespace c{
+    let cd: string
+  }
+}
+```
+
+有时候我们导出去的是一个函数本身，比如这样的：
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902155047.png)
+对应的`d.ts`写法是这样的：
+```js
+declare module 'jquery' {
+  function aaa(some:number):number
+  export = aaa
+}
+```
+导出一个变量或常量的话这么写：
+```js
+declare module "ccc" {
+ const c:400
+ export=c
+}
+```
+
+#### UMD
+有一种代码，既可以通过全局变量访问到，也可以通过`require`的方式访问到。比如我们最常见的`jquery`：
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902155219.png)
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902155220.png)
+其实就是按照全局的方式写`d.ts`，写完后在最后加上declare namespace "xxx"的描述：
+```js
+declare namespace UUU{
+ let a:number
+}
+ 
+declare module "UUU" {
+ export = UUU
+}
+```
+效果这样：
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902155400.png)
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902155401.png)
+
+#### 其他
+有时候我们扩展了一些内置对象。比如我们给`Date`增加了一个`format`的实例方法：
+![](https://gitee.com/itchenliang/img/raw/master/img/20210902155501.png)
+对应的`d.ts`写法是这样的：
+```js
+interface Date {
+  format(f: string): string
+}
+```

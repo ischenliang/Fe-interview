@@ -243,3 +243,36 @@ $("ul").delegate("li", "click", function(){ $(this).hide(); });
 - 2、参数传递方式不同：get请求会将参数跟在URL后进行传递，而POST请求则是作为HTTP消息的实体内容发送给Web服务器的，这种传递是对用户不可见的。
 - 3、数据传输大小不同：get方式传输的数据大小不能超过2KB 而POST要大的多
 - 4、安全问题： GET 方式请求的数据会被浏览器缓存起来，因此有安全问题。
+
+
+## 33、jQuery获取的dom对象和原生的dom对象有何区别？
+js原生获取的dom是一个对象，jQuery对象就是一个数组对象，其实就是选择出来的元素的数组集合，所以说他们两者是不同的对象类型不等价。
+原生DOM对象转jQuery对象：
+```js
+var box = document.getElementById('box');
+var $box = $(box);
+```
+jQuery对象转原生DOM对象：
+```js
+var $box = $('#box');
+var box = $box[0];
+```
+
+
+## 34、jQuery如何扩展自定义方法
+```js
+// 方式一
+(jQuery.fn.myMethod=function () {
+     alert('myMethod');
+})
+// 方式二：
+(function ($) {
+    $.fn.extend({
+         myMethod : function () {
+              alert('myMethod');
+         }
+    })
+})(jQuery)
+// 使用
+$("#div").myMethod();
+```
