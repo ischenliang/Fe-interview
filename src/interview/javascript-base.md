@@ -127,13 +127,13 @@ Object.prototype.toString.call('123') === '[object String]' // true
   - `querySelectorAll(CSS selectors)`：匹配指定 CSS 选择器的所有元素，返回 NodeList 对象
 
 
-## 7、❓事件委托是什么？
+## 7、事件委托是什么？
 利用事件冒泡的原理，让自己的所触发的事件，让他的父元素代替执行！
-1. 那什么样的事件可以用事件委托，什么样的事件不可以用呢？
+- 那什么样的事件可以用事件委托，什么样的事件不可以用呢？
   - 适合用事件委托的事件：`click`，`mousedown`，`mouseup`，`keydown`，`keyup`，`keypress`。
   - 值得注意的是，`mouseover` 和 `mouseout` 虽然也有事件冒泡，但是处理它们的时候需要特别的注意，因为需要经常计算它们的位置，处理起来不太容易。
   - 不适合的就有很多了，举个例子，`mousemove`，每次都要计算它的位置，非常不好把控，在不如说 `focus`，`blur` 之类的，本身就没用冒泡的特性，自然就不用事件委托了。
-2. 为什么要用事件委托
+- 为什么要用事件委托
   - 提高性能
     ```html
     <ul>
@@ -141,7 +141,7 @@ Object.prototype.toString.call('123') === '[object String]' // true
       <li>香蕉</li>
       <li>凤梨</li>
     </ul>
-
+    <script>
     // good
     document.querySelector('ul').onclick = (event) => {
       let target = event.target
@@ -149,19 +149,19 @@ Object.prototype.toString.call('123') === '[object String]' // true
         console.log(target.innerHTML)
       }
     }
-
     // bad
     document.querySelectorAll('li').forEach((e) => {
       e.onclick = function() {
         console.log(this.innerHTML)
       }
     })
+    </script>
     ```
   - 新添加的元素还会有之前的事件
-3. 事件冒泡与事件委托的对比
+- 事件冒泡与事件委托的对比
   - 事件冒泡：box 内部无论是什么元素，点击后都会触发 box 的点击事件
   - 事件委托：可以对 box 内部的元素进行筛选
-4. 事件委托怎么取索引？
+- 事件委托怎么取索引？
   ```html
   <ul id="ul">
     <li> aaaaaaaa </li>
@@ -694,9 +694,11 @@ CDN边缘节点缓存机制，一般都遵守http标准协议，通过http响应
 服务器缓存有助于优化性能和节省宽带，它将需要频繁访问的Web页面和对象保存在离用户更近的系统中，当再次访问这些对象的时候加快了速度。
 
 
-## 15、列举 3 种强制类型转换和 2 种隐式类型转换
-强制: parseInt(), parseFloat(), Number(), Boolean(), String()<br>
-隐式: +, -
+## 15、❓列举 3 种强制类型转换和 2 种隐式类型转换
+> http://c.biancheng.net/view/9378.html
+
+强制: `parseInt()`, `parseFloat()`, `Number()`, `Boolean()`, `String()`<br>
+隐式: `+`, `-`
 ```js
 // 1.parseInt() 把值转换成整数
 parseInt("1234blue"); // 1234
@@ -950,9 +952,28 @@ test(); // Hi! xiaoming
 
 
 ## 17、如何判断 NaN
+**方式一：`isNaN(NaN)`方法**
 ```js
 isNaN(NaN) // true
+
+let a = 1
+let b = NaN
+console.log('数字a:', typeof a, isNaN(a)) // 数字a: number false
+console.log('数字b:', typeof(b), isNaN(b)) // 数字b: number true
 ```
+使用`isNaN()`函数只能判断变量是否非数字，而无法判断变量值是否为`NaN`，于是可以使用方式二。
+
+**方式二：`NaN`的非自反特性**<br>
+应用`NaN`的性质(非自反: `NaN`与谁都不相等，包括它本身):
+```js
+NaN === NaN // false，永远返回false
+
+let a = NaN
+a === a // false
+a !== a // true
+```
+所以想要判断变量值是否为`NaN`，就能使用`===`判断变量是否为`NaN`。只需判断**变量是否与自身相等，若不等的情况，该变量的值即为`NaN`**。
+
 
 
 ## 18、new 一个对象的过程中发生了什么
@@ -980,34 +1001,61 @@ if (typeof(result) == "object") {
 ```
 
 
-## 19、for in 和 for of的区别
-### for ... in
-1. 一般用于遍历对象的可枚举属性。以及对象从构造函数原型中继承的属性。对于每个不同的属性，语句都会被执行。
-2. 不建议使用 for in 遍历数组，因为输出的顺序是不固定的。
-3. 如果迭代的对象的变量值是 null 或者 undefined, for in 不执行循环体，建议在使用 for in 循环之前，先检查该对象的值是不是 null 或者 undefined。
-
-### for ... of
-1. for…of 语句在可迭代对象（包括 Array，Map，Set，String，TypedArray，arguments 对象等等）上创建一个迭代循环，调用自定义迭代钩子，并为每个不同属性的值执行语句。
-
+## 19、for in、for of、for 和 forEach 的区别
+- 1、`for ... in` 和`for ... of`都可以循环数组
+  - `for ... in`输出的是数组的`index`下标
+  - `for ... of`输出的是数组的每一项的值
 ```js
-var s = {
+const arr = [1,2,3,4]
+
+// for ... in
+for (const key in arr) {
+  console.log(key) // 输出 0,1,2,3
+}
+// for ... of
+for (const key of arr) {
+  console.log(key) // 输出 1,2,3,4
+}
+```
+- 2、`for ... in`可以遍历对象，`for ... of`不能遍历对象，只能遍历带有`iterator`接口的，例如`Set,Map,String,Array`
+```js
+const obj = {
   a: 1,
   b: 2,
   c: 3
-};
-var s1 = Object.create(s);
-for (var prop in s1) {
-  console.log(prop); //a b c
-  console.log(s1[prop]); //1 2 3
 }
-for (let prop of s1) {
-  console.log(prop); //报错如下 Uncaught TypeError: s1 is not iterable
+for (let i in obj) {
+  console.log(i)    //输出 ： a   b  c
 }
-for (let prop of Object.keys(s1)) {
-  console.log(prop); // a b c
-  console.log(s1[prop]); //1 2 3
+for (let i of obj) {
+  console.log(i)    //输出： Uncaught TypeError: obj is not iterable 报错了
 }
 ```
+- 3、`forEach`对数组的每一个元素执行一次提供的函数（**不能使用`return`、`break`等中断循环**），不改变原数组，无返回值。
+  ```js
+  let arr = ['a', 'b', 'c', 'd']
+  arr.forEach(function (val, idx, arr) {
+    console.log(val + ', index = ' + idx) // val是当前元素，index当前元素索引，arr数组
+    console.log(arr)
+  })
+  // 输出结果
+  // a, index = 0
+  // (4) ["a", "b", "c", "d"]
+  // b, index = 1
+  // (4) ["a", "b", "c", "d"]
+  // c, index = 2
+  // (4) ["a", "b", "c", "d"]
+  // d, index = 3
+  // (4) ["a", "b", "c", "d"]
+  ```
+- 4、`for循环`除了上三种方法以外还有一种最原始的遍历，自Javascript诞生起就一直用的，就是`for循环`，它用来遍历数组。**for循环中可以使用`return`、`break`等来中断循环**
+  ```js
+  var arr = [1,2,3,4]
+  for(var i = 0 ; i< arr.length ; i++){
+    console.log(arr[i])
+  }
+  ```
+
 
 ## 20、如何判断 JS 变量的一个类型（至少三种方式）
 ### typeof
@@ -1093,9 +1141,9 @@ Array.isArray('1234')  // false
 
 
 ## 21、for ... in、Object.keys 和 Object.getOwnPropertyNames 对属性遍历有什么区别？
-- `for ... in`会遍历自身及原型链上的可枚举属性
-- `Object.keys`会将对象自身的可枚举属性的 key 输出
-- `Object.getOwnPropertyNames`会将自身所有的属性的 key 输出
+- `for ... in`会遍历**自身及原型链**上的**可枚举属性**
+- `Object.keys`会将对象**自身**的**可枚举属性**的 key 输出
+- `Object.getOwnPropertyNames`会将**自身所有属性**的 key 输出
 
 ECMAScript 将对象的属性分为两种：数据属性和访问器属性。
 ```js
@@ -1127,39 +1175,90 @@ var child = Object.create(parent, {
 
 ### for ... in
 ```js
+/**
+ * 对象使用
+ */
 for (var key in child) {
   console.log(key);
 }
 // b
 // a
+
+
+/**
+ * 数组使用
+ */
+let arr = [1, 2, 3];
+Array.prototype.xxx = 5;
+for (let i in arr) {
+  console.log(i, arr[i])
+}
+// 0 1
+// 1 2
+// 2 3
+// xxx 5
+
+
 // for in 会遍历自身及原型链上的可枚举属性
 ```
-如果只想输出自身的可枚举属性，可使用 hasOwnProperty 进行判断(数组与对象都可以，此处用数组做例子)
+如果只想输出**自身**的可枚举属性，可使用`hasOwnProperty`进行判断(数组与对象都可以)
 ```js
+/**
+ * 对象使用
+ */
+for (let key in child) {
+  if (child.hasOwnProperty(key)) {
+    console.log(key)
+  }
+}
+// b
+
+/**
+ * 数组使用
+ */
 let arr = [1, 2, 3];
 Array.prototype.xxx = 1231235;
 for (let i in arr) {
   if (arr.hasOwnProperty(i)) {
-    console.log(arr[i]);
+    console.log(i, arr[i]);
   }
 }
-// 1
-// 2
-// 3
+// 0 1
+// 1 2
+// 2 3
 ```
 
 ### Object.keys
 ```js
-console.log(Object.keys(child));
-// ["b"]
+/**
+ * 对象使用
+ */
+console.log(Object.keys(child)) // ["b"]
+
+/**
+ * 数组使用
+ */
+let arr = [1, 2, 3];
+Array.prototype.xxx = 5;
+console.log(Object.keys(arr)) // ['0', '1', '2']
+
 // Object.keys 会将对象自身的可枚举属性的key输出
 ```
 
 ### Object.getOwnPropertyNames
 ```js
-console.log(Object.getOwnPropertyNames(child));
-// ["b","c"]
-// 会将自身所有的属性的key输出
+/**
+ * 对象使用
+ */
+console.log(Object.getOwnPropertyNames(child)) // ["b", "c"]
+
+/**
+ * 数组使用
+ */
+let arr = [1, 2, 3];
+Array.prototype.xxx = 5;
+console.log(Object.getOwnPropertyNames(arr)) // ['0', '1', '2', 'length']
+// Object.getOwnPropertyNames 会将自身所有的属性的key输出
 ```
 
 
@@ -1222,20 +1321,38 @@ console.log(Object.getOwnPropertyNames(child));
 
 ## 23、❓H5 与 Native 如何交互
 jsBridge
+> https://zhuanlan.zhihu.com/p/438763800
 
 
-## 24、❓如何判断一个对象是否为数组
-- 使用 instanceof 操作符
+## 24、如何判断一个对象是否为数组
+- 1、使用`instanceof`操作符
   ```js
   [1, 2, 3] instanceof Array // true
   ```
-- 使用 ECMAScript 5 新增的 Array.isArray() 方法
+- 2、**判断构造函数**，使用`constructor`方法
+  ```js
+  let a = [1, 2]
+  a.constructor === Array // true
+  ```
+- 3、**判断原型**使用`Object.getPrototypeOf`，缺点：原型是可以人为修改的
+  ```js
+  let a = [1, 2]
+  Object.getPrototypeOf(a) === Array.prototype // true
+
+  Object.setPrototypeOf(a, Object.prototype);
+  Object.getPrototypeOf(a) === Array.prototype // false
+  ```
+- 4、使用 ECMAScript 5 新增的`Array.isArray()`方法
   ```js
   Array.isArray([1, 2, 3]) // true
   ```
-- 使用使用 Object.prototype 上的原生 toString()方法判断
+- 5、使用`Object.prototype`上的原生`toString()`方法判断
   ```js
   Object.prototype.toString.call([1, 2, 3]) // [object Array]
+  ```
+- 6、使用`Array.prototype`上的`isPrototypeOf()`方法来判断
+  ```js
+  Array.prototype.isPrototypeOf([1, 2, 3]) // true
   ```
 
 
@@ -1342,8 +1459,12 @@ console.log(234)
 有了 async 或 defer 属性，浏览器会立即下载相应的脚本 a.js 和 b.js，在下载过程中页面的处理不会停止，在 a.js 和 b.js 中有 defer 属性的会先被执行，即输出结果如下：`aaa bbb 123 123 234`
 
 
-## 26、什么是面向对象OOP？
-面向对象是把构成问题事务分解成各个对象，建立对象的目的不是为了完成一个步骤，而是为了描叙某个事物在整个解决问题的步骤中的行为。
+## 26、==什么是面向对象OOP？==
+面向对象（`Object-Oriented Programming`）是把构成问题事务分解成各个对象，建立对象的目的不是为了完成一个步骤，而是为了描叙某个事物在整个解决问题的步骤中的行为。<br>
+面向对象就是一种思想，任何事务都可以看作对象，所以才有了”万物皆对象“这一说，面向对象又称OOP(Object Oriented Programming) 分开来看就是：
+- Object：对象
+- Oriented： 面向的
+- Programming:程序设计
 
 **面向对象和面向过程的异同**
 - 面向过程就是分析出解决问题所需要的步骤，然后用函数把这些步骤一步一步实现，使用的时候一个一个依次调用就可以了。
@@ -2689,16 +2810,80 @@ JS中内置了17个对象，常用的是Array对象、Date对象、正则表达�
   - 同源策略带来的麻烦：ajax 在不同域名下的请求无法实现，需要进行跨域操作
 
 
-## 63、❓事件冒泡与事件捕获
-- 事件冒泡：由最具体的元素（目标元素）向外传播到最不具体的元素
-- 事件捕获：由最不确定的元素到目标元素
+## 63、事件捕获、事件冒泡、事件委托
+DOM事件流（event  flow ）存在三个阶段：**事件捕获阶段**、**处于目标阶段**、**事件冒泡阶段**。
+- 事件捕获: window将事件派发到目标的这一过程
+- 目标阶段: 事件派发到目标元素的阶段，如果事件被处理成不进行冒泡，那么后续的冒泡将终止
+- 冒泡阶段: 从目标元素开始，逐层向上传递事件，直到document
+![202302272001442.png](https://imgs.itchenliang.club/img/202302272001442.png)
+
+dom标准事件流的触发的先后顺序为：**先捕获再冒泡**，即当触发dom事件时，会先进行事件捕获，捕获到事件源之后通过事件传播进行事件冒泡。
+
+### 事件捕获
+通俗的理解就是，当鼠标点击或者触发dom事件时，浏览器会从根节点开始由**外到内**进行事件传播，即点击了子元素，如果父元素通过事件捕获方式注册了对应的事件的话，会先触发父元素绑定的事件。
+
+### 事件冒泡
+与事件捕获恰恰相反，事件冒泡顺序是由**内到外**进行事件传播，直到根节点。
+
+### 事件委托
+> 又称`事件代理`，事件委托就是利用事件冒泡，只指定一个事件处理程序，就可以管理某一类型的所有事件。
+
+案例：实现功能是点击li，弹出123，不使用事件委托实现。
+```html
+<ul id="ul1">
+  <li>111</li>
+  <li>222</li>
+  <li>333</li>
+  <li>444</li>
+</ul>
+```
+```js
+window.onload = function(){
+  var oUl = document.getElementById("ul1");
+  var aLi = oUl.getElementsByTagName('li');
+  for(var i = 0; i < aLi.length; i++){
+    aLi[i].onclick = function(){
+      alert(123);
+    }
+  }
+}
+```
+使用事件委托实现：
+```js
+window.onload = function(){
+  var oUl = document.getElementById("ul1");
+  oUl.onclick = function(ev){
+    var ev = ev || window.event;
+    var target = ev.target || ev.srcElement;
+    if(target.nodeName.toLowerCase() == 'li'){
+      alert(123);
+      alert(target.innerHTML);
+    }
+  }
+}
+```
+
+### 经典案例
+![202302272024251.png](https://imgs.itchenliang.club/img/202302272024251.png)
+
+可以看到，上面程序的输出结果：
+```
+我是 monther
+我是 daughter
+我是 baby
+我是 grandma
+```
+造成这以结果的原因是：
+> `target.addEventListener(type, listener, useCapture)`
+> - 参数一：事件类型，比如 click、mouseenter、drag等。
+> - 参数二：事件被触发时的回调函数。
+> - 参数三：`useCapture`: 默认值为false，表示在冒泡阶段处理事件。**如果为true，则在捕获阶段处理事件**。
+
+前面提到的DOM事件流的执行顺序是**先捕获再冒泡**，所以dom事件流从外向内捕获过程就是`grandma -> monther -> daughter -> baby`，而只有`monther`和`daughter`设置了`useCapture = true`，所以在捕获阶段就先将事件处理了，而`grandma`和`baby`并未设置`useCapture = true`，默认是`false`，而我们又是点击的`baby`所以首先会先处理`baby`目标事件，然后再通过冒泡到`grandma`事件。
 
 
-## 64、❓复杂数据类型如何转变为字符串
-- 首先，会调用 valueOf 方法，如果方法的返回值是一个基本数据类型，就返回这个值
-- 如果调用 valueOf 方法之后的返回值仍旧是一个复杂数据类型，就会调用该对象的 toString 方法
-- 如果 toString 方法调用之后的返回值是一个基本数据类型，就返回这个值，
-- 如果 toString 方法调用之后的返回值是一个复杂数据类型，就报一个错误。
+## 64、❓JavaScript全局函数有哪些?
+> https://blog.csdn.net/weixin_45735355/article/details/119953872
 
 
 ## 65、❓javascript 中 this 的指向问题

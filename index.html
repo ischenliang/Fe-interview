@@ -8,13 +8,38 @@
 </head>
 <body>
   <script>
-
-    const a = 22
-    a = 'aaa'
+    var parent = Object.create(Object.prototype, {
+      a: {
+        value: 123,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      }
+    });
+    // parent继承自Object.prototype，有一个可枚举的属性a（enumerable:true）。
+    var child = Object.create(parent, {
+      b: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      },
+      c: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true
+      }
+    });
     
-    window.onerror = (e) => {
-      console.log(e)
+    let arr = [1, 2, 3];
+    Array.prototype.xxx = 5;
+    for (let i in arr) {
+      if (arr.hasOwnProperty(i)) {
+        console.log(i, arr[i])
+      }
     }
+    console.log(Object.getOwnPropertyNames(arr))
   </script>
 </body>
 </html>
