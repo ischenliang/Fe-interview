@@ -3148,52 +3148,268 @@ console.log(getBrowser())
 - valueOf()：返回原始字符串值
 
 
-## 53、==自执行函数? 用于什么场景？好处?==
-自执行函数: 
-1. 声明一个匿名函数
-2. 马上调用这个匿名函数。
+## 53、自执行函数? 用于什么场景？好处?
+自执行函数: 是指声明的一个匿名函数，可以立即调用这个匿名函数。作用是创建一个独立的作用域。
+> 自执行函数又称`立即调用函数`或`立即执行函数`，具有自执行，即定义后立即调用的功能。
 
-作用：创建一个独立的作用域。<br>
-好处：防止变量弥散到全局，以免各种 js 库冲突。隔离作用域避免污染，或者截断作用域链，避免闭包造成引用变量无法释放。利用立即执行特性，返回需要的业务函数或对象，避免每次通过条件判断来处理。<br>
-场景：一般用于框架、插件等场景
+格式：
+```js
+// 写法一
+(function(){
+	console,log("hello world");
+})();
+
+// 写法二
+(function(){
+	console,log("hello world");
+}());
+```
+
+**使用场景**
+> 一般用于框架、插件等场景。
+
+简单的使用场景：`for`循环中通过延时器输出索引`i`
+```js
+// 不使用立即执行函数
+// 注意：这里需要使用var声明i，如果使用let，则不会导致变量提升
+for (var i = 0; i < 5; i++) {
+  setTimeout(() => {
+    console.log(i);//输出:55555
+  }, 1000);
+}
+
+// 使用立即执行函数
+for (var i = 0; i < 5; i++) {
+  ((index) => {
+    setTimeout(() => {
+      console.log(index)
+    }, 1000)
+  })(i);
+}
+```
+
+**好处**
+- 防止变量弥散到全局，以免各种 js 库冲突；
+- 隔离作用域避免污染，或者截断作用域链，避免闭包造成引用变量无法释放；
+- 利用立即执行特性，返回需要的业务函数或对象，避免每次通过条件判断来处理；
 
 
 ## 54、多个页面之间如何进行通信
-- cookie
-- web worker
-- localeStorage 和 sessionStorage
+- 1、**使用cookie + setInterval**
+  ```html
+  <!-- pageA -->
+  <script>
+    setInterval(() => {
+      //加入定时器，让函数每一秒就调用一次，实现页面刷新
+      console.log("cookie",document.cookie)
+    }, 1000);
+  </script>
+
+  <!-- pageB -->
+  <script>
+    let btnB = document.getElementById("btnB");
+    let num = 0;
+    btnB.addEventListener("click", () => {
+      document.cookie = `客户端B发送的消息:${num++}`
+    })
+  </script>
+  ```
+- 2、**web worker（SharedWorker）**<br>
+  新建一个`worker.js`，编写代码
+  ```js
+  // worker.js
+  const set = new Set()
+  onconnect = event => {
+    const port = event.ports[0]
+    set.add(port)
+    // 接收信息
+    port.onmessage = e => {
+      // 广播信息
+      set.forEach(p => {
+        p.postMessage(e.data)
+      })
+    }
+    // 发送信息
+    port.postMessage("worker广播信息")
+  }
+  ```
+  ```html
+  <!-- pageA -->
+  <script>
+    const worker = new SharedWorker('./worker.js')
+    worker.port.onmessage = e => {
+      console.info("pageA收到消息", e.data)
+    }
+  </script>
+
+  <!-- pageB -->
+  <script>
+    const worker = new SharedWorker('./worker.js')
+    let btnB = document.getElementById("btnB");
+    let num = 0;
+    btnB.addEventListener("click", () => {
+      worker.port.postMessage(`客户端B发送的消息:${num++}`)
+    })
+  </script>
+  ```
+- 3、**websocket**
+  ```html
+  // A页面
+  <script>
+    // 创建一个websocket连接
+    var ws = new WebSocket('ws://localhost:3000/');
+    // WebSocket连接成功回调
+    ws.onopen = function () {
+      console.log("websocket连接成功")
+    }
+    // 这里接受服务器端发过来的消息
+    ws.onmessage = function (e) {
+      console.log("服务端发送的消息", e.data)
+    }
+  </script>
+
+  // B页面
+  <script>
+    let btnB = document.getElementById("btnB");
+    let num = 0;
+    btnB.addEventListener("click", () => {
+      ws.send(`客户端B发送的消息:${num++}`);
+    })
+    // 创建一个websocket连接
+    var ws = new WebSocket('ws://localhost:3000/');
+    // WebSocket连接成功回调
+    ws.onopen = function () {
+      console.log("websocket连接成功")
+    }
+  </script>
+  ```
+  当我们点击pageB中的按钮时，会通过websocket向服务端发送一条消息，服务端接收到这条消息之后，会将消息转发给pageA，这样pageA就得到了pageB传来的数据。
+- 4、**localeStorage 和 sessionStorage**
+  ```html
+  // A页面监听storage变化
+  <script>
+    window.addEventListener('storage', () => {
+      console.log('改变了')
+    })
+  </script>
+
+  // B页面修改storage数据
+  <button id="btn">按钮</button>
+  <script>
+    document.querySelector('#btn').addEventListener('click', () => {
+      localStorage.setItem('demo', 'abc')
+    })
+  </script>
+  ```
+
+对比：
+| 实现方式 | 优缺点 |
+| :------ | :---- |
+| localStorage | **优点**：操作简单，易于理解。<br>**缺点**：存储大小限制只能监听非己页面跨域不共享（**总体来说较为推荐**） |
+| websocket | **优点**：理论上可是实现任何数据共享跨域共享。<br>**缺点**：需要服务端配合增加服务器压力上手不易（**总体不推荐**） |
+| sharedWorker | **优点**：理论上可以实现任何数据共享性能较好。<br>**缺点**：跨域不共享调试不方便兼容性不好 （**总体推荐一般**） |
+| cookie | **优点**：兼容性好易于上手和理解。<br>**缺点**：有存储大小限制轮询消耗性能发请求会携带cookie （**总体不推荐**） |
+
 
 
 ## 55、css 动画和 js 动画的差异
-1. 代码复杂度，js 动画代码相对复杂一些
-2. 动画运行时，对动画的控制程度上，js 能够让动画，暂停，取消，终止，css 动画不能添加事件
-3. 动画性能看，js 动画多了一个 js 解析的过程，性能不如 css 动画好
+### css动画
+**优点**
+- 1、浏览器可以对css动画进行优化<br>
+  浏览器可以对css动画进行优化，其优化原理类似于requestAnimationFrame，会把每一帧的DOM操作都集中起来，在一次重绘和回流中去完成。一般来说频率为每秒60帧。隐藏和不可见的dom不会进行重绘或回流，这样就会更少的使用CPU,GPU和内存使用量。
+- 2、强制使用硬件加速<br>
+  使用GPU来提高动画性能。
+- 3、代码相对简单,性能调优方向固定
+- 4、对于帧速不好的浏览器，css3可以做到自动降级，js则需要添加额外的代码
+
+**缺点**
+- 1、无法控制中间的某一个状态，或者是给其添加回调函数，不能半路翻转动画，没有进度报告。
+- 2、如果想要实现相对复杂的动画效果时，css的代码冗余量很大。
+
+### js动画
+**优点**
+- 1、js动画的控制能力很强，可以在动画播放过程中对动画进行控制，开始、暂停、回放、终止、取消都是可以做到的。
+- 2、动画效果比css3动画丰富,有些动画效果，比如曲线运动,冲击闪烁,视差滚动效果，只有JavaScript动画才能完成。
+- 3、CSS3有兼容性问题，而JS大多时候没有兼容性问题
+
+**缺点**
+- 1、javascript在浏览器的主线程中运行，而主线程中还存在其他需要运行的javascript脚本，样式计算、布局、绘制任务等,对其干扰导致线程可能出现阻塞，从而造成丢帧的情况。
+- 2、js代码的复杂度要改与css动画
 
 
-## 56、如何做到修改 url 参数页面不刷新
+## 56、❓如何做到修改 url 参数页面不刷新
 HTML5 引入了 `history.pushState()` 和 `history.replaceState()` 方法，它们分别可以添加和修改历史记录条目。
 ```js
-let stateObj = {
-  foo: "bar"
-};
-history.pushState(stateObj, "page 2", "bar.html");
+<button id="btn">按钮</button>
+<script>
+  document.querySelector('#btn').addEventListener('click', () => {
+    let stateObj = {
+      foo: "bar"
+    };
+    history.pushState(stateObj, "page 2", "bar.html");
+  })
+</script>
 ```
-假设当前页面为 foo.html ，执行上述代码后会变为 bar.html ，点击浏览器后退，会变为 foo.html ，但浏览器并不会刷新。 pushState() 需要三个参数: 一个状态对象, 一个标题 (目前被忽略), 和 (可选的) 一个 URL.让我们来解释下这三个参数详细内容：
-- 状态对象 — 状态对象 state 是一个 JavaScript 对象，通过 pushState () 创建新的历史记录条目。无论什么时候用户导航到新的状态， popstate 事件就会被触发，且该事件的 state 属性包含该历史记录条目状态对象的副本。<br>
-  状态对象可以是能被序列化的任何东西。原因在于 Firefox 将状态对象保存在用户的磁盘上，以便在用户重启浏览器时使用，我们规定了状态对象在序列化表示后有 640k 的大小限制。如果你给 pushState() 方法传了一个序列化后大于 640k 的状态对象，该方法会抛出异常。如果你需要更大的空间，建议使用 sessionStorage 以及 localStorage .
-- 标题 — Firefox 目前忽略这个参数，但未来可能会用到。传递一个空字符串在这里是安全的，而在将来这是不安全的。二选一的话，你可以为跳转的 state 传递一个短标题。
-- URL — 该参数定义了新的历史 URL 记录。注意，调用 pushState() 后浏览器并不会立即加载这个 URL，但可能会在稍后某些情况下加载这个 URL，比如在用户重新打开浏览器时。新 URL 不必须为绝对路径。如果新 URL 是相对路径，那么它将被作为相对于当前 URL 处理。新 URL 必须与当前 URL 同源，否则 pushState() 会抛出一个异常。该参数是可选的，缺省为当前 URL。
+假设当前页面为`foo.html`，执行上述代码后会变为`bar.html`，点击浏览器后退，会变为`foo.html`，但浏览器并不会刷新。<br>
+`pushState()`需要三个参数: 
+- 一个状态对象
+- 一个标题 (目前被忽略)
+- 一个 URL
+
+让我们来解释下这三个参数详细内容：
+- 状态对象 — 状态对象`state`是一个 JavaScript 对象，通过`pushState()`创建新的历史记录条目。无论什么时候用户导航到新的状态，`popstate`事件就会被触发，且该事件的`state`属性包含该历史记录条目状态对象的副本。<br>
+  状态对象可以是能被序列化的任何东西。原因在于 Firefox 将状态对象保存在用户的磁盘上，以便在用户重启浏览器时使用，我们规定了状态对象在序列化表示后有 640k 的大小限制。如果你给`pushState()`方法传了一个序列化后大于 640k 的状态对象，该方法会抛出异常。如果你需要更大的空间，建议使用 sessionStorage 以及 localStorage .
+- 标题 — Firefox 目前忽略这个参数，但未来可能会用到。传递一个空字符串在这里是安全的，而在将来这是不安全的。二选一的话，你可以为跳转的`state`传递一个短标题。
+- URL — 该参数定义了新的历史 URL 记录。注意，调用`pushState()`后浏览器并不会立即加载这个 URL，但可能会在稍后某些情况下加载这个 URL，比如在用户重新打开浏览器时。新 URL 不必须为绝对路径。如果新 URL 是相对路径，那么它将被作为相对于当前 URL 处理。新 URL 必须与当前 URL 同源，否则`pushState()`会抛出一个异常。该参数是可选的，缺省为当前 URL。
 
 
 ## 57、事件绑定与普通事件有什么区别
-- 用普通事件添加相同事件，下面会覆盖上面的，而事件绑定不会
-- 普通事件是针对非 dom 元素，事件绑定是针对 dom 元素的事件
+事件绑定相当于在一个元素上进行监听，监听事件是否触发。普通事件就是直接触发事件。
+
+两者的区别：
+> 在于是否可重复使用。事件绑定可以在一个元素上监听同一事件多次，而普通事件多次写会被覆盖。
+
+**普通事件**
+```html
+<!-- 普通添加事件的方法 -->
+<button id="btn">按钮</button>
+<script>
+  const btn = document.querySelector('#btn')
+  btn.onclick = () => {
+    console.log('123')
+  }
+  btn.onclick = () => {
+    console.log('234')
+  }
+</script>
+```
+点击`按钮`控制台会输出`234`。
+
+**事件绑定**
+```html
+<!-- 事件绑定方式添加事件 -->
+<button id="btn">按钮</button>
+<script>
+  const btn = document.querySelector('#btn')
+  btn.addEventListener('click', () => {
+    console.log('123')
+  })
+  btn.addEventListener('click', () => {
+    console.log('234')
+  })
+</script>
+```
+点击`按钮`控制台会输出`123 234`。
 
 
 ## 58、IE 和 DOM 事件流的区别
 **事件流的区别**：
-- IE 采用冒泡型事件 Netscape 使用捕获型事件
-- DOM 使用先捕获后冒泡型事件
+- 事件执行的顺序不同
+  - IE事件流：IE 的事件执行顺序采用冒泡形式，从事件触发的元素开始，逐级冒泡到 DOM 根节点
+  - DOM事件流：支持两种事件模型，即冒泡和捕获，但是捕获先开始，冒泡后发生，捕获从 DOM 根开始到事件触发元素为止，然后再从事件触发的元素冒泡到 DOM 根，从 DOM 根出发最后又回到了 DOM 根。
+- 监听方式的不同
+  - IE事件流：通过`attachEvent`和`detachEvent`来进行监听与移除
+  - DOM事件流：通过`addEventListener`和`removeEventListener`来进行监听与移除
 
 示例：
 ```html
@@ -3203,11 +3419,11 @@ history.pushState(stateObj, "page 2", "bar.html");
   </div>
 </body>
 ```
-冒泡型事件模型： button->div->body (IE 事件流) <br>
-捕获型事件模型： body->div->button (Netscape 事件流)<br>
-DOM 事件模型： body->div->button->button->div->body (先捕获后冒泡)
+冒泡型事件模型：`button->div->body (IE 事件流) `<br>
+捕获型事件模型：`body->div->button (Netscape 事件流)`<br>
+DOM 事件模型：`body->div->button->button->div->body (先捕获后冒泡)`
 
-**事件侦听函数的区别**：
+**事件侦听函数的区别**：<br>
 IE 使用:
 ```js
 [Object].attachEvent("name_of_event_handler", fnHandler); //绑定函数
@@ -3218,20 +3434,39 @@ DOM 使用：
 [Object].addEventListener("name_of_event", fnHandler, bCapture); //绑定函数
 [Object].removeEventListener("name_of_event", fnHandler, bCapture); //移除绑定
 ```
-bCapture 参数用于设置事件绑定的阶段，true 为捕获阶段，false 为冒泡阶段。
+`bCapture`参数用于设置事件绑定的阶段，`true`为捕获阶段，`false`为冒泡阶段。
 
 
 ## 59、IE 和标准下有哪些兼容性的写法
 ```js
+// 1、获取事件对象
 var ev = ev || window.event;
-document.documentElement.clientWidth || document.body.clientWidth;
-var target = ev.srcElement || ev.target;
+// 2、事件委派
+var target = event.target || event.srcElement;
+// 3、获得键盘属性
+var cpde = event.which || ebent.keyCode;
+// 4、阻止冒泡事件
+event.stopPropagation ? event.stopPropagation() : event.cancelBubble = true;
+// 5、阻止默认行为
+event.preventDEfault ? event.preventDEfault() : event.returnValue = false;
+// 6、窗口宽高
+var width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+// 7、滚动条高度
+var top = document.documentElement.scrollTop || document.body.scrollTop;
+// 8、事件监听
+element.addEventListener(), element.attchEvent();
+// 9、获取最终生效样式
+window.getComputedStyle ? window.getComputedStyle(element) : element.currentStyle;
 ```
 
 
 ## 60、如何阻止冒泡与默认行为
-- 阻止冒泡行为：非 IE 浏览器 stopPropagation()，IE 浏览器 window.event.cancelBubble = true
-- 阻止默认行为：非 IE 浏览器 preventDefault()，IE 浏览器 window.event.returnValue = false
+- 阻止冒泡行为：
+  - 非 IE 浏览器`stopPropagation()`
+  - IE 浏览器`window.event.cancelBubble = true`
+- 阻止默认行为：
+  - 非 IE 浏览器`preventDefault()`
+  - IE 浏览器`window.event.returnValue = false`
 
 当需要阻止冒泡行为时，可以使用：
 ```js
@@ -3262,7 +3497,7 @@ function stopDefault(e) {
 ```
 
 
-## 61、❓javascript 的本地对象，内置对象和宿主对象
+## 61、❓==javascript 的本地对象，内置对象和宿主对象==
 ### 本地对象
 ECMA-262 把本地对象（native object）定义为“独立于宿主环境的 ECMAScript 实现提供的对象"。简单来说，本地对象就是 ECMA-262 定义的类（引用类型）。它们包括：Object、Function、Array、String、Boolean、Number、Date、RegExp、Error、EvalError、RangeError、ReferenceError、SyntaxError、TypeError、URIError
 
