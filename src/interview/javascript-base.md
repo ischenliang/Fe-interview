@@ -1459,7 +1459,7 @@ console.log(234)
 有了 async 或 defer 属性，浏览器会立即下载相应的脚本 a.js 和 b.js，在下载过程中页面的处理不会停止，在 a.js 和 b.js 中有 defer 属性的会先被执行，即输出结果如下：`aaa bbb 123 123 234`
 
 
-## 26、==什么是面向对象OOP？==
+## 26、什么是面向对象OOP？
 面向对象（`Object-Oriented Programming`）是把构成问题事务分解成各个对象，建立对象的目的不是为了完成一个步骤，而是为了描叙某个事物在整个解决问题的步骤中的行为。<br>
 面向对象就是一种思想，任何事务都可以看作对象，所以才有了”万物皆对象“这一说，面向对象又称OOP(Object Oriented Programming) 分开来看就是：
 - Object：对象
@@ -1467,40 +1467,109 @@ console.log(234)
 - Programming:程序设计
 
 **面向对象和面向过程的异同**
-- 面向过程就是分析出解决问题所需要的步骤，然后用函数把这些步骤一步一步实现，使用的时候一个一个依次调用就可以了。
-- 面向对象是把构成问题事务分解成各个对象，建立对象的目的不是为了完成一个步骤，而是为了描叙某个事物在整个解决问题的步骤中的行为。
+- 面向过程：直接将解决问题的步骤分析出来，然后用函数把步骤一步一步实现，然后再依次调用就可以了。
+- 面向对象：将构成问题的事物，分解成若干个对象，建立对象的目的不是为了完成一个步骤，而是为了描述某个事物在解决问题过程中的行为。
+> - 面向过程思想偏向于我们做一件事的流程，首先做什么，其次做什么，最后做什么。
+> - 面向对象思想偏向于了解一个人，这个人的性格、特长是怎么样的，有没有遗传到什么能力，有没有家族病史。
 
 
 ## 27、你对松散类型的理解
-松散类型就是指当一个变量被申明出来就可以保存任意类型的值，就是不像 SQL 一样申明某个键值为 int 就只能保存整型数值，申明 varchar 只能保存字符串。一个变量所保存值的类型也可以改变，这在 JavaScript 中是完全有效的，只是不推荐。相比较于将变量理解为“盒子“，它不保存值，而是抓取值。这一点在当变量保存引用类型值时更加明显。
+松散类型就是指当一个变量被申明出来就可以保存任意类型的值，就是不像 SQL 一样申明某个键值为 int 就只能保存整型数值，申明 varchar 只能保存字符串。一个变量所保存值的类型也可以改变，这在 JavaScript 中是完全有效的，只是不推荐。相比较于将变量理解为“盒子“，《JavaScript 编程精解》中提到应该将变量理解为“触手”，它不保存值，而是抓取值。这一点在当变量保存引用类型值时更加明显。
 
-JavaScript 中变量可能包含两种不同的数据类型的值：基本类型和引用类型。
+JavaScript 中变量可能包含两种不同的数据类型的值：**基本类型和引用类型**。
 - 基本类型是指简单的数据段；
 - 引用类型指那些可能包含多个值的对象；
 
 
 ## 28、JavaScript 严格模式和正常模式的区别
-严格模式使用"use strict"，老版本的浏览器会把它当作一行普通字符串，加以忽略。
+除了正常的运行模式，JavaScript 还有第二种运行模式：严格模式使用`"use strict"`，老版本的浏览器会把它当作一行普通字符串，加以忽略。
+> 严格模式，顾名思义，这种模式采用更加严格的 JavaScript 语法。
+
 ### 作用
-- 消除 Javascript 语法的一些不合理、不严谨之处，减少一些怪异行为;
-- 消除代码运行的一些不安全之处，保证代码运行的安全；
+早期的 JavaScript 语言有很多设计不合理的地方，但是为了兼容以前的代码，又不能改变老的语法，只能不断添加新的语法，引导程序员使用新语法。严格模式是从 ES5 进入标准的，主要目的有以下几个：
+- 明确禁止一些不合理、不严谨的语法，减少 JavaScript 语言的一些怪异行为；
+- 增加更多报错的场合，消除代码运行的一些不安全之处，保证代码运行的安全；
 - 提高编译器效率，增加运行速度；
-- 为未来新版本的 Javascript 做好铺垫。
+- 为未来新版本的 JavaScript 语法做好铺垫。
+
+总之，**严格模式体现了 JavaScript 更合理、更安全、更严谨的发展方向**
 
 ### 表现
-- 严格模式下, delete 运算符后跟随非法标识符(即 delete 不存在的标识符)，会抛出语法错误； 非严格模式下，会静默失败并返回 false
-- 严格模式中，对象直接量中定义同名属性会抛出语法错误； 非严格模式不会报错
-- 严格模式中，函数形参存在同名的，抛出错误； 非严格模式不会
-- 严格模式不允许八进制整数直接量（如：023）
-- 严格模式中，arguments 对象是传入函数内实参列表的静态副本；非严格模式下，arguments 对象里的元素和对应的实参是指向同一个值的引用
-- 严格模式中 eval 和 arguments 当做关键字，它们不能被赋值和用作变量声明
-- 严格模式会限制对调用栈的检测能力，访问 arguments.callee.caller 会抛出异常
-- 严格模式 变量必须先声明，直接给变量赋值，不会隐式创建全局变量，不能用 with,
-- 严格模式中 call apply 传入 null undefined 保持原样不被转换为 window
+- 1、严格模式下, 变量必须先声明后使用，且无法删除，不能重复；
+  ```js
+  'use strict'
+  a = 1 // Uncaught ReferenceError: a is not defined
+
+  var b = 2
+  delete b // Uncaught SyntaxError: Delete of an unqualified identifier in strict mode.
+  ```
+- 2、严格模式中，函数形参存在同名的，抛出错误；
+  ```js
+  'use strict'
+  function foo (p1, p1) {} // Uncaught SyntaxError: Duplicate parameter name not allowed in this context
+  ```
+- 3、严格模式中，不允许八进制数和转义字符；
+  ```js
+  'use strict'
+  var a = 010; //报错 Uncaught SyntaxError: Octal literals are not allowed in strict mode.
+  var a = \010; //报错 Uncaught SyntaxError: Invalid or unexpected token
+  ```
+- 4、严格模式中，不能使用`with`语句；<br>
+  `with`语句用于暂时修改作用域链，语法如下：
+  ```js
+  with (Object)
+    statement
+  ```
+  废弃`with`的主要原因是因为它在引用对象时不可预测，使得代码难以优化，并且还会拖慢代码的执行速度。
+- 5、严格模式中，不能对只读属性赋值，不能删除不可删除的属性
+  ```js
+  'use strict'
+  var obj = {};
+  obj.defineProperty(obj, 'a', {value:1, writable: false});//writable=false使属性不可写
+  obj.a = 2; //报错 Uncaught TypeError: Cannot assign to read only property 'a' of object '#<Object>'
+
+  delete Object.prototype //报错 Uncaught TypeError: Cannot delete property 'prototype' of function Object() { [native code] }
+  ```
+- 6、严格模式中，`eval`当做关键字，不能被重新赋值和用作变量声明，在作用域`eval()`创建的变量不能被调用；
+  ```js
+  var eval = 1; // 报错 Uncaught SyntaxError: Unexpected eval or arguments in strict mode
+  eval('var a = 1')
+  console.log(a) // 报错 Uncaught ReferenceError: a is not defined
+  ```
+- 7、严格模式中，`arguments`当做关键字，不能被重新赋值和用作变量声明，不会自动反映函数参数的变化；
+  ```js
+  var arguments = 1; // 报错 Uncaught SyntaxError: Unexpected eval or arguments in strict mode
+  ```
+- 8、严格模式中，禁止`this`指向全局对象；在严格模式下，顶层`this`指向`undefined`，而不再指向全局对象。
+  ```js
+  function foo1 () {
+    return this; // 返回Window对象
+  } 
+  function foo2 () { 
+    "use strict";
+    return this; // 返回undefined
+  }
+  ```
+- 9、严格模式中，不能使用`arguments.callee`和`arguments.caller`；
+  - `arguments.callee`通常用在函数的递归调用中，废弃的原因主要是因为它在每次递归调用时都需要重新创建，不仅影响性能，还会影响闭包。
+  - `arguments.caller`属性用在函数执行的时候调用自身。废弃的原因是因为其潜在的不安全性。
+- 10、严格模式中，不能使用`fn.caller`和`fn.arguments`获取函数调用的堆栈
+  - `fn.caller`返回的是函数的调用者
+    - 当一个函数`fn`在全局作用域内被调用时，`fn.caller`为`null`；
+    - 当一个函数`fn`在另外一个函数作用域内被调用的，`fn.caller`则指向调用它的那个函数；
+  - `fn.arguments`代表传入函数的实参，已被废弃，可以使用函数内部的`arguments`对象代替。
+- 11、严格模式中，增加了保留字(`public`、`private`、`protected`、`static`、`let`、`yield`、`package`、`interface`、`implements`)。
+- 12、严格模式中，`call`，`apply`传入`null`或`undefined`保持原样不被转换为`window`。
+  ```js
+
+  ```
 
 ### 严格模式调用方式
-- **针对整个脚本文件**<br>
-  将"use strict"放在脚本文件的第一行，则整个脚本都将以"严格模式"运行。如果这行语句不在第一行，则无效，整个脚本以"正常模式"运行。如果不同模式的代码文件合并成一个文件，这一点需要特别注意。
+> "use strict" 指令只允许出现在脚本或函数的开头，并且在ES6的模块中自动采用严格模式。<br>
+> 不管是否使用严格模式，都应该按照严格模式的标准来书写代码，这样可使得代码更加安全、稳定。
+
+- 1、**针对整个脚本文件**<br>
+  将`"use strict"`放在脚本文件的第一行，则整个脚本都将以"严格模式"运行。如果这行语句不在第一行，则无效，整个脚本以"正常模式"运行。如果不同模式的代码文件合并成一个文件，这一点需要特别注意。
   ```html
   <script>
     "use strict";
@@ -1510,8 +1579,8 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
     console.log("这是正常模式。")
   </script>
   ```
-- **针对单个函数**<br>
-  将"use strict"放在函数体的第一行，则整个函数以"严格模式"运行。
+- 2、**针对单个函数**<br>
+  将`"use strict"`放在函数体的第一行，则整个函数以"严格模式"运行。
   ```js
   function strict() {
     "use strict";
@@ -1522,7 +1591,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
     return "这是正常模式。"
   }
   ```
-- **脚本文件的变通写法**<br>
+- 3、**脚本文件的变通写法**<br>
   因为第一种调用方法不利于文件合并，所以更好的做法是，借用第二种方法，将整个脚本文件放在一个立即执行的匿名函数之中。
   ```js
   (function() {
@@ -1532,7 +1601,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
 
 ### 语法和行为改变
 严格模式对 Javascript 的语法和行为，都做了一些改变。
-- **全局变量显式声明**<br>
+- 1、**全局变量显式声明**<br>
   在正常模式中，如果一个变量没有声明就赋值，默认是全局变量。严格模式禁止这种用法，全局变量必须显式声明。
   ```js
   "use strict";
@@ -1542,7 +1611,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
   }
   ```
   因此，严格模式下，变量都必须先用 var 命令声明，然后再使用。
-- **静态绑定**<br>
+- 2、**静态绑定**<br>
   Javascript 语言的一个特点，就是允许"动态绑定"，即某些属性和方法到底属于哪一个对象，不是在编译时确定的，而是在运行时（runtime）确定的。<br>
   严格模式对动态绑定做了一些限制。某些情况下，只允许静态绑定。也就是说，属性和方法到底归属哪个对象，在编译阶段就确定。这样做有利于编译效率的提高，也使得代码更容易阅读，更少出现意外。<br>
   具体来说，涉及以下几个方面。
@@ -1564,7 +1633,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
     console.info(eval("var x = 5; x")); // 5
     console.info(x); // 2
     ```
-- **增强的安全措施**<br>
+- 3、**增强的安全措施**<br>
   - 禁止 this 关键字指向全局对象<br>
     ```js
     function f() {
@@ -1592,7 +1661,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
     }
     f1();
     ```
-- **禁止删除变量**<br>
+- 4、**禁止删除变量**<br>
   严格模式下无法删除变量。只有 configurable 设置为 true 的对象属性，才能被删除。<br>
   ```js
   "use strict";
@@ -1606,7 +1675,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
   });
   delete o.x; // 删除成功
   ```
-- **显式报错**<br>
+- 5、**显式报错**<br>
   正常模式下，对一个对象的只读属性进行赋值，不会报错，只会默默地失败。严格模式下，将报错。<br>
   ```js
   "use strict";
@@ -1639,7 +1708,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
   "use strict";
   delete Object.prototype; // 报错
   ```
-- **重名错误**<br>
+- 6、**重名错误**<br>
   严格模式新增了一些语法错误。
   - 对象不能有重名的属性：正常模式下，如果对象有多个重名属性，最后赋值的那个属性会覆盖前面的值。严格模式下，这属于语法错误。
     ```js
@@ -1656,13 +1725,13 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
       return;
     }
     ```
-- **禁止八进制表示法**<br>
+- 7、**禁止八进制表示法**<br>
   正常模式下，整数的第一位如果是 0，表示这是八进制数，比如 0100 等于十进制的 64。严格模式禁止这种表示法，整数第一位为 0，将报错。
   ```js
   "use strict";
   var n = 0100; // 语法错误
   ```
-- **arguments 对象的限制**
+- 8、**arguments 对象的限制**<br>
   arguments 是函数的参数对象，严格模式对它的使用做了限制。
   - 不允许对 arguments 赋值
     ```js
@@ -1698,7 +1767,7 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
     };
     f(); // 报错
     ```
-- **函数必须声明在顶层**<br>
+- 9、**函数必须声明在顶层**<br>
   将来 Javascript 的新版本会引入"块级作用域"。为了与新版本接轨，严格模式只允许在全局作用域或函数作用域的顶层声明函数。也就是说，不允许在非函数的代码块内声明函数。
   ```js
   "use strict";
@@ -1709,62 +1778,180 @@ JavaScript 中变量可能包含两种不同的数据类型的值：基本类型
     function f2() {} // 语法错误
   }
   ```
-- **保留字**<br>
-  为了向将来 Javascript 的新版本过渡，严格模式新增了一些保留字：implements, interface, let, package, private, protected, public, static, yield。<br>
-  使用这些词作为变量名将会报错。
+- 10、**保留字**<br>
+  为了向将来 Javascript 的新版本过渡，严格模式新增了一些保留字：`implements`, `interface`, `let`, `package`, `private`, `protected`, `public`, `static`, `yield`。使用这些词作为变量名将会报错。
   ```js
   function package(protected) { // 语法错误
     "use strict";
     var implements; // 语法错误
   }
   ```
-  此外，ECMAscript 第五版本身还规定了另一些保留字（class, enum, export, extends, import, super），以及各大浏览器自行增加的 const 保留字，也是不能作为变量名的。
+  此外，ECMAscript 第五版本身还规定了另一些保留字（`class`, `enum`, `export`, `extends`, `import`, `super`），以及各大浏览器自行增加的`const`保留字，也是不能作为变量名的。
 
 
 ## 29、移动端 click 事件、touch 事件、tap 事件的区别
-1. click 事件在移动端会有 200-300ms 的延迟，主要原因是苹果手机在设计时，考虑到用户在浏览网页时需要放大，所以，在用户点击的 200-300ms 之后，才触发 click，如果 200-300ms 之内还有 click，就会进行放大缩小。
-2. touch 事件是针对触屏手机上的触摸事件。现今大多数触屏手机 webkit 内核提供了 touch 事件的监听，让开发者可以获取用户触摸屏幕时的一些信息。其中包括：touchstart, touchmove, touchend, touchcancel 这四个事件，touchstart touchmove touchend 事件可以类比于 mousedown mouseover mouseup 的触发
-3. tap 事件在移动端，代替 click 作为点击事件，tap 事件被很多框架（如 zepto）封装，来减少这延迟问题， tap 事件不是原生的，所以是封装的，那么具体是如何实现的呢？
+1. `click`事件在移动端会有 200-300ms 的延迟，主要原因是苹果手机在设计时，考虑到用户在浏览网页时需要放大，所以，在用户点击的 200-300ms 之后，才触发`click`，如果 200-300ms 之内还有`click`，就会进行放大缩小。
+2. `touch`事件是针对触屏手机上的触摸事件。现今大多数触屏手机 webkit 内核提供了`touch`事件的监听，让开发者可以获取用户触摸屏幕时的一些信息。其中包括：`touchstart`, `touchmove`, `touchend`, `touchcancel`这四个事件，`touchstart`、`touchmove`、`touchend`事件可以类比于 `mousedown`、`mouseover`、`mouseup`的触发
+3. `tap`事件在移动端，代替`click`作为点击事件，`tap`事件被很多框架（如`zepto`）封装，来减少这延迟问题，`tap`事件不是原生的，所以是封装的，那么具体是如何实现的呢？
 ```html
+<button id="btn">按钮</button>
 <script>
-  function tap(ele, callback) {
-      // 记录开始时间
-      var startTime = 0,
-          // 控制允许延迟的时间
-          delayTime = 200,
-          // 记录是否移动，如果移动，则不触发tap事件
-          isMove = false;
+  function tap (ele, callback) {
+    // 记录开始时间
+    var startTime = 0,
+      // 控制允许延迟的时间
+      delayTime = 200,
+      // 记录是否移动，如果移动，则不触发tap事件
+      isMove = false
+    
+    // 在touchstart时记录开始的时间
+    ele.addEventListener('touchstart', (e) => {
+      startTime = Date.now()
+    })
 
-      // 在touchstart时记录开始的时间
-      ele.addEventListener('touchstart', function(e) {
-          startTime = Date.now();
-      });
+    // 如果touchmove事件被触发，则isMove为true
+    ele.addEventListener('touchmove', (e) => {
+      isMove = true
+    })
 
-      // 如果touchmove事件被触发，则isMove为true
-      ele.addEventListener('touchmove', function(e) {
-          isMove = true;
-      });
-
-      // 如果touchmove事件触发或者中间时间超过了延迟时间，则返回，否则，调用回调函数。
-      ele.addEventListener('touchend', function(e) {
-          if (isMove || (Date.now() - startTime > delayTime)) {
-              return;
-          } else {
-              callback(e);
-          }
-      })
+    // 如果touchmove事件触发或者中间时间超过了延迟时间，则返回，否则，调用回调函数。
+    ele.addEventListener('touchend', (e) => {
+      if (isMove || (Date.now() - startTime > delayTime)) {
+        return
+      }
+      callback(e)
+    })
   }
-
-  var btn = document.getElementById('btn');
-  tap(btn, function() {
-      alert('taped');
-  }); 
+  
+  var btn = document.querySelector('#btn')
+  tap(btn, () => {
+    console.log('触发了')
+  })
 </script>
 ```
+**注意**：调试时需要打开浏览器的手机模式调试面板。
+
+**移动端tap或touch类型事件的点透问题(点击穿透)**
+> 常见到有这种应用场景，点击遮罩层，遮罩层消失，露出底部的页面。当底部的页面中某个元素绑定了click事件，并且点击遮罩的时候正好点的是该元素的位置，会发现该元素的click事件被触发了。
+
+案例：使用`zepto`来测试
+```html
+<script src="//cdn.bootcss.com/zepto/1.0rc1/zepto.min.js"></script>
+<div id="container" style="width: 200px;height: 200px;background: #ccc;text-align: center;position: relative;"></div>
+<div id="popup" style="width: 200px;height:200px;background: rgba(255, 0, 0, 0.3);position: absolute;top: 8px;left: 8px;text-align: center;">
+  <button id="btn">按钮</button>
+</div>
+<script>
+  $('#btn').on('tap', (e) => {
+    console.log('我是btn tap')
+    $('#popup').hide()
+  })
+  $('#container').on('click', () => {
+    console.log('我是container click')
+  })
+</script>
+```
+打开手机调试模式，然后点击`button`按钮会发现此时控制栏输出了如下所示结果，此现象即为`点击穿透`。
+```
+我是btn tap
+我是container click
+```
+
+**解决办法**
+1. 延迟遮罩层消失的时间，使其超过300ms<br>
+  由于`click`事件的滞后性，在这段时间内原来点击的元素消失了，于是便“穿透”了。因此我们顺着这个思路就想到，可以给元素的消失做一个fade效果，类似jQuery里的fadeOut，并设置动画`duration`大于`300ms`，这样当延迟的`click`触发时，就不会“穿透”到下方的元素了。
+  ```js
+  $('#btn').on('tap', (e) => {
+    console.log('我是btn tap')
+    setTimeout(() => {
+      $('#popup').hide()
+    }, 320)
+  })
+  $('#container').on('click', () => {
+    console.log('我是container click')
+  })
+  ```
+2. 用`touchend`代替`tap`事件并阻止掉`touchend`的默认行为`preventDefault()`
+  ```js
+  $('#btn').on('touchend', (e) => {
+    e.preventDefault()
+    console.log('我是btn tap')
+    $('#popup').hide()
+  })
+  $('#container').on('click', () => {
+    console.log('我是container click')
+  })
+  ```
+  使用此方法的话，很可能会阻止掉页面上的其他事件。
+3. 使用`touchend`代替`tap`事件并使用动态生成的遮盖层挡住
+  ```js
+  $('#btn').on('touchend', (e) => {
+    console.log('我是btn tap')
+    $('#popup').hide()
+    // 遮挡物
+		var $tap = $('<div></div>');
+		$tap.css({
+			width: '40px',
+			height: '40px',
+			position: 'absolute',
+			opacity: '1',
+      top: 0,
+      left: 0
+		});
+    var touch = e.changedTouches[0];
+    $tap.css({
+      top: (touch.pageY - 20) + 'px',
+      left: (touch.pageX - 20) + 'px'
+    });
+
+    $('body').append($tap);
+    setTimeout(function(){
+      $tap.remove();
+    }, 400);
+  })
+  $('#container').on('click', () => {
+    console.log('我是container click')
+  })
+  ```
+4. 使用fastclick库<br>
+  使用fastclick库，其实现思路是，取消`click`事件，用`touchend`模拟快速点击行为
+  ```js
+  <script src="https://unpkg.com/fastclick@1.0.6/lib/fastclick.js"></script>
+  <script>
+    FastClick.attach(document.body);
+    $('#btn').on('tap', (e) => {
+      console.log('我是btn tap')
+      $('#popup').hide()
+    })
+    $('#container').on('click', () => {
+      console.log('我是container click')
+    })
+  </script>
+  ```
+5. pointer-events: `pointer-events`是CSS3中的属性，它有很多取值，有用的主要是`auto`和`none`
+  - auto: 效果和没有定义`pointer-events`属性相同，鼠标不会穿透当前层。
+  - none: 元素不再是鼠标事件的目标，鼠标不再监听当前层而去监听下面的层中的元素。但是如果它的子元素设置了pointer-events为其它值，比如auto，鼠标还是会监听这个子元素的。
+  ```js
+  $('#btn').on('tap', (e) => {
+    console.log('我是btn tap')
+    $('#popup').hide()
+    $('#container').css('pointer-events', 'none')
+
+    setTimeout(() => {
+      $('#container').css('pointer-events', 'auto')
+    }, 320)
+  })
+  $('#container').on('click', () => {
+    console.log('我是container click')
+  })
+  ```
 
 
-## 30、JS 单线程还是多线程，如何显示异步操作
-JS 本身是单线程的，他是依靠浏览器完成的异步操作。
+## 30、❓JS 单线程还是多线程，如何显示异步操作
+JS 本身是单线程的，他是依靠浏览器完成的异步操作，而浏览器不是单线程的。
+
+**同步任务**指的是，在主线程上排队执行的任务，只有前一个任务执行完毕，才能执行后一个任务；
+**异步任务**指的是，不进入主线程、而进入”任务队列”（`task queue`）的任务，只有”任务队列”通知主线程，某个异步任务可以执行了，该任务才会进入主线程执行。
 
 具体步骤：
 1. 主线程 执行 js 中所有的代码
@@ -1775,7 +1962,6 @@ JS 本身是单线程的，他是依靠浏览器完成的异步操作。
 
 
 ## 31、JavaScript 数组常用方法
-参考：https://www.runoob.com/jsref/jsref-obj-array.html
 ### map
 此方法是将数组中的每个元素调用一个提供的函数，结果作为一个新的数组返回，并`不改变原数组`。
 ```js
@@ -1903,183 +2089,367 @@ console.log(arr3) //[1, 2, 'haha', 4, 5] 替换一个元素
 ```
 
 
-## 32、JS 块级作用域、变量提升、let const var 的区别
-### 块级作用域
-JS 中作用域有：全局作用域、函数作用域。没有块作用域的概念。ECMAScript 6(简称 ES6)中新增了块级作用域。块作用域由 { } 包括，if 语句和 for 语句里面的{ }也属于块作用域。
+## 32、JS 块级作用域、变量提升、var、let、const的区别
+> 作用域指的是变量的可见区域
 
-### 变量提升
-- 如果变量声明在函数里面，则将变量声明提升到函数的开头
-- 如果变量声明是一个全局变量，则将变量声明提升到全局作用域的开头
+### 作用域
+JS 中作用域有：**全局作用域**、**函数作用域**、**块级作用域**(ES6新增)。块作用域由`{ }`包括，`if`语句和`for `语句里面的`{ }`也属于**块作用域**。
+#### 全局作用域
+- 全局作用域在网页运行时创建，在网页关闭时销毁
+- 直接写到script标签中的代码都在全局作用域中
+- 全局作用域中的变量是全局变量，可在任意地方访问
+```js
+let a = 9
+console.log(a) // 9
 
-```html
-<script type = "text/javascript"> 
-{
-  var a = 1;
-  console.log(a); // 1
+for (let i = 0; i < 2; i++) {
+  console.log(a, i) // 9 0, 9 1
 }
-console.log(a); // 1
-// 可见，通过var定义的变量可以跨块作用域访问到。
 
-(function A() {
-  var b = 2;
-  console.log(b); // 2
-})();
-// console.log(b); // 报错，
-// 可见，通过var定义的变量不能跨函数作用域访问到
-
-if (true) {
-  var c = 3;
+function demo () {
+  console.log(a) // 9
 }
-console.log(c); // 3
-for (var i = 0; i < 4; i++) {
-  var d = 5;
-};
-console.log(i); // 4  (循环结束i已经是4，所以此处i为4)
-console.log(d); // 5
-// if语句和for语句中用var定义的变量可以在外面访问到，
-// 可见，if语句和for语句属于块作用域，不属于函数作用域。
-
-{
-  var a = 1;
-  let b = 2;
-  const c = 3;
-  {
-    console.log(a); // 1	子作用域可以访问到父作用域的变量
-    console.log(b); // 2	子作用域可以访问到父作用域的变量
-    console.log(c); // 3	子作用域可以访问到父作用域的变量
-
-    var aa = 11;
-    let bb = 22;
-    const cc = 33;
-  }
-
-  console.log(aa); // 11	// 可以跨块访问到子 块作用域 的变量
-  console.log(bb); // 报错	bb is not defined
-  console.log(cc); // 报错	cc is not defined
-} 
-</script>
 ```
 
-### var、let、const 的区别
-- var 定义的变量，没有块的概念，可以跨块访问, 不能跨函数访问。
-- let 定义的变量，只能在块作用域里访问，不能跨块访问，也不能跨函数访问。
-- const 用来定义常量，使用时必须初始化(即必须赋值)，只能在块作用域里访问，而且不能修改。
-- 同一个变量只能使用一种方式声明，不然会报错
+#### 局部作用域
+**函数作用域**: 指在函数内部声明的变量，在`函数内部`和`函数内部声明的函数`中都可以访问到。
+- 函数作用域在函数调用时创建，调用结束后销毁
+- 函数每一次调用都会产生一个全新的函数作用域，它们都是独立的，互不影响
+- 在函数作用域中声明的变量只能在块函数内部访问，外部访问不了
+```js
+let a = 9
+console.log(a) // 9
 
-1. var在js中是支持预解析的，而let不支持预解析，也就是变量提升的区别
+function demo () {
+  let a = 10
+  console.log(a) // 10
+  console.log(b) // Uncaught ReferenceError: b is not defined
+  return function test () {
+    let b = 3
+    console.log(a) // 10
+    console.log(b) // 3
+  }
+}
+demo()()
+```
+
+**块级作用域**(es6): 
+- 使用let/const关键字创建的变量都具有块级作用域。
+- 块级作用域的变量只有在语句块内可以访问。所谓语句块就是用`{ }`包起来的区域。
+- 块级作用域有几个特性：`不存在变量提升`、`暂时性死区`、`不允许重复声明`。
+  - 什么是暂时性死区呢？<br>
+    只要块级作用域内存在`let`命令，它所声明的变量就绑定了这个区域，不再受外部影响。在代码块内，使用`let`命令声明函数之前，该变量都是不可用的，这在语法上称为`“暂时性死区”`。
+    ```js
+    var tmp = 123;
+    if (true) {
+      tmp = 'abc'; // Uncaught ReferenceError: Cannot access 'tmp' before initialization
+      let tmp;
+    }
+    ```
+- 通过`var`定义的变量可以跨块级作用域，而不能跨函数作用域
+  ```js
+  // if语句和for语句中用var定义的变量可以在外面访问到，
+  // 可见，if语句和for语句属于块作用域，不属于函数作用域。
+  f (true) {
+    var c = 3;
+  }
+  console.log(c); // 3
+  for (var i = 0; i < 4; i++) {
+    var d = 5;
+  };
+  console.log(i); // 4  (循环结束i已经是4，所以此处i为4)
+  console.log(d); // 5
+  ```
+- 子作用域可以访问到父作用域的变量
+  ```js
+  // 子作用域可以访问到父作用域的变量
+  function demo() {
+    var a = 1
+    let b = 2
+    const c = 3
+    test()
+    function test () {
+      console.log(a)
+      console.log(b)
+      console.log(c)
+    }
+  }
+  demo()
+
+  // 特殊案例
+  // 子作用域可以访问到父作用域的变量
+  function demo() {
+    if (true) {
+      var a = 1
+      let b = 2
+      const c = 3
+    }
+    console.log(a)
+    console.log(b) // Uncaught ReferenceError: b is not defined
+    console.log(c) // Uncaught ReferenceError: c is not defined
+  }
+  demo()
+  ```
+
+### 变量提升
+JS在执行之前，会先进行预编译，主要做两个工作(这就是变量提升)：
+1. 将全局作用域或者函数作用域内的所有函数声明提前
+2. 将全局作用域或者函数作用域内的所有`var`声明的变量提前声明，并且复制`undefined`
+
+- **变量的提升**<br>
+  使用`var`声明的变量，它会在所有代码执行前被声明，所以我们可以在变量声明前就访问变量，此时的值为`undefined`
   ```js
   console.log(a) // undefined
-  var a = 22
+  var a = 1
+  console.log(a) // 1
 
-  console.log(b) // ReferenceError: Cannot access 'b' before initialization
-  let b = 22
+  // 等价于
+  var a = undefined
+  console.log(a)
+  a = 1
+  console.log(a)
   ```
-2. var可以重复定义同一个变量，但是let不可以
+  从下面例子可以看出：通过`var`定义的变量可以跨块作用域访问到。
+  ```js
+  if (true) {
+    var a = 1
+    console.log(a) // 1
+  }
+  console.log(a) // 1
+
+  // 等价于
+  var a = undefined
+  if (true) {
+    a = 1
+    console.log(a)
+  }
+  console.log(a)
+  ```
+  从下面例子可以看出：通过`var`定义的变量不能跨函数作用域访问到。
+  ```js
+  (() => {
+    var a = 1 // Uncaught ReferenceError: a is not defined
+  })();
+  console.log(a)
+  ```
+- **函数的提升**<br>
+  使用函数声明创建的函数`function fn(){  }`，会在其他代码执行前先执行，所以我们可以在函数声明前调用函数。
+  ```js
+  demo()
+  function demo () {
+    console.log('aa') // aa
+  }
+  ```
+  注意：
+    - 函数声明可以提升，但是函数表达式不提升，具名的函数表达式的标识符也不会提升。
+    - 同名的函数声明，后面的覆盖前面的
+    - 函数声明的提升，不受逻辑判断的控制
+    ```js
+    // 函数表达式和具名函数表达式标识符都不会提升
+    test(); // TypeError test is not a function
+    log(); // TypeError log is not a function
+    var test = function log() {
+      console.log('test')
+    }
+
+    // 同名函数声明，后面的覆盖前面的
+    test(); // 2
+    function test() {
+      console.log(1);
+    }
+    function test() {
+      console.log(2);
+    }
+
+    // 函数声明的提升，不受逻辑判断的控制
+    // 注意这是在ES5环境中的规则，在ES6中会报错
+    function test() {
+      log();
+      if (false) {
+        function log() {
+          console.log('test');
+        }
+      }
+    }
+    test(); // 'test'
+    ```
+  <span style="color: red;">在块级作用域中声明函数会是什么效果呢？</span><br>
+  ES6环境中，如果在语句块中声明函数，按照正常的规范，函数声明应该被封闭在语句块里面，但是为了兼容老代码，因此语法标准允许其他的实现：
+    - 允许在块级作用域内声明函数。
+    - 函数声明类似于var，即会提升到全局作用域或函数作用域的头部。
+    - 同时，函数声明还会提升到所在的块级作用域的头部。
+    ```js
+    /**
+     * 简单例子
+     */
+    f()
+    function f(flag) {
+      console.log('I am outside!'); // I am outside!
+
+      demo()
+      if (flag) {
+        function demo () {
+          console.log('I am inside!') // Uncaught TypeError: demo is not a function
+        }
+      }
+    }
+
+    /**
+     * 同名例子
+     */
+    function f() {
+      console.log('I am outside!');
+    }
+    (function () {
+      if (false) {
+        // 重复声明一次函数f
+        function f() {
+          console.log('I am inside!');
+        }
+      }
+      f(); // Uncaught TypeError: f is not a function
+    }());
+
+    // 等价于
+    function f() {
+      console.log('I am outside!');
+    }
+    (function () {
+      var f = undefined;
+      if (false) {
+        function f() {
+          console.log('I am inside!');
+        }
+      }
+      f(); // Uncaught TypeError: f is not a function
+    }());
+    ```
+
+### var、let、const 的区别
+- var 定义的变量，没有块的概念，可以跨块访问, 不能跨函数访问。`var`可以重复定义同一个变量，效果是重复赋值。
   ```js
   var a = 1
   var a = 2
+  console.log(a) // 2
+  ```
+- let 定义的变量，具有块级作用域，函数内部使用let定义后，对函数外部无影响，不能跨函数访问。`let`定义的变量不能重复定义同一个变量。
+  ![202302281614171.png](https://imgs.itchenliang.club/img/202302281614171.png)
+- const 用来定义常量，使用时必须初始化(即必须赋值)，只能在块作用域里访问，而且定义之后是不允许改变的。
+  ![202302281612254.png](https://imgs.itchenliang.club/img/202302281612254.png)
+- 同一个变量只能使用一种方式声明，不然会报错
+  ```js
+  var a = 1
+  let a = 2 // Uncaught SyntaxError: Identifier 'a' has already been declared
   console.log(a)
-
-  let b = 1
-  let b = 2 // SyntaxError: Identifier 'b' has already been declared
-  console.log(b)
   ```
-3. const是用来定义常量的，常量定义之后是不允许改变的，而且必须初始化
-  ```js
-  const b = 2
-  b = 3 // TypeError: Assignment to constant variable.
-  const a // SyntaxError: Missing initializer in const declaration
-  ```
-  **注意**：引用变量与普通变量的区别，所以用const定义的常量只要是引用类型数据，改变这个引用类型数据的结构或属性，都是允许的
-  ```js
-  const obj = {}
-  obj.name = '123'
-  ```
-4. let具有块级作用域，函数内部使用let定义后，对函数外部无影响<br>
-  在es6之前实现块级作用域使用立即执行函数
-  ```js
-  // Es6之前
-  (function () {
-    var a = 200
-  })()
-  console.log(a) // ReferenceError: a is not defined
-
-  // ES6的块级作用域
-  {
-    let a = 1
-  }
-  console.log(a) // ReferenceError: a is not defined
-  ```
-  块级作用域常见使用场景
-  ```js
-  for (let i = 0; i < 10; i++) {
-    // ...
-  }
-  console.log(i) // ReferenceError: i is not defined
-
-  for (var i = 0; i < 10; i++) {
-    // ...
-  }
-  console.log(i) // ReferenceError: i is not defined
-
-  // 函数中的变量污染了全局环境
-  function run() {
-    web = 'houlaizhe' // 等价于 window.web = 'houlaizhe'
-  }
-  run()
-  console.log(web) // houlaizhe 等价于 console.log(window.web)
-  ```
-5. var定义的全局变量会挂载到window对象上，使用window可以访问，let定义的全局变量则不会挂载到window对象上
+- var定义的全局变量会挂载到window对象上，使用window可以访问，let定义的全局变量则不会挂载到window对象上
   ```js
   var a = 1
   console.log(window.a)
   ```
 
-```html
-<script type = "text/javascript">
-// 块作用域
-{
-  var a = 1;
-  let b = 2;
-  const c = 3;
-  // c = 4; // 报错
-  // let a = 'a';	// 报错  注：是上面 var a = 1; 那行报错
-  // var b = 'b';	// 报错：本行报错
-  // const a = 'a1';	// 报错  注：是上面 var a = 1; 那行报错
-  // let c = 'c';	// 报错：本行报错
-  var aa;
-  let bb;
-  // const cc; // 报错
-  console.log(a); // 1
-  console.log(b); // 2
-  console.log(c); // 3
-  console.log(aa); // undefined
-  console.log(bb); // undefined
-}
-console.log(a); // 1
-// console.log(b); // 报错
-// console.log(c); // 报错
 
-// 函数作用域
-(function A() {
-  var d = 5;
-  let e = 6;
-  const f = 7;
-  console.log(d); // 5
-  console.log(e); // 6  (在同一个{ }中,也属于同一个块，可以正常访问到)
-  console.log(f); // 7  (在同一个{ }中,也属于同一个块，可以正常访问到)
-})();
-// console.log(d); // 报错
-// console.log(e); // 报错
-// console.log(f); // 报错
-</script>
-```
+## 33、null和undefined的区别
+共同点：都是原始类型。
+- **null**：Null类型，代表“空值"，表示一个变量将来可能指向一个对象，一般用于主动释放指向对象的引用；空值，空引用；
+- **undefined**：Undefined 类型，表示变量声明过但并未赋过值，它是所有未赋值变量默认值；
+  ```js
+  var a
+  console.log(a) // undefined
+  ```
 
+### 区别
+- 1、数据类型不一样
+  ```js
+  typeof null // object
+  typeof undefined // undefined
 
-## 33、null/undefined 的区别
-- **null**：Null类型，代表“空值"，代表一个空对象指针，使用 typeof 运算得到 “object"，所以你可以认为它是一个特殊的对象值。
-- **undefined**：Undefined 类型，当一个声明了一个变量未初始化时，得到的就是 undefined。
+  Object.prototype.toString.call(null) // [object Null]
+  Object.prototype.toString.call(undefined) // [object Undefined]
+  ```
+  为什么`typeof null是object`？<br>
+  因为不同的对象在底层都表现为二进制，在  JavaScript  中二进制前三位都为 0 的话会被判断为`object`类型，`null`的二进制全部都为 0 ，前三位自然也是 0 ，所以执行`typeof`值会返回`object`。
+- 2、`null`和`undefined`两者相等，但是当两者做全等比较时，两者又不等。（因为它们的数据类型不一样）
+  ```js
+  null == undefined // true
+  null === undefined // false
+  !!null === !!undefined  // true
+  ```
+- 3、转化成数字的值不同
+  ```js
+  Number(null) // 0
+  Number(undefined) // NaN
+  22 + null // 22
+  22 + undefined // NaN
+  ```
+- 4、`null`代表"空"，代表空指针；`undefined`是定义了没有赋值
+  ```js
+  var a;
+  console.log(a); // undefined
 
+  var b = null;
+  console.log(b) // null
+  ```
+- 5、`null`是 js 语言的关键字，是不允许用户用来作为标识符声明变量的，但是`undefined`可以，`undefined`不是关键字，同时也不能使用`let`定义。
+  ```js
+  var null = null // 报错：'null' is not allowed as a variable declaration name
+  ```
+  ![202302281657449.png](https://imgs.itchenliang.club/img/202302281657449.png)
+
+### 运用场景
+**undefined**
+- 1、变量被声明时，但没有赋值时，就等于`undefined`
+  ```js
+  var a;
+  console.log(a); // undefined
+  ```
+- 2、调用函数时，应该提供的参数没有提供，该参数等于`undefined`
+  ```js
+  function f(a,b) {
+    console.log(a,b)
+  }
+  f("你好");   //输出结果为：你好 undefined
+  ```
+- 3、对象没有赋值的属性，该属性的值为`undefined`
+  ```js
+  var obj = {
+    name: "lihua",
+    age: "18"
+  }
+  console.log(obj.sex)  //输出结果为： undefined
+  ```
+- 4、函数没有返回值时，默认返回`undefined`
+  ```js
+  function  add(a,b) {
+  var c = a+b;
+  //  没有返回时为 undefined 
+  // return c;
+  }
+  console.log(add(1,2));  //输出结果为：undefined
+  ```
+
+### null
+- 1、作为函数的参数，表示该函数的参数不是对象（不想传递参数）
+  ```js
+  function  add() {
+    console.log(111)
+  }
+  add(null);
+  ```
+- 2、作为对象原型链的终点
+- 3、如果定义的变量准备在将来用于保存对象，此时可以将该变量初始化为`null`
+  ```js
+  var a = null;
+  console.log(a); / /null
+  ```
+- 4、释放内存时可以设置为null
+  ```js
+  let a = {
+    name: '张三',
+    age: 24
+  }
+  a = null // 释放内存
+  ```
 
 ## 34、JS 哪些操作会造成内存泄露/内存泄漏
 内存泄露是指一块被分配的内存既不能使用，又不能回收，直到浏览器进程结束。C#和Java等语言采用了自动垃圾回收方法管理内存，几乎不会发生内存泄露。我们知道，浏览器中也是采用自动垃圾回收方法管理内存，但由于浏览器垃圾回收方法有bug，会产生内存泄露。
@@ -2226,14 +2596,8 @@ function addEvent(ele, eventName, fun) {
 ```
 
 
-## 37、typescript 遇到过什么坑
-main.ts 报错（ Cannot find module './App.vue'.）<br>
-原因： typescript 不能识别.vue 文件<br>
-解决办法： 引入 vue 的 typescript declare 库
-
-
-## 38、this 和 apply 的应用
-比如求数组的最大值 Math.max.apply(this, 数组)
+## 38、❓this 和 bind、call、apply 的应用
+比如求数组的最大值 Math.max.apply(this, 数组)，更多可以参考: 43项
 ```js
 var numbers = [5, 458, 120, -215];
 var maxInNumbers = Math.max.apply(this, numbers); //第一个参数也可以填Math或null
@@ -2243,48 +2607,77 @@ console.log(maxInNumbers); // 458
 ```
 
 
-## 39、split() join()的区别
+## 39、split() 和 join()的区别
 - join()：用于把数组中的所有元素通过指定的分隔符进行分隔放入一个字符串
 - split()：用于把一个字符串通过指定的分隔符进行分隔成数组
 
 
 ## 40、JavaScript 的数据类型
-js数据类型分为基本数据类型和引用类型，其中基本数据类型：
+js数据类型分为基本数据类型和引用类型，其中**基本数据类型**：
 - String：字符串
 - Number：数值
 - Boolean：布尔值
 - Null：空值
 - Undefined：未定义
+- Symbol类型：ES6 新增，代表创建后独一无二且不可变的数据类型
 
-引用类型包括：
-- Object
-
-另外，ES6 新增了
-- Symbol类型：代表创建后独一无二且不可变的数据类型
-
-ES10 中新增的：
-- BigInt类型：一种数字类型的数据，它可以表示任意精度格式的整数
+**引用类型**包括：
+- Object: 对象
+- Array: 数组
+- Function: 函数
 
 
 ## 41、如何判断一个对象是否属于某个类？
 ```js
 class Person {}
 var p = new Person()
+// 方式一
 if (p instanceof Person) {
   console.log("yes");
 }
+
+// 方式二
+p.constructor === Person
+
+// 方式三
+Object.getPrototypeOf(p) === Person.prototype
+
+// 方式四
+p.__proto__ === Person.prototype
 ```
 
 
 ## 42、new 操作符具体干了什么呢?
+```js
+var Fn = function () {
+
+};
+var fnObj = new Fn();
+```
 new 共经过了 4 几个阶段
 - 创建一个空对象
+  ```js
+  var obj = new object();
+  ```
 - 设置原型链
-- 让 Func 中的 this 指向 obj，并执行 Func 的函数体
-- 判断 Func 的返回值类型
+  ```js
+  obj.__proto__ = Fn.prototype;
+  ```
+- 让`Fn`中的`this`指向`obj`，并执行`Fn`的函数体
+  ```js
+  var result = Fn.call(obj);
+  ```
+- 判断`Fn`的返回值类型：判断`Fn`的返回值类型，如果是值类型，返回`obj`。如果是引用类型，就返回这个引用类型的对象。
+  ```js
+  if (typeof(result) === "object"){  
+    return result;  
+  } else {  
+    return obj;
+  }
+  ```
 
 
-## 43、❓bind()、call()与apply()的作用与区别？
+## 43、bind()、call()与apply()的作用与区别？
 ### 43.1、作用
 `call`、`apply`、`bind`作用是**改变函数执行时的上下文**，简而言之就是**改变函数运行时的this指向**。
 那么什么情况下需要改变this的指向呢？下面举个例子
@@ -2615,12 +3008,23 @@ console.log(
 ```
 
 
-## 45、❓如何判断当前脚本运行在浏览器还是 node 环境中？
-通过判断 Global 对象是否为 window，如果不为 window，当前脚本没有运行在浏览器中
+## 45、如何判断当前脚本运行在浏览器还是 node 环境中？
+浏览器端的`window`或者是node端的`process`全局对象。
+
+**方式一**：通过判断Global对象是否为window，如果不为window，则当前脚本运行在node.js环境中。
+```js
+this === window ? console.log('browser') : console.log('node');
+```
+
+**方式二**：通过判断process全局对象
+```js
+typeof process === undefined ? console.log('browser') : console.log('node')
+```
 
 
-## 46、❓移动端最小触控区域是多大？
-苹果推荐是 44pt x 44pt
+## 46、移动端最小触控区域是多大？
+移动端最小触控区域`44*44px`，再小就容易点击不到或者误点。
+> 参考：[移动端最小触控区域44*44px](https://www.cnblogs.com/wobushijincan/articles/7300509.html)
 
 
 ## 47、移动端的点击事件的有延迟，时间是多久，为什么会有？ 怎么解决这个延时？
@@ -2629,22 +3033,95 @@ console.log(
 3. 推荐 fastclick.js
 
 
-## 48、Node.js 的适用场景？
+## 48、Node.js 的适用场景/使用场景？
 比如：RESTFUL API、实时聊天、客户端逻辑强大的单页 APP，具体的例子比如说：本地化的在线音乐应用，本地化的在线搜索应用，本地化的在线 APP 等。
 
 
 ## 49、使用构造函数的注意点
 1. 一般情况下构造函数的首字母需要大写，因为我们在看到一个函数首字母大写的情况，就认定这是一个构造函数，需要跟new关键字进行搭配使用，创建一个新的实例（对象）
-2. 构造函数在被调用的时候需要跟new关键字搭配使用。
-3. 在构造函数内部通过this+属性名的形式为实例添加一些属性和方法。
+2. 构造函数在被调用的时候需要跟`new`关键字搭配使用。
+3. 在构造函数内部通过`this+属性名的形式`为实例添加一些属性和方法。
 4. 构造函数一般不需要返回值，如果有返回值
-  - 如果返回值是一个基本数据类型，那么调用构造函数，返回值仍旧是那么创建出来的对象。
-  - 如果返回值是一个复杂数据类型，那么调用构造函数的时候，返回值就是这个return之后的那个复杂数据类型。
+  - 如果返回值是一个`基本数据类型`，那么调用构造函数，返回值仍旧是那么创建出来的对象。
+  ```js
+  function Person (name) {
+    this.name = name
+    return 'aaa'
+  }
+  const person = new Person('张三')
+  console.log(person) // Person {name: '张三'}
+  ```
+  - 如果返回值是一个`复杂数据类型`，那么调用构造函数的时候，返回值就是这个`return`之后的那个`复杂数据类型`。
+  ```js
+  function Person (name) {
+    this.name = name
+    return {
+      demo: '123'
+    }
+  }
+  const person = new Person('张三')
+  console.log(person) // {demo: '123'}
+  ```
 
 
 ## 50、如何获取浏览器版本信息
 ```js
 window.navigator.userAgent
+```
+```js
+function getBrowser() {
+  var UserAgent = navigator.userAgent.toLowerCase();
+  var browserInfo = {};
+  var browserArray = {
+    // IE
+    IE: window.ActiveXObject || "ActiveXObject" in window,
+    // Chrome浏览器
+    Chrome: UserAgent.indexOf('chrome') > -1 && UserAgent.indexOf('safari') > -1,
+    // 火狐浏览器
+    Firefox: UserAgent.indexOf('firefox') > -1,
+    // Opera浏览器
+    Opera: UserAgent.indexOf('opera') > -1,  
+    // safari浏览器
+    Safari: UserAgent.indexOf('safari') > -1 && UserAgent.indexOf('chrome') == -1,  
+    // Edge浏览器  
+    Edge: UserAgent.indexOf('edge') > -1, 
+    // qq浏览器
+    QQBrowser: /qqbrowser/.test(UserAgent), 
+    // 微信浏览器
+    WeixinBrowser: /MicroMessenger/i.test(UserAgent)
+  };
+  
+  for (var i in browserArray) {
+    if (browserArray[i]) {
+      var versions = '';
+      if (i == 'IE') {
+        versions = UserAgent.match(/(msie\s|trident.*rv:)([\w.]+)/)[2];
+      } else if (i == 'Chrome') {
+        for (var mt in navigator.mimeTypes) {
+          //检测是否是360浏览器(测试只有pc端的360才起作用)      
+          if (navigator.mimeTypes[mt]['type'] == 'application/360softmgrplugin') {
+            i = '360';
+          }
+        }
+        versions = UserAgent.match(/chrome\/([\d.]+)/)[1];
+      } else if (i == 'Firefox') {
+        versions = UserAgent.match(/firefox\/([\d.]+)/)[1];
+      } else if (i == 'Opera') {
+        versions = UserAgent.match(/opera\/([\d.]+)/)[1];
+      } else if (i == 'Safari') {
+        versions = UserAgent.match(/version\/([\d.]+)/)[1];
+      } else if (i == 'Edge') {
+        versions = UserAgent.match(/edge\/([\d.]+)/)[1];
+      } else if (i == 'QQBrowser') {
+        versions = UserAgent.match(/qqbrowser\/([\d.]+)/)[1];
+      }
+      browserInfo.type = i;
+      browserInfo.versions = parseInt(versions);
+    }
+  } return browserInfo;
+}
+
+console.log(getBrowser())
 ```
 
 
@@ -2671,7 +3148,7 @@ window.navigator.userAgent
 - valueOf()：返回原始字符串值
 
 
-## 53、自执行函数? 用于什么场景？好处?
+## 53、==自执行函数? 用于什么场景？好处?==
 自执行函数: 
 1. 声明一个匿名函数
 2. 马上调用这个匿名函数。

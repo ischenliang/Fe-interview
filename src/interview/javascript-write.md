@@ -10,6 +10,36 @@
 - https://juejin.cn/post/6844904052237713422
 - https://juejin.cn/post/6844903911686406158
 
+## new关键字手写实现
+```js
+function objectFactory() {
+  let newObject = null,
+    constructor = Array.prototype.shift.call(arguments), // 取出第一个参数--构造函数
+    result = null;
+
+  // 参数判断
+  if (typeof constructor !== "function") {
+    console.error("type error");
+    return;
+  }
+
+  // 新建一个空对象，对象的原型为构造函数的 prototype 对象
+  newObject = Object.create(constructor.prototype);
+
+  // 将 this 指向新建对象，并执行函数
+  result = constructor.apply(newObject, arguments);
+
+  // 判断返回对象
+  let flag = result && (typeof result === "object" || typeof result === "function");
+
+  // 判断返回结果
+  return flag ? result : newObject;
+}
+
+// 使用方法
+// objectFactory(构造函数, 初始化参数);
+```
+
 ## 1、apply的实现
 + 前部分与call一样
 + 第二个参数可以不传，但类型必须为数组或者类数组
