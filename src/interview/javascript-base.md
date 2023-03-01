@@ -109,22 +109,8 @@ Object.prototype.toString.call('123') === '[object String]' // true
 如果你对`==`和`===`的概念不是特别了解，建议大多数情况下使用`===`。
 
 
-## 6、怎样添加、移除、移动、复制、创建和查找节点？
-- 创建新节点
-  - `createDocumentFragment()`：创建一个 DOM 片段
-  - `createElement()`：创建一个具体的元素
-  - `createTextNode()`：创建一个文本节点
-- 添加、移除、替换、插入
-  - `appendChild()`：添加
-  - `removeChild()`：移除
-  - `replaceChild()`：替换
-  - `insertBefore()`：插入
-- 查找
-  - `getElementsByTagName()`：通过标签名称
-  - `getElementsByName()`：通过元素的 Name 属性的值
-  - `getElementById()`：通过元素 Id，唯一性
-  - `querySelector(CSS selectors)`：匹配指定 CSS 选择器的一个元素
-  - `querySelectorAll(CSS selectors)`：匹配指定 CSS 选择器的所有元素，返回 NodeList 对象
+## 6、事件代理怎么实现？
+在元素的父节点注册事件，通过事件冒泡，在父节点捕获事件。
 
 
 ## 7、事件委托是什么？
@@ -192,19 +178,77 @@ Object.prototype.toString.call('123') === '[object String]' // true
   ```
 
 
-## 8、require 与 import 的区别
-node编程中最重要的思想就是模块化，import 和 require 都是被模块化所使用。在 ES6 当中，用 export 导出接口，用 import 引入模块。但是在 node 模块中，使用module.exports导出接口，使用 require 引入模块。
-### 遵循规范不同
-- require 是 CommonJS/AMD 规范；
-- import 是 ESMAScript6+ 规范；
+## 8、事件捕获、事件冒泡、事件委托
+DOM事件流（event  flow ）存在三个阶段：**事件捕获阶段**、**处于目标阶段**、**事件冒泡阶段**。
+- 事件捕获: window将事件派发到目标的这一过程
+- 目标阶段: 事件派发到目标元素的阶段，如果事件被处理成不进行冒泡，那么后续的冒泡将终止
+- 冒泡阶段: 从目标元素开始，逐层向上传递事件，直到document
+![202302272001442.png](https://imgs.itchenliang.club/img/202302272001442.png)
 
-### 遵循时间不同
-- require 是运行时加载，由于编译时加载，所以import会提升到整个模块的头部；
-- import 是编译时加载；
+dom标准事件流的触发的先后顺序为：**先捕获再冒泡**，即当触发dom事件时，会先进行事件捕获，捕获到事件源之后通过事件传播进行事件冒泡。
 
-### 本质不同
-- require 是赋值过程。module.exports后面的内容是什么，require的结果就是什么，比如对象、数字、字符串、函数等，然后再把require的结果赋值给某个变量，它相当于module.exports的传送门；
-- import 是解构过程，但是目前所有的引擎都还没有实现import，我们在node中使用babel支持ES6，也仅仅是将ES6转码为ES5再执行，import语法会被转码为require
+### 事件捕获
+通俗的理解就是，当鼠标点击或者触发dom事件时，浏览器会从根节点开始由**外到内**进行事件传播，即点击了子元素，如果父元素通过事件捕获方式注册了对应的事件的话，会先触发父元素绑定的事件。
+
+### 事件冒泡
+与事件捕获恰恰相反，事件冒泡顺序是由**内到外**进行事件传播，直到根节点。
+
+### 事件委托
+> 又称`事件代理`，事件委托就是利用事件冒泡，只指定一个事件处理程序，就可以管理某一类型的所有事件。
+
+案例：实现功能是点击li，弹出123，不使用事件委托实现。
+```html
+<ul id="ul1">
+  <li>111</li>
+  <li>222</li>
+  <li>333</li>
+  <li>444</li>
+</ul>
+```
+```js
+window.onload = function(){
+  var oUl = document.getElementById("ul1");
+  var aLi = oUl.getElementsByTagName('li');
+  for(var i = 0; i < aLi.length; i++){
+    aLi[i].onclick = function(){
+      alert(123);
+    }
+  }
+}
+```
+使用事件委托实现：
+```js
+window.onload = function(){
+  var oUl = document.getElementById("ul1");
+  oUl.onclick = function(ev){
+    var ev = ev || window.event;
+    var target = ev.target || ev.srcElement;
+    if(target.nodeName.toLowerCase() == 'li'){
+      alert(123);
+      alert(target.innerHTML);
+    }
+  }
+}
+```
+
+### 经典案例
+![202302272024251.png](https://imgs.itchenliang.club/img/202302272024251.png)
+
+可以看到，上面程序的输出结果：
+```
+我是 monther
+我是 daughter
+我是 baby
+我是 grandma
+```
+造成这以结果的原因是：
+> `target.addEventListener(type, listener, useCapture)`
+> - 参数一：事件类型，比如 click、mouseenter、drag等。
+> - 参数二：事件被触发时的回调函数。
+> - 参数三：`useCapture`: 默认值为false，表示在冒泡阶段处理事件。**如果为true，则在捕获阶段处理事件**。
+
+前面提到的DOM事件流的执行顺序是**先捕获再冒泡**，所以dom事件流从外向内捕获过程就是`grandma -> monther -> daughter -> baby`，而只有`monther`和`daughter`设置了`useCapture = true`，所以在捕获阶段就先将事件处理了，而`grandma`和`baby`并未设置`useCapture = true`，默认是`false`，而我们又是点击的`baby`所以首先会先处理`baby`目标事件，然后再通过冒泡到`grandma`事件。
+
 
 
 ## 9、JavaScript 对象的几种创建方式
@@ -3497,543 +3541,375 @@ function stopDefault(e) {
 ```
 
 
-## 61、❓==javascript 的本地对象，内置对象和宿主对象==
+## 61、JavaScript的本地对象，内置对象和宿主对象
 ### 本地对象
-ECMA-262 把本地对象（native object）定义为“独立于宿主环境的 ECMAScript 实现提供的对象"。简单来说，本地对象就是 ECMA-262 定义的类（引用类型）。它们包括：Object、Function、Array、String、Boolean、Number、Date、RegExp、Error、EvalError、RangeError、ReferenceError、SyntaxError、TypeError、URIError
+本地对象(native object)与宿主无关，无论在浏览器还是服务器中都有的对象，就是ECMAScript标准中**定义的类**(构造函数)。在使用过程中需要我们手动`new`创建。
+> 包括：`Boolean`、`Number`、`Date`、`RegExp`、`Array`、`String`、`Object`、`Function`、`Error`、`EvalError`、`RangeError`、`ReferenceError`、`SyntaxError`、`TypeError`、`URIError`。
 
 ### 内置对象
-JS中内置了17个对象，常用的是Array对象、Date对象、正则表达式对象、string对象、Global对象
+内置对象(built-in object)与宿主无关，无论在浏览器还是服务器中都有的对象，ECMAScript已经帮我们**创建好的对象**，在使用过程中无需我们动手`new`创建。所有内置对象都是本地对象的子集。
+> 包含：`Global`、`Math`、`JSON`
 
 ### 宿主对象
-由ECMAScript实现的宿主环境提供的对象，可以理解为：浏览器提供的对象。所有的BOM和DOM都是宿主对象。
+宿主对象(host object)由 ECMAScript 实现的宿主环境（如某浏览器）提供的对象（如由浏览器提供的`Window`和`Document`），包含两大类，一个是宿主提供，一个是自定义类对象。所有非本地对象都属于宿主对象。
+> 包含：`Window`和`Document`、以及所有的`DOM`和`BOM`对象。
+
+**什么是宿主？**
+> 宿主就是指JavaScript运行环境，js可以在浏览器中运行，也可以在服务器上运行(nodejs)，对于嵌入到网页中的js来说，其宿主对象就是浏览器，所以宿主对象就是浏览器提供的对象。
 
 
-## 62、❓javascript 的同源策略
-一段脚本只能读取来自于同一来源的窗口和文档的属性<br>
-同源策略：限制从一个源加载的文档或脚本如何与来自另一个源的资源进行交互。这是一个用于隔离潜在恶意文件的关键的安全机制。（来自 MDN 官方的解释）。
-
-简单来说就是：一段脚本只能读取来自于同一来源的窗口和文档的属性，这里的同一来源指的是主机名、协议和端口号的组合。<br>
-具体解释：
-- 源包括三个部分：协议、域名、端口（http 协议的默认端口是 80）。如果有任何一个部分不同，则源不同，那就是跨域了。
-- 限制：这个源的文档没有权利去操作另一个源的文档。这个限制体现在：
-  - Cookie、LocalStorage 和 IndexDB 无法获取。
-  - 无法获取和操作 DOM。
-  - 不能发送 Ajax 请求。我们要注意，Ajax 只适合同源的通信
-  - 同源策略带来的麻烦：ajax 在不同域名下的请求无法实现，需要进行跨域操作
+## 62、javascript 的同源策略
+所谓同源是指，域名，协议，端口相同，同源策略是一种安全协议。不同源的客户端脚本(javascript、ActionScript)在没明确授权的情况下，不能读写对方的资源。
+> 简单的来说，浏览器允许包含在页面A的脚本访问第二个页面B的数据资源，这一切是建立在A和B页面是同源的基础上。<br>
 
 
-## 63、事件捕获、事件冒泡、事件委托
-DOM事件流（event  flow ）存在三个阶段：**事件捕获阶段**、**处于目标阶段**、**事件冒泡阶段**。
-- 事件捕获: window将事件派发到目标的这一过程
-- 目标阶段: 事件派发到目标元素的阶段，如果事件被处理成不进行冒泡，那么后续的冒泡将终止
-- 冒泡阶段: 从目标元素开始，逐层向上传递事件，直到document
-![202302272001442.png](https://imgs.itchenliang.club/img/202302272001442.png)
+## 63、require 与 import 的区别
+node编程中最重要的思想就是模块化，import 和 require 都是被模块化所使用。在 ES6 当中，用 export 导出接口，用 import 引入模块。但是在 node 模块中，使用module.exports导出接口，使用 require 引入模块。
+### 遵循规范不同
+- require 是 CommonJS/AMD 规范；
+- import 是 ESMAScript6+ 规范；
 
-dom标准事件流的触发的先后顺序为：**先捕获再冒泡**，即当触发dom事件时，会先进行事件捕获，捕获到事件源之后通过事件传播进行事件冒泡。
+### 遵循时间不同
+- require 是运行时加载，由于编译时加载，所以import会提升到整个模块的头部；
+- import 是编译时加载；
 
-### 事件捕获
-通俗的理解就是，当鼠标点击或者触发dom事件时，浏览器会从根节点开始由**外到内**进行事件传播，即点击了子元素，如果父元素通过事件捕获方式注册了对应的事件的话，会先触发父元素绑定的事件。
+### 本质不同
+- require 是赋值过程。module.exports后面的内容是什么，require的结果就是什么，比如对象、数字、字符串、函数等，然后再把require的结果赋值给某个变量，它相当于module.exports的传送门；
+- import 是解构过程，但是目前所有的引擎都还没有实现import，我们在node中使用babel支持ES6，也仅仅是将ES6转码为ES5再执行，import语法会被转码为require
 
-### 事件冒泡
-与事件捕获恰恰相反，事件冒泡顺序是由**内到外**进行事件传播，直到根节点。
 
-### 事件委托
-> 又称`事件代理`，事件委托就是利用事件冒泡，只指定一个事件处理程序，就可以管理某一类型的所有事件。
 
-案例：实现功能是点击li，弹出123，不使用事件委托实现。
-```html
-<ul id="ul1">
-  <li>111</li>
-  <li>222</li>
-  <li>333</li>
-  <li>444</li>
-</ul>
-```
+## 64、==JavaScript全局属性和全局函数有哪些?==
+> https://www.runoob.com/jsref/jsref-obj-global.html
+### 全局属性
+#### Infinity
+代表正的无穷大的数值。
+
+#### NaN
+指示某个值是不是数字值。
+
+#### undefined
+指示未定义的值。
+
+### 全局函数
+#### decodeURI()
+解码某个编码的URI
+
+#### decodeURIComponent()
+解码一个编码的URI组件
+
+#### encodeURI()
+把字符串编码为URI
+
+#### encodeURIComponent()
+把字符串编码为URI组件
+
+#### escape()
+对字符串进行编码
+
+#### eval()
+计算 JavaScript 字符串，并把它作为脚本代码来执行
+
+#### isFinite()
+检查某个值是否为有穷大的数
+
+#### isNaN()
+检查某个值是否是数字
+
+#### Number()
+将对象的值转换成数字
+
+#### parseFloat()
+解析一个字符串并返回一个浮点数
+
+#### parseInt()
+解析一个字符串并返回一个整数
+
+#### String()
+把对象的值转换为字符串
+
+#### unescape()
+对由`escape()`编码的字符串进行解码
+
+
+## 65、JavaScript中 this 的指向问题
+> 一句话概括this指向：谁调用this就指向谁。优先级: 箭头函数 -> new -> bind -> call&apply -> obj.xx -> 直接调用 -> 不在函数里
+### 箭头函数
+箭头函数`this`的指向不会发生改变，也就是说在创建箭头函数时就已经确定了它的`this`的指向了；它的指向永远指向箭头函数外层的`this`。
 ```js
-window.onload = function(){
-  var oUl = document.getElementById("ul1");
-  var aLi = oUl.getElementsByTagName('li');
-  for(var i = 0; i < aLi.length; i++){
-    aLi[i].onclick = function(){
-      alert(123);
+function fn1() {
+  console.log(this);
+  let fn2 = () => {
+    console.log(this);
+  }
+  fn2(); // this->window
+}
+fn1();// this->window
+// 因为fn1函数中this的指向是window，所以fn2箭头函数this指向fn1函数也就是间接指向window
+```
+
+### 直接调用(普通函数)
+在函数被直接调用时，`this`将指向全局对象。在浏览器环境中全局对象是`Window`，在 Node.js 环境中是`Global`。
+- 全局作用域中：`this`永远指向`window`，无论是否严格模式；
+  ```js
+  // 非严格模式
+  console.log(this) // window
+
+  // 严格模式
+  'use strict';
+  console.log(this) // window
+  ```
+- 函数作用域中：
+  - 如果函数直接被调用(`函数名()`)，非严格模式`this`指向`window`，严格模式`this`指向`undefined`；
+  ```js
+  // 简单例子
+  function func() {
+    console.log(this) // Window
+  }
+  func()
+
+  // 严格模式
+  'use strict';
+  function func() {
+    console.log(this) // undefined
+  }
+  func()
+  ```
+  ```js
+  // 复杂的例子: 外层的 outerFunc 就起个迷惑目的
+  function outerFunc() {
+    console.log(this) // { x: 1 }
+    function func() {
+      console.log(this) // Window
     }
+    func()
+  }
+  outerFunc.bind({ x: 1 })()
+  ```
+  - 被对象的`对象.属性()`调用，函数中的`this`指向这个对象，详细查看下节内容。
+
+### obj.xxx()
+对象的`对象.属性()`调用，函数中的`this`指向这个对象
+```js
+// 简单例子
+var a = {
+  fn () {
+    console.log(this) // 指向a = { fn } 这个对象
   }
 }
-```
-使用事件委托实现：
-```js
-window.onload = function(){
-  var oUl = document.getElementById("ul1");
-  oUl.onclick = function(ev){
-    var ev = ev || window.event;
-    var target = ev.target || ev.srcElement;
-    if(target.nodeName.toLowerCase() == 'li'){
-      alert(123);
-      alert(target.innerHTML);
-    }
-  }
-}
-```
+a.fn()
 
-### 经典案例
-![202302272024251.png](https://imgs.itchenliang.club/img/202302272024251.png)
-
-可以看到，上面程序的输出结果：
-```
-我是 monther
-我是 daughter
-我是 baby
-我是 grandma
-```
-造成这以结果的原因是：
-> `target.addEventListener(type, listener, useCapture)`
-> - 参数一：事件类型，比如 click、mouseenter、drag等。
-> - 参数二：事件被触发时的回调函数。
-> - 参数三：`useCapture`: 默认值为false，表示在冒泡阶段处理事件。**如果为true，则在捕获阶段处理事件**。
-
-前面提到的DOM事件流的执行顺序是**先捕获再冒泡**，所以dom事件流从外向内捕获过程就是`grandma -> monther -> daughter -> baby`，而只有`monther`和`daughter`设置了`useCapture = true`，所以在捕获阶段就先将事件处理了，而`grandma`和`baby`并未设置`useCapture = true`，默认是`false`，而我们又是点击的`baby`所以首先会先处理`baby`目标事件，然后再通过冒泡到`grandma`事件。
-
-
-## 64、❓JavaScript全局函数有哪些?
-> https://blog.csdn.net/weixin_45735355/article/details/119953872
-
-
-## 65、❓javascript 中 this 的指向问题
-- 全局环境、普通函数（非严格模式）指向 window
-- 普通函数（严格模式）指向 undefined
-- 函数作为对象方法及原型链指向的就是上一级的对象
-- 构造函数指向构造的对象
-- DOM 事件中指向触发事件的元素
-- 箭头函数...
-
-### 全局环境
-全局环境下，this 始终指向全局对象（window），无论是否严格模式；
-```js
-// 在浏览器中，全局对象为 window 对象：
-console.log(this === window); // true
-
-this.a = 37;
-console.log(window.a); // 37
-```
-
-### 函数上下文调用
-#### 普通函数
-普通函数内部的 this 分两种情况，严格模式和非严格模式。<br>
-（1）非严格模式下，没有被上一级的对象所调用, this 默认指向全局对象 window。
-```js
-function f1() {
-  return this;
-}
-f1() === window; // true
-```
-（2）严格模式下，this 指向 undefined。
-```js
-function f2() {
-  "use strict"; // 这里是严格模式
-  return this;
-}
-f2() === undefined; // true
-```
-
-#### 函数作为对象的方法
-（1）函数有被上一级的对象所调用，那么 this 指向的就是上一级的对象。<br>
-（2）多层嵌套的对象，内部方法的 this 指向离被调用函数最近的对象（window 也是对象，其内部对象调用方法的 this 指向内部对象， 而非 window）。
-```js
-//方式1
+// 复杂例子1
 var o = {
   prop: 37,
   f: function() {
-    return this.prop;
+    console.log(this.prop)
   }
 };
-//当 o.f()被调用时，函数内的this将绑定到o对象。
-console.log(o.f()); // logs 37
-
-//方式2
-var o = {
-  prop: 37
-};
-
 function independent() {
-  return this.prop;
+  console.log(this.prop)
 }
-//函数f作为o的成员方法调用
-o.f = independent;
-console.log(o.f()); // logs 37
-
-//方式3
-//this 的绑定只受最靠近的成员引用的影响
 o.b = {
   g: independent,
   prop: 42
 };
-console.log(o.b.g()); // 42
-```
-特殊例子
-```js
-// 例子1
+o.f() // 37
+o.b.g() // 42
+
+// 复杂例子2
 var o = {
   a: 10,
   b: {
     // a:12,
     fn: function() {
-      console.log(this.a); //undefined
-      console.log(this); //{fn: ƒ}
+      console.log(this.a); // undefined
+      console.log(this); // {fn: ƒ}
     }
   }
 };
 o.b.fn();
-// 例子2
+
+// 复杂例子3
 var o = {
   a: 10,
   b: {
     a: 12,
     fn: function() {
-      console.log(this.a); //undefined
-      console.log(this); //window
+      console.log(this.a); // undefined
+      console.log(this); // window
     }
   }
 };
 var j = o.b.fn;
 j();
-// this永远指向的是最后调用它的对象，也就是看它执行的时候是谁调用的，例子2中虽然函数fn是被对象b所引用，但是在将fn赋值给变量j的时候并没有执行所以最终指向的是window，这和例子1是不一样的，例子1是直接执行了fn
 ```
-
-#### 原型链中的 this
-（1）如果该方法存在于一个对象的原型链上，那么 this 指向的是调用这个方法的对象，就像该方法在对象上一样。
+箭头函数中`this`不会被修改
 ```js
-var o = {
-  f: function() {
-    return this.a + this.b;
+var a = {
+  fn: () => {
+    console.log(this) // window
   }
-};
-var p = Object.create(o);
-p.a = 1;
-p.b = 4;
-
-console.log(p.f()); // 5
+}
+a.fn()
 ```
-上述例子中，对象 p 没有属于它自己的 f 属性，它的 f 属性继承自它的原型。当执行 p.f()时，会查找 p 的原型链，找到 f 函数并执行。因为 f 是作为 p 的方法调用的，所以函数中的 this 指向 p。
-
-（2）相同的概念也适用于当函数在一个 getter 或者 setter 中被调用。用作 getter 或 setter 的函数都会把 this 绑定到设置或获取属性的对象。<br>
-（3）call()和 apply()方法：当函数通过 Function 对象的原型中继承的方法 call() 和 apply() 方法调用时， 其函数内部的 this 值可绑定到 call() & apply() 方法指定的第一个对象上， 如果第一个参数不是对象，JavaScript 内部会尝试将其转换成对象然后指向它。
+`obj.xxx`与`bind`一起使用
 ```js
-function add(c, d) {
-  return this.a + this.b + c + d;
+var obj = { name: 'obj' }
+var a = {
+  name: 'a',
+  fn () {
+    console.log(this) // obj
+  }
 }
-var o = {
-  a: 1,
-  b: 3
-};
-
-add.call(o, 5, 7); // 1 + 3 + 5 + 7 = 16
-add.apply(o, [10, 20]); // 1 + 3 + 10 + 20 = 34
-
-function tt() {
-  console.log(this);
-}
-// 第一个参数不是对象，JavaScript内部会尝试将其转换成对象然后指向它。
-tt.call(5); // 内部转成 Number {[[PrimitiveValue]]: 5}
-tt.call("asd"); // 内部转成 String {0: "a", 1: "s", 2: "d", length: 3, [[PrimitiveValue]]: "asd"}
+a.fn.bind(obj)()
 ```
-（4）bind()方法：由 ES5 引入， 在 Function 的原型链上， Function.prototype.bind。通过 bind 方法绑定后， 函数将被永远绑定在其第一个参数对象上， 而无论其在什么情况下被调用。
+总结：**this永远指向的是最后调用它的对象，也就是看它执行的时候是谁调用的**
+
+### new
+当使用`new`关键字调用函数时，函数中的`this`一定是 JS 创建的新对象。
 ```js
-function f() {
-  return this.a;
+// 简单例子
+function Person () {
+  console.log(this) // Person {}
 }
+const person = new Person()
 
-var g = f.bind({
-  a: "azerty"
-});
-console.log(g()); // azerty
-
-var o = {
-  a: 37,
-  f: f,
-  g: g
-};
-console.log(o.f(), o.g()); // 37, azerty
-```
-
-#### 构造函数中的 this
-当一个函数用作构造函数时（使用 new 关键字），它的 this 被绑定到正在构造的新对象。构造器返回的默认值是 this 所指的那个对象，也可以手动返回其他的对象。
-```js
-function C() {
-  this.a = 37;
-}
-
-var o = new C();
-console.log(o.a); // 37
-// 为什么this会指向o？首先new关键字会创建一个空的对象，然后会自动调用一个函数apply方法，将this指向这个空对象，这样的话函数内部的this就会被这个空的对象替代。
-
-function C2() {
-  this.a = 37;
+// 复杂例子1
+function Person () {
+  this.name = 'abc'
   return {
-    a: 38
-  }; // 手动设置返回{a:38}对象
+    name: 'cba' // 手动设置返回对象
+  }
 }
+const person = new Person()
+console.log(person.name) // cba
 
-o = new C2();
-console.log(o.a); // 38
+// 复杂例子2
+function Person () {
+  this.name = 'abc'
+  return 1
+}
+const person = new Person()
+console.log(person.name) // abc
+
+// 复杂例子3
+function Person () {
+  this.name = 'abc'
+  return undefined
+}
+const person = new Person()
+console.log(person.name) // abc
+
+// 复杂例子4
+function Person () {
+  this.name = 'abc'
+  return null
+}
+const person = new Person()
+console.log(person.name) // abc
 ```
-特殊例子：当 this 碰到 return 时
-```js
-// 例子1
-function fn() {
-  this.user = "追梦子";
-  return {};
-}
-var a = new fn();
-console.log(a.user); //undefined
-// 例子2
-function fn() {
-  this.user = "追梦子";
-  return function() {};
-}
-var a = new fn();
-console.log(a.user); //undefined
-// 例子3
-function fn() {
-  this.user = "追梦子";
-  return 1;
-}
-var a = new fn();
-console.log(a.user); //追梦子
-// 例子4
-function fn() {
-  this.user = "追梦子";
-  return undefined;
-}
-var a = new fn();
-console.log(a.user); //追梦子
-// 例子5
-function fn() {
-  this.user = "追梦子";
-  return undefined;
-}
-var a = new fn();
-console.log(a); //fn {user: "追梦子"}
-// 例子6
-// 虽然null也是对象，但是在这里this还是指向那个函数的实例，因为null比较特殊
-function fn() {
-  this.user = "追梦子";
-  return null;
-}
-var a = new fn();
-console.log(a.user); //追梦子
+总结: **如果手动设置的返回值是一个对象(`null`除外)，那么`this`指向的就是那个返回的对象，如果返回值不是一个对象那么`this`还是指向函数的实例。**
 
-// 总结：如果返回值是一个对象，那么this指向的就是那个返回的对象，如果返回值不是一个对象那么this还是指向函数的实例。
+那么有的人就会疑问，如果使用`new`关键调用箭头函数，是不是箭头函数的`this`就会被修改呢？
+```js
+Person = () => {}
+new Person() // Uncaught TypeError: Person is not a constructor
+```
+从控制台中可以看出，箭头函数不能当做构造函数，所以不能与`new`一起执行。
+
+### bind
+`bind`是指`Function.prototype.bind()`。多次`bind`时只认第一次`bind`的值。
+```js
+function fn() {
+  console.log(this)
+}
+fn.bind(1).bind(2)() // 1
+```
+箭头函数中`this`不会被修改
+```js
+fun = () => {
+  // 这里 this 指向取决于外层 this
+  console.log(this)
+}
+fun.bind(1)() // Window
+```
+易错点：**bind 与 new**
+注意: `new`优先
+```js
+function Person() {
+  console.log(this, this.__proto__ === Person.prototype)
+}
+boundFunc = Person.bind(1)
+new Person() // Person {} true
+```
+`bind`函数中`this`不会被修改
+```js
+function func() {
+  console.log(this)
+}
+ 
+boundFunc = func.bind(1)
+// 尝试使用apply修改this
+boundFunc.apply(2) // 1 -> 由结果可知bind的优先级高
 ```
 
-#### setTimeout & setInterval
-（1）对于延时函数内部的回调函数的 this 指向全局对象 window；<br>
-（2）可以通过 bind()方法改变内部函数 this 指向。
+### apply和call
+`apply()`和`call()`的第一个参数都是`this`，区别在于通过`apply`调用时实参是放到数组中的，而通过`call`调用时实参是逗号分隔的。
 ```js
-//默认情况下代码
+function Person(name, age) {
+  this.name = name
+  this.age = age
+  console.log(this)
+}
+const person = new Person('小明', 23) // Person {name: '小明', age: 23}
+var obj = {}
+Person.apply(obj, ['李四', 24]) // {name: '李四', age: 24}
+Person.call(obj, '王五', 25) // {name: '王五', age: 25}
+console.log(person) // Person {name: '小明', age: 23}
+```
+箭头函数中`this`不会被修改
+```js
+func = () => {
+  // 这里 this 指向取决于外层 this
+  console.log(this)
+}
+func.apply(1) // Window
+```
+
+### 不在函数里
+不在函数中的场景，可分为浏览器的`script`标签里，或 Node.js 的模块文件里。
+- 在`script`标签里，`this`指向`Window`。
+- 在 Node.js 的模块文件里，`this`指向`Module`的默认导出对象，也就是`module.exports`
+
+### setTimeout和setInterval
+- 对于延时函数内部的回调函数的`this`指向全局对象`window`；
+- 可以通过`bind()`方法改变内部函数`this`指向。
+```js
+// 默认情况下代码
 function Person() {
   this.age = 0;
   setTimeout(function() {
-    console.log(this);
+    console.log(this); // window
   }, 3000);
 }
 
-var p = new Person(); //3秒后返回 window 对象
+var p = new Person();
+
 //通过bind绑定
 function Person() {
   this.age = 0;
   setTimeout(
     function() {
-      console.log(this);
+      console.log(this); // Person{...}
     }.bind(this),
-    3000
-  );
+  3000);
 }
-var p = new Person(); //3秒后返回构造函数新生成的对象 Person{...}
+var p = new Person(); 
 ```
 
-### 在 DOM 事件中
-#### 作为一个 DOM 事件处理函数
-当函数被用作事件处理函数时，它的 this 指向触发事件的元素（针对 addEventListener 事件）。
-```js
-// 被调用时，将关联的元素变成蓝色
-function bluify(e) {
-  //this指向所点击元素
-  console.log("this === e.currentTarget", this === e.currentTarget); // 总是 true
-  // 当 currentTarget 和 target 是同一个对象时为 true
-  console.log("this === e.target", this === e.target);
-  this.style.backgroundColor = "#A5D9F3";
-}
 
-// 获取文档中的所有元素的列表
-var elements = document.getElementsByTagName("*");
-
-// 将bluify作为元素的点击监听函数，当元素被点击时，就会变成蓝色
-for (var i = 0; i < elements.length; i++) {
-  elements[i].addEventListener("click", bluify, false);
-}
-```
-
-#### 作为一个内联事件处理函数
-（1）当代码被内联处理函数调用时，它的 this 指向监听器所在的 DOM 元素；<br>
-（2）当代码被包括在函数内部执行时，其 this 指向等同于 普通函数直接调用的情况，即在非严格模式指向全局对象 window，在严格模式指向 undefined：
-```js
-<button onclick="console.log(this)">show me</button>
-<button onclick="(function () {console.log(this)})()">show inner this</button>
-<button onclick="(function () {'use strict'; console.log(this)})()">
-  use strict
-</button>
-```
-```
-// 控制台打印
-<button onclick="console.log(this)">show me</button>
-Window {postMessage: ƒ, blur: ƒ, focus: ƒ, close: ƒ, parent: Window, …}
-undefined
-```
-
-### 箭头函数
-#### 全局环境中
-在全局代码中，箭头函数被设置为全局对象：
-```js
-var globalObject = this;
-var foo = () => this;
-console.log(foo() === globalObject); // true
-```
-
-#### this 捕获上下文
-箭头函数没有自己的 this，而是使用箭头函数所在的作用域的 this，即指向箭头函数定义时（而不是运行时）所在的作用域。
-```js
-//1、箭头函数在函数内部，以非方法的方法使用
-function Person() {
-  this.age = 0;
-  setInterval(() => {
-    this.age++;
-  }, 3000);
-}
-var p = new Person(); //Person{age: 0}
-
-//普通函数作为内部函数
-function Person() {
-  this.age = 0;
-  setInterval(function() {
-    console.log(this);
-    this.age++;
-  }, 3000);
-}
-var p = new Person(); //Window{...}
-```
-
-#### this 捕获上下文
-箭头函数没有自己的 this，而是使用箭头函数所在的作用域的 this，即指向箭头函数定义时（而不是运行时）所在的作用域。
-```js
-//1、箭头函数在函数内部，以非方法的方法使用
-function Person() {
-  this.age = 0;
-  setInterval(() => {
-    console.log(this);
-    this.age++;
-  }, 3000);
-}
-var p = new Person(); //Person{age: 0}
-
-//普通函数作为内部函数
-function Person() {
-  this.age = 0;
-  setInterval(function() {
-    console.log(this);
-    this.age++;
-  }, 3000);
-}
-var p = new Person(); //Window{...}
-```
-在 setTimeout 中的 this 指向了构造函数新生成的对象，而普通函数指向了全局 window 对象。
-
-#### 箭头函数作为对象的方法使用
-箭头函数作为对象的方法使用，指向全局 window 对象；而普通函数作为对象的方法使用，则指向调用的对象。
-```js
-var obj = {
-  i: 10,
-  b: () => console.log(this.i, this),
-  c: function() {
-    console.log(this.i, this);
-  }
-};
-obj.b(); // undefined window{...}
-obj.c(); // 10 Object {...}
-```
-
-#### 箭头函数中，call()、apply()、bind()方法无效
-```js
-var adder = {
-  base: 1,
-  //对象的方法内部定义箭头函数，this是箭头函数所在的作用域的this，
-  //而方法add的this指向adder对象，所以箭头函数的this也指向adder对象。
-  add: function(a) {
-    var f = v => v + this.base;
-    return f(a);
-  },
-  //普通函数f1的this指向window
-  add1: function() {
-    var f1 = function() {
-      console.log(this);
-    };
-    return f1();
-  },
-  addThruCall: function inFun(a) {
-    var f = v => v + this.base;
-    var b = {
-      base: 2
-    };
-
-    return f.call(b, a);
-  }
-};
-
-console.log(adder.add(1)); // 输出 2
-adder.add1(); //输出全局对象 window{...}
-console.log(adder.addThruCall(1)); // 仍然输出 2（而不是3，其内部的this并没有因为call() 而改变，其this值仍然为函数inFun的this值，指向对象adder
-```
-
-#### this 指向固定化
-箭头函数可以让 this 指向固定化，这种特性很有利于封装回调函数
-```js
-var handler = {
-  id: "123456",
-  init: function() {
-    document.addEventListener(
-      "click",
-      event => this.doSomething(event.type),
-      false
-    );
-  },
-
-  doSomething: function(type) {
-    console.log("Handling " + type + " for " + this.id);
-  }
-};
-```
-上面代码的 init 方法中，使用了箭头函数，这导致这个箭头函数里面的 this，总是指向 handler 对象。如果不使用箭头函数则指向全局 document 对象。
-
-#### 箭头函是不适用场景
-（1）箭头函数不适合定义对象的方法（方法内有 this），因为此时指向 window；<br>
-（2）需要动态 this 的时候，也不应使用箭头函数。
-```js
-//例1，this指向定义箭头函数所在的作用域，它位于对象cat内，但cat不能构成一个作用域，所以指向全局window，改成普通函数后this指向cat对象。
-const cat = {
-  lives: 9,
-  jumps: () => {
-    this.lives--;
-  }
-};
-
-//例2，此时this也是指向window，不能动态监听button，改成普通函数后this指向按钮对象。
-var button = document.getElementById("press");
-button.addEventListener("click", () => {
-  this.classList.toggle("on");
-});
-```
-
-## 66、正则表达式构造函数 var reg = new RegExp('xxx')与正则表达字面量 var reg = // 有什么不同？
-使用正则表达字面量的效率更高。
+## 66、正则表达式构造函数`var reg = new RegExp('xxx')`与正则表达字面量`var reg = //`有什么不同？
+当使用`RegExp()`构造函数的时候，不仅需要转义引号（即`\`”表示”），并且还需要双反斜杠（即`\\`表示一个`\`）。使用正则表达字面量的效率更高。
 
 示例代码：演示两种可用于创建正则表达式以匹配反斜杠的方法
 ```js
@@ -4048,51 +3924,91 @@ console.log(re.test(foo)); //true
 console.log(reg.test(foo)); //true
 ```
 如上面的代码中可以看到，使用正则表达式字面量表示法时式子显得更加简短，而且不用按照类似类（class-like）的构造函数方式思考。<br>
-其次，在当使用构造函数的时候，在这里要使用四个反斜杠才能匹配单个反斜杠。这使得正则表达式模式显得更长，更加难以阅读和修改。正确来说，当使用 RegExp() 构造函数的时候，不仅需要转义引号（即"表示"），并且通常还需要双反斜杠（即\表示一个\）。<br>
-使用 new RegExp() 的原因之一在于，某些场景中无法事先确定模式，而只能在运行时以字符串方式创建。
-
-
-## 67、js 中 callee 与 caller 的作用
-### caller
-返回一个调用当前函数的引用 如果是由顶层调用的话 则返回 null。举个栗子哈 caller 给你打电话的人 谁给你打电话了 谁调用了你 很显然是下面 a 函数的执行 只有在打电话的时候你才能知道打电话的人是谁 所以对于函数来说 只有 caller 在函数执行的时候才存在）
+其次，在当使用构造函数的时候，在这里要使用四个反斜杠才能匹配单个反斜杠。这使得正则表达式模式显得更长，更加难以阅读和修改。正确来说，当使用 `RegExp()`构造函数的时候，不仅需要转义引号（即"表示"），并且通常还需要双反斜杠（即\表示一个\）。<br>
+使用`new RegExp()`的原因之一在于，某些场景中无法事先确定模式，而只能在运行时以字符串方式创建。
 ```js
-var callerTest = function() {
-  console.log(callerTest.caller);
-};
-
-function a() {
-  callerTest();
-}
-a(); //输出function a() {callerTest();}
-callerTest(); //输出null
+// 邮箱的整则匹配
+var regMail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+((.[a-zA-Z0-9_-]{2,3}){1,2})$/;
 ```
+
+
+## 67、JavaScript中 callee 与 caller 的作用
+### caller
+返回一个调用当前函数的调用者，如果是由顶层调用的话则返回`null`。
+```js
+function demo () {
+  console.log(demo.caller)
+}
+function nest () {
+  demo()
+}
+demo() // null => 由于是顶层调用所以返回 null
+nest() // ƒ nest () { demo() } => 由于是nest调用的demo，所以输出 nest 函数 
+```
+**应用场景**
+> 主要用于察看函数本身被哪个函数调用。
 
 ### callee
-返回一个正在被执行函数的引用。（这里常用来递归匿名函数本身 但是在严格模式下不可行）<br>
-callee 是 arguments 对象的一个成员 表示对函数对象本身的引用 它有个 length 属性（代表形参的长度）
+`callee`是对象的一个属性，该属性是一个指针，指向参数`arguments`对象的函数。返回正被执行的`Function`对象，也就是所指定的`Function`对象的正文。是对象的一个属性，
+> `callee`是`arguments`的一个属性成员，它表示对函数对象本身的引用，这有利于匿名函数的递归或者保证函数的封装性。它有个`length`属性（代表形参的长度）。
 ```js
-var c = function(x, y) {
-  console.log(arguments.length, arguments.callee.length, arguments.callee);
-};
-c(1, 2, 3); //输出3 2 function(x,y) {console.log(arguments.length,arguments.callee.length,arguments.callee)}
+function demo (name, age) {
+  console.log(arguments.callee)
+  console.log('实参长度:', arguments.length)
+  console.log('形参长度:', arguments.callee.length)
+}
+demo('张三')
+// 输出结果
+// ƒ demo (name, age) {
+//  console.log(arguments.callee)
+//  console.log('实参长度:', arguments.length)
+//  console.log('形参长度:', arguments.callee.length)
+// }
+// 实参长度: 1
+// 形参长度: 2
+
+demo('张三', 23)
+// 输出结果
+// ƒ demo (name, age) {
+//  console.log(arguments.callee)
+//  console.log('实参长度:', arguments.length)
+//  console.log('形参长度:', arguments.callee.length)
+// }
+// 实参长度: 2
+// 形参长度: 2
 ```
+**应用场景**
+> 一般用于匿名函数，有利于匿名函数的递归或者保证函数的封装性。
+```js
+var fn = function (n) {
+  if(n > 0) return n + fn(n-1);
+  return 0;
+}
+console.log(fn(10)) // 55
+```
+函数内部包含了对自身的引用，函数名仅仅是一个变量名，在函数内部调用即相当于调用一个全局变量，不能很好的体现出是调用自身，这时使用`callee`会是一个比较好的方法
+```js
+var fn = function (n) {
+  if(n > 0) return n + arguments.callee(n - 1);
+  return 0;
+}
+console.log(fn(10)) // 55
+```
+这样就**让代码更加简练。又防止了全局变量的污染**。
 
 
 ## 68、异步加载 js 的方法
-**<p>方案一</p>**
-`<script>`标签的 async="async" 属性（详细参见：script 标签的 async 属性）<br>
-点评：HTML5 中新增的属性，Chrome、FF、IE9&IE9+均支持（IE6~8 不支持）。此外，这种方法不能保证脚本按顺序执行。
+**方案一**: `<script>`标签的`async="async"`属性
+> 点评：HTML5 中新增的属性，Chrome、FF、IE9&IE9+均支持（IE6~8 不支持）。此外，这种方法不能保证脚本按顺序执行。
 
-**<p>方案二</p>**
-`<script>`标签的 defer="defer" 属性<br>
-点评：兼容所有浏览器。此外，这种方法可以确保所有设置 defer 属性的脚本按顺序执行。
+**方案二**: `<script>`标签的`defer="defer"`属性
+> 点评：兼容所有浏览器。此外，这种方法可以确保所有设置 defer 属性的脚本按顺序执行。
 
-**<p>方案三</p>**
-动态创建 `<script>` 标签
+**方案三**: 动态创建`<script>`标签
+> 点评：兼容所有浏览器。
 ```html
 <!DOCTYPE html>
 <html>
-
 <head>
   <script type="text/javascript">
     (function() {
@@ -4102,35 +4018,30 @@ c(1, 2, 3); //输出3 2 function(x,y) {console.log(arguments.length,arguments.ca
       var tmp = document.getElementsByTagName("script")[0];
       tmp.parentNode.insertBefore(s, tmp);
     })();
-  </script>
+  </>
 </head>
-
 <body>
   <img src="http://xybtv.com/uploads/allimg/100601/48-100601162913.jpg" />
 </body>
-
 </html>
 ```
-点评：兼容所有浏览器。
 
-**<p>方案四</p>**
-AJAX eval（使用 AJAX 得到脚本内容，然后通过 eval_r(xmlhttp.responseText)来运行脚本）<br>
-点评：兼容所有浏览器。
+**方案四**: 使用 AJAX 得到脚本内容，然后通过`eval(xmlhttp.responseText)`来运行脚本
+> 点评：兼容所有浏览器。
 
-**<p>方案五</p>**
-iframe 方式（这里可以参照：iframe 异步加载技术及性能 中关于 Meboo 的部分）<br>
-点评：兼容所有浏览器。
+**方案五**: `iframe`方式（这里可以参照：iframe 异步加载技术及性能 中关于 Meboo 的部分）<br>
+> 点评：兼容所有浏览器。
 
 
-## 69、❓去除数组重复成员的方法（数组去重）
-**扩展运算符和 Set 结构相结合**
+## 69、去除数组重复成员的方法（数组去重）
+**1、扩展运算符`...`和`Set`结构相结合**
 ```js
 // 去除数组的重复成员
 [...new Set([1, 2, 2, 3, 4, 5, 5])];
 // [1, 2, 3, 4, 5]
 ```
 
-**Array.from和 Set 结构结合**
+**2、`Array.from`和`Set`结构结合**
 ```js
 function dedupe(array) {
   return Array.from(new Set(array));
@@ -4138,7 +4049,7 @@ function dedupe(array) {
 dedupe([1, 1, 2, 3]); // [1, 2, 3]
 ```
 
-**使用循环**
+**3、使用循环和`indexof/lastIndexOf`**
 ```js
 function unique(arry) {
   const temp = [];
@@ -4147,55 +4058,134 @@ function unique(arry) {
       temp.push(e);
     }
   });
-
   return temp;
 }
 ```
 
+**4、使用循环和`includes|filter|find|some`**
+```js
+let a = [1, 2, 1, 3, 4, 2]
+let res = []
+for (let i = 0; i< a.length; i++) {
+  if (!res.includes(a[i])) {
+    res.push(a[i])
+  }
+}
+console.log(res) // [1, 2, 3, 4]
+```
 
-## 70、❓去除字符串里面的重复字符
+
+## 70、去除字符串里面的重复字符（字符串去重）
+**1、展开运算符`...`和`Set`结构**
 ```js
 [...new Set("ababbc")].join(""); // "abc"
 ```
 
+**2、使用ES5万能的`reduce`函数实现**
+```js
+var dic = {};
+"ababbc".split("").reduce(function(total,next){
+  if (!(next in dic)){
+    dic[next] = true;
+    total += next;
+  }
+  return total;
+}, "")
+```
 
-## 71、❓求数组的最大值
-Math.max.apply(null, 数组)
+**3、使用正则表达式**
+```js
+var reg = /(.)(?=.*\1)/g;
+var result = 'ababbc'.replace(reg, "");
+console.log(result)
+```
+
+
+## 71、求数组的最大值或最小值
+**1、for循环**
+```js
+var a = [3, 1, 2, 3, 5];
+let max = a[0]
+let min = a[0]
+for (let i = 0; i < a.length; i++) {
+  if (a[i] > max) {
+    max = a[i]
+  }
+  if (a[i] < min) {
+    min = a[i]
+  }
+}
+console.log(max, min) // 5 1
+```
+
+**2、借助`apply()`方法**
 ```js
 var a = [1, 2, 3, 5];
 alert(Math.max.apply(null, a)); //最大值
 alert(Math.min.apply(null, a)); //最小值
 ```
 
+**3、借助`reduce()`或`reduceRight()`方法**
+```js
+var a = [3, 1, 2, 3, 5];
+const max = a.reduce((total, currentValue, currentIndex, arr) => {
+  if (currentValue >= total) {
+    total = currentValue
+  }
+  return total
+}, 0)
+console.log(max)
+```
 
-## 72、❓JS 中 文档碎片的理解和使用
+**4、借助`sort()`方法**
+```js
+var a = [3, 1, 2, 3, 5];
+let max = a.sort((a, b) => b - a)[0]
+console.log(max)
+```
+
+**5、借助`sort()`和`reverse()`方法**
+```js
+var a = [1, 2, 3, 5];
+let max = arr.sort().reverse()[0];
+console.log(max);
+```
+
+
+## 72、JS 中 文档碎片的理解和使用
 **什么是文档碎片？**
 ```js
 document.createDocumentFragment(); // 一个容器，用于暂时存放创建的dom元素
 ```
+**文档碎片有什么用？**
+> 将需要添加的大量元素，先添加到文档碎片中，再将文档碎片添加到需要插入的位置，大大减少dom操作，提高性能（IE和火狐比较明显）。
 
-**文档碎片有什么用？**<br>
-将需要添加的大量元素,先添加到文档碎片中，再将文档碎片添加到需要插入的位置，大大 减少dom操作，提高性能（IE和火狐比较明显）
+示例：往页面上放100个元素。
 ```js
 // 普通方式：（操作了100次dom）
+// 通过for循环，每次循环，添加一个dom元素
 for (var i = 100; i > 0; i--) {
   var elem = document.createElement("div");
-  document.body.appendChild(elem); //放到body中
+  document.body.appendChild(elem); // 放到body中
 }
 
-//  文档碎片：(操作1次dom)
+// 文档碎片：(操作1次dom)
+// 先将dom暂存在文档碎片中，然后在一次性操作dom
 var df = document.createDocumentFragment();
 for (var i = 100; i > 0; i--) {
   var elem = document.createElement("div");
   df.appendChild(elem);
 }
-//最后放入到页面上
+// 最后放入到页面上
 document.body.appendChild(df);
 ```
+**前端性能优化都是从一些细节地方做起的，如果不加以注意，后果很严重。**
 
 
-## 73、❓说说你对作用域链的理解
-作用域链的作用是保证执行环境里有权访问的变量和函数是有序的，作用域链的变量只能向上访问，变量访问到 window 对象即被终止，作用域链向下访问变量是不被允许的。
+## 73、说说你对作用域链的理解
+一般情况使用的变量取值是在当前执行环境的作用域中查找，如果当前作用域没有查到这个值，就会向上级作用域查找，直到查找到全局作用域，这么一个查找的过程我们叫做**作用域链**，又称**变量查找的机制**。
+
+作用域链的作用: 保证执行环境里有权访问的变量和函数是有序的，作用域链的变量只能向上访问，变量访问到`window`对象即被终止，作用域链向下访问变量是不被允许的。
 
 
 ## 74、offsetWidth/offsetHeight, clientWidth/clientHeight 与 scrollWidth/scrollHeight 的区别？
@@ -4215,24 +4205,112 @@ scroll系列
 - `scrollLeft`属性返回的是元素滚动条到元素左边的距离。
 
 
-## 75、❓谈谈你对 AMD、CMD 的理解
+## 75、谈谈你对CommonJS、AMD、CMD和ES模块化的理解
+它们都是js模块定义规范。参考：https://blog.csdn.net/snsHL9db69ccu1aIKl9r/article/details/117718898
+![202303011734344.png](https://imgs.itchenliang.club/img/202303011734344.png)
+
+**AMD**(`require.js`和`curl.js`)
+> AMD(Asynchronous Module Definition异步模块定义)基于CommonJS实现浏览器端的模块化就是AMD，且能与服务器端兼容最好。采用异步方式加载模块，模块的加载不影响它后面语句的运行。所有依赖这个模块的语句，都定义在一个回调函数中，等到加载完成之后，这个回调函数才会运行。浏览器没有Node.js的四个环境变量`module`、`exports`、`requrie`、`global`;
+
+特点: 
+- AMD允许输出的模块兼容CommonJS
+- 异步并行加载，不阻塞 DOM 渲染
+- 推崇依赖前置，也就是提前执行（预执行），在模块使用之前就已经执行完毕
+
+**CMD**(sea.js)
+参考：https://www.cnblogs.com/yanggb/p/10796839.html
+> CMD(Common Module Definition，通用模块定义)是通用模块加载，要解决的问题与 AMD 一样，只不过是对依赖模块的执行时机不同 ，推崇就近依赖。
+
+AMD和CMD的区别:
+- AMD 是提前执行，CMD 是延迟执行。
+- AMD 是依赖前置，CMD 是依赖就近
+
+**CommonJS**
+> CommonJS(同步模块定义)是服务器端模块的规范，Node.js采用了这个规范。CommonJS规范加载模块是同步的，也就是说，只有加载完成，才能执行后面的操作。
+- CommonJS的风格通过对`module.exports`或`exports`的属性赋值来达到暴露模块对象的目的
+
+**UMD**
+> UMD是AMD和CommonJS的糅合，UMD的实现很简单：
+1. 先判断是否支持Node.js模块（exports是否存在），存在则使用Node.js模块模式
+2. 再判断是否支持AMD（define是否存在），存在则使用AMD方式加载模块
+3. 前两个都不存在，则将模块公开到全局（window或global）
+
+**ES6模块化**
+> ES6 模块的设计思想，是尽量的静态化，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。
+
+ES6 中，`import`引用模块，使用`export`导出模块。默认情况下，Node.js默认是不支持`import`语法的，通过`babel`项目将`ES6模块`编译为ES5的 CommonJS。
+```js
+// 导入
+import Vue from 'vue'
+import App from './App'
+
+// 导出
+function v1() { ... }
+function v2() { ... }
+export {
+  v1 as streamV1,
+  v2 as streamV2,
+  v2 as streamLatestVersion
+};
+export function multiply() {...};
+export var year = 2018;
+export default ...
+```
+因此Babel实际上是将`import/export`翻译成Node.js支持的`require/exports`，还需要使用另一个工具`browserify`
+```
+1、安装必要包：babel，及browserify
+npm install babel-cli -g
+npm install babel-preset-es2015 --save-dev
+npm install browserify -g
+
+2、创建.babelrc文件，并设置编译格式为es2015
+3、自定义一个模块，导出数据，并在主模块中加载执行
+4、babel ./src -d ./build 命令将import编译为require
+5、browserify ./build/main.js -o ./dist/main.js 编译为浏览器识别语法，最终引入index.html文件中
+6、编译命令及浏览器运行
+```
+
+ES6模块和CommonJS规范区别
+- CommonJS支持动态导入，ES6不支持，是静态编译。
+- CommonJS同步加载，用于服务端，文件放在本地磁盘，读取速度快。同步导入卡住主线程也并无影响。ES6是异步加载，用于浏览器端，不能同步加载，会导致页面渲染，用户体验差。
+- CommonJS模块输出的是值拷贝，内部的变化影响不到值的变化。ES6模块输出的是值引用，原始值变化，加载的值也会跟着变化，ES6模块是动态引用，并且不会缓存值。
+- CommonJS模块是运行时加载，ES6模块是编译时输出接口。CommonJS模块就是对象，输入时先加载整个模块，生成一个对象，然后从对象读取方法。ES6模块不是对象，export输出指定代码，import导入加载某个值，而不是整个模块。
+- 关于模块顶层的this指向问题，在CommonJS顶层，this指向当前模块；而在ES6模块中，this指向undefined。
+- ES6模块当中，是支持加载CommonJS模块的。但是反过来，CommonJS并不能requireES6模块，在NodeJS中，两种模块方案是分开处理的。
 
 
-## 76、❓web 开发中会话跟踪的方法有哪些
+## 76、web 开发中会话跟踪的方法有哪些
+**1、cookie**
+> Cookie是客户端技术，程序把每个用户的数据以cookie的形式写给用户各自的浏览器。当用户使用浏览器再去访问服务器中的web资源时，就会带着各自的数据去。
+
+**2、session**
+> Session 是存储在服务端的，并针对每个客户端（客户），通过SessionID来区别不同用户的。 该会话过程直到session失效（服务端关闭），或者客户端关闭时结束。相比cookie更安全，一般网站是session结合着cookie一起使用的。
+
+**3、url重写**
+> 客户程序在每个URL的尾部添加一些额外数据。这些数据标识当前的会话，服务器将这个标识符与它存储的用户相关数据关联起来。 URL重写是比较不错的会话跟踪解决方案，即使浏览器不支持 cookie 或在用户禁用 cookie 的情况下，这种方案也能够工作。 最大的缺点是每个页面都是动态的，如果用户离开了会话并通过书签或链接再次回来，会话的信息也会丢失，因为存储下来的链接含有错误的标识信息。
+
+**4、隐藏input**
+```html
+<input type="hidden" name="content" value="haha">
+```
+提交表单时，要将指定的名称和值自动包括在 GET 或 POST 数据中。这个隐藏域可以用来存储有关会话的信息。
+
+主要缺点是：仅当每个页面都是由表单提交而动态生成时，才能使用这种方法。
 
 
-## 77、❓说几条写 JavaScript 的基本规范？
+## 77、说几条写 JavaScript 的基本规范？
 在平常项目开发中，我们遵守一些这样的基本规范，比如说：
-1. 一个函数作用域中所有的变量声明应该尽量提到函数首部，用一个 var 声明，不允许出现两个连续的 var 声明，声明时如果变量没有值，应该给该变量赋值对应类型的初始值，便于他人阅读代码时，能够一目了然的知道变量对应的类型值。
+1. 一个函数作用域中所有的变量声明应该尽量提到函数首部，用一个`var`声明，不允许出现两个连续的`var`声明，声明时如果变量没有值，应该给该变量赋值对应类型的初始值，便于他人阅读代码时，能够一目了然的知道变量对应的类型值。
 2. 代码中出现地址、时间等字符串时需要使用常量代替。
-3. 在进行比较的时候吧，尽量使用'===', '!=='代替'==', '!='。
-4. 不要在内置对象的原型上添加方法，如 Array, Date。
-5. switch 语句必须带有 default 分支。
-6. for 循环必须使用大括号。
-7. if 语句必须使用大括号。
+3. 在进行比较的时候吧，尽量使用`'==='`, `'!=='`代替`'=='`, `'!='`。
+4. 不要在内置对象的原型上添加方法，如`Array`, `Date`。
+5. `switch`语句必须带有`default`分支。
+6. `for`循环必须使用大括号。
+7. `if`语句必须使用大括号。
 
 
-## 78、❓JavaScript 有几种类型的值？你能画一下他们的内存图吗？
+## 78、❓==JavaScript 有几种类型的值？你能画一下他们的内存图吗？==
+https://blog.csdn.net/u598975767/article/details/88344113
 
 
 ## 79、❓eval 是做什么的？
@@ -4489,8 +4567,22 @@ JSON(JavaScript Object Notation) 是一种基于文本的轻量级的数据交�
 在项目开发中，我们使用 JSON 作为前后端数据交换的方式。在前端我们通过将一个符合 JSON 格式的数据结构序列化为 JSON 字符串，然后将它传递到后端，后端通过 JSON 格式的字符串解析后生成对应的数据结构，以此来实现前后端数据的一个传递。
 
 
-## 114、事件代理怎么实现？
-在元素的父节点注册事件，通过事件冒泡，在父节点捕获事件。
+## 114、怎样添加、移除、移动、复制、创建和查找节点？
+- 创建新节点
+  - `createDocumentFragment()`：创建一个 DOM 片段
+  - `createElement()`：创建一个具体的元素
+  - `createTextNode()`：创建一个文本节点
+- 添加、移除、替换、插入
+  - `appendChild()`：添加
+  - `removeChild()`：移除
+  - `replaceChild()`：替换
+  - `insertBefore()`：插入
+- 查找
+  - `getElementsByTagName()`：通过标签名称
+  - `getElementsByName()`：通过元素的 Name 属性的值
+  - `getElementById()`：通过元素 Id，唯一性
+  - `querySelector(CSS selectors)`：匹配指定 CSS 选择器的一个元素
+  - `querySelectorAll(CSS selectors)`：匹配指定 CSS 选择器的所有元素，返回 NodeList 对象
 
 
 ## 115、❓什么是属性搜索原则？
