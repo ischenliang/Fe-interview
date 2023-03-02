@@ -602,7 +602,7 @@ vue 首页白屏是什么问题引起的？
   - 通过数据劫持实现
 
 原理结构图
-![202302201243274.png](https://imgs.itchenliang.club/img/202302201243274.png)
+![202302201243274.png](http://img.itchenliang.club/img/202302201243274.png)
 
 
 ## 150、vue.use是干什么的？原理是什么？

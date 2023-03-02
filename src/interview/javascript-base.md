@@ -183,7 +183,7 @@ DOM事件流（event  flow ）存在三个阶段：**事件捕获阶段**、**�
 - 事件捕获: window将事件派发到目标的这一过程
 - 目标阶段: 事件派发到目标元素的阶段，如果事件被处理成不进行冒泡，那么后续的冒泡将终止
 - 冒泡阶段: 从目标元素开始，逐层向上传递事件，直到document
-![202302272001442.png](https://imgs.itchenliang.club/img/202302272001442.png)
+![202302272001442.png](http://img.itchenliang.club/img/202302272001442.png)
 
 dom标准事件流的触发的先后顺序为：**先捕获再冒泡**，即当触发dom事件时，会先进行事件捕获，捕获到事件源之后通过事件传播进行事件冒泡。
 
@@ -232,7 +232,7 @@ window.onload = function(){
 ```
 
 ### 经典案例
-![202302272024251.png](https://imgs.itchenliang.club/img/202302272024251.png)
+![202302272024251.png](http://img.itchenliang.club/img/202302272024251.png)
 
 可以看到，上面程序的输出结果：
 ```
@@ -618,8 +618,8 @@ console.log(son instanceof Son) // true
 
 ## 11、什么是原型链？
 通过一个对象的`__proto__`可以找到它的原型对象，原型对象也是一个对象，就可以通过原型对象的`__proto__`，最后找到了我们的 `Object.prototype`, 从实例的原型对象开始一直到 `Object.prototype` 就是我们的原型链。
-![2023021413594110.png](https://imgs.itchenliang.club/img/2023021413594110.png)
-![202302141359533.png](https://imgs.itchenliang.club/img/202302141359533.png)
+![2023021413594110.png](http://img.itchenliang.club/img/2023021413594110.png)
+![202302141359533.png](http://img.itchenliang.club/img/202302141359533.png)
 
 
 ## 12、复杂数据类型如何转变为字符串
@@ -1452,7 +1452,7 @@ console.log(234)
 如果同时指定了两个属性, 则会**遵从 async 属性而忽略 defer 属性**。
 
 下图可以直观的看出三者之间的区别:
-![2023021415000410.png](https://imgs.itchenliang.club/img/2023021415000410.png)
+![2023021415000410.png](http://img.itchenliang.club/img/2023021415000410.png)
 其中蓝色代表 js 脚本网络下载时间，红色代表 js 脚本执行，绿色代表 html 解析。
 
 ### 多个脚本的情况
@@ -2002,7 +2002,7 @@ JS 本身是单线程的，他是依靠浏览器完成的异步操作，而浏�
 2. 主线程 在执行过程中发现了需要异步的任务任务后扔给浏览器（浏览器创建多个线程执行），并在  callback queue  中创建对应的回调函数（回调函数是一个对象，包含该函数是否执行完毕等）
 3. 主线程 已经执行完毕所有同步代码。开始监听  callback queue 一旦 浏览器 中某个线程任务完成将会改变回调函数的状态。主线程查看到某个函数的状态为已完成，就会执行该函数
 
-![202302141550108.png](https://imgs.itchenliang.club/img/202302141550108.png)
+![202302141550108.png](http://img.itchenliang.club/img/202302141550108.png)
 
 
 ## 31、JavaScript 数组常用方法
@@ -2377,9 +2377,9 @@ JS在执行之前，会先进行预编译，主要做两个工作(这就是变�
   console.log(a) // 2
   ```
 - let 定义的变量，具有块级作用域，函数内部使用let定义后，对函数外部无影响，不能跨函数访问。`let`定义的变量不能重复定义同一个变量。
-  ![202302281614171.png](https://imgs.itchenliang.club/img/202302281614171.png)
+  ![202302281614171.png](http://img.itchenliang.club/img/202302281614171.png)
 - const 用来定义常量，使用时必须初始化(即必须赋值)，只能在块作用域里访问，而且定义之后是不允许改变的。
-  ![202302281612254.png](https://imgs.itchenliang.club/img/202302281612254.png)
+  ![202302281612254.png](http://img.itchenliang.club/img/202302281612254.png)
 - 同一个变量只能使用一种方式声明，不然会报错
   ```js
   var a = 1
@@ -2438,7 +2438,7 @@ JS在执行之前，会先进行预编译，主要做两个工作(这就是变�
   ```js
   var null = null // 报错：'null' is not allowed as a variable declaration name
   ```
-  ![202302281657449.png](https://imgs.itchenliang.club/img/202302281657449.png)
+  ![202302281657449.png](http://img.itchenliang.club/img/202302281657449.png)
 
 ### 运用场景
 **undefined**
@@ -2563,7 +2563,7 @@ JS在执行之前，会先进行预编译，主要做两个工作(这就是变�
   ```
   这样的代码很常见, 如果 id 为 Node 的元素从 DOM 中移除, 该定时器仍会存在, 同时, 因为回调函数中包含对 someResource 的引用, 定时器外面的 someResource 也不会被释放。
 5. 子元素存在引起的内存泄露
-  ![202302141601126.png](https://imgs.itchenliang.club/img/202302141601126.png)
+  ![202302141601126.png](http://img.itchenliang.club/img/202302141601126.png)
   黄色是指直接被 js 变量所引用，在内存里，红色是指间接被 js 变量所引用，如上图，refB 被 refA 间接引用，导致即使 refB 变量被清空，也是不会被回收的子元素 refB 由于 parentNode 的间接引用，只要它不被删除，它所有的父元素（图中红色部分）都不会被删除。
 
 ### JS 的回收机制
@@ -2605,7 +2605,7 @@ Google Chrome 浏览器提供了非常强大的 JS 调试工具，Memory 视图 
 - 观察者模式：观察者（Observer）直接订阅（Subscribe）主题（Subject），而当主题被激活的时候，会触发（Fire Event）观察者里的事件。
 - 发布订阅模式：订阅者（Subscriber）把自己想订阅的事件注册（Subscribe）到调度中心（Topic），当发布者（Publisher）发布该事件（Publish topic）到调度中心，也就是该事件触发时，由调度中心统一调度（Fire Event）订阅者注册到调度中心的处理代码。
 
-![202302141606478.png](https://imgs.itchenliang.club/img/202302141606478.png)
+![202302141606478.png](http://img.itchenliang.club/img/202302141606478.png)
 
 
 ## 36、jsonp 优缺点？
@@ -4207,7 +4207,7 @@ scroll系列
 
 ## 75、谈谈你对CommonJS、AMD、CMD和ES模块化的理解
 它们都是js模块定义规范。参考：https://blog.csdn.net/snsHL9db69ccu1aIKl9r/article/details/117718898
-![202303011734344.png](https://imgs.itchenliang.club/img/202303011734344.png)
+![202303011734344.png](http://img.itchenliang.club/img/202303011734344.png)
 
 **AMD**(`require.js`和`curl.js`)
 > AMD(Asynchronous Module Definition异步模块定义)基于CommonJS实现浏览器端的模块化就是AMD，且能与服务器端兼容最好。采用异步方式加载模块，模块的加载不影响它后面语句的运行。所有依赖这个模块的语句，都定义在一个回调函数中，等到加载完成之后，这个回调函数才会运行。浏览器没有Node.js的四个环境变量`module`、`exports`、`requrie`、`global`;
@@ -4221,9 +4221,9 @@ scroll系列
 参考：https://www.cnblogs.com/yanggb/p/10796839.html
 > CMD(Common Module Definition，通用模块定义)是通用模块加载，要解决的问题与 AMD 一样，只不过是对依赖模块的执行时机不同 ，推崇就近依赖。
 
-AMD和CMD的区别:
-- AMD 是提前执行，CMD 是延迟执行。
-- AMD 是依赖前置，CMD 是依赖就近
+**AMD和CMD的区别**:​ AMD 是 RequireJS 在推广过程中对模块定义提出的概念。​ CMD 是 SeaJS 在推广过程中对模块定义提出的概念。
+- 对于依赖的模块，AMD 是提前执行，CMD 是延迟执行
+- CMD 推崇依赖就近，AMD 推崇依赖前置
 
 **CommonJS**
 > CommonJS(同步模块定义)是服务器端模块的规范，Node.js采用了这个规范。CommonJS规范加载模块是同步的，也就是说，只有加载完成，才能执行后面的操作。
@@ -4309,86 +4309,153 @@ ES6模块和CommonJS规范区别
 7. `if`语句必须使用大括号。
 
 
-## 78、❓==JavaScript 有几种类型的值？你能画一下他们的内存图吗？==
-https://blog.csdn.net/u598975767/article/details/88344113
+## 78、JavaScript 有几种类型的值？你能画一下他们的内存图吗？
+分为两大类: 
+- 栈: 原始数据类型(`Undefined`、`Null`、`Boolean`、`String`、`Number`)
+- 堆: 引用数据类型(`Array`、`Object`、`Function`)
+
+区别: 两大类存储位置不同。
+- 原始数据类型直接存储在栈(stack)中的简单数据段，占据空间小、大小固定，属于被频繁使用数据，所以放入栈中存储；
+- 引用数据类型存储在堆(heap)中的对象,占据空间大、大小不固定,如果存储在栈中，将会影响程序运行的性能；引用数据类型在栈中存储了指针，该指针指向堆中该实体的起始地址。当解释器寻找引用值时，会首先检索其在栈中的地址，取得地址后从堆中获得实体。
+
+内存图如下所示: 
+![202303021647274.png](http://img.itchenliang.club/img/202303021647274.png)
 
 
-## 79、❓eval 是做什么的？
-它的功能是把对应的字符串解析成 JS 代码并运行 2.应该避免使用 eval，不安全，非常耗性能（2 次，一次解析成 js 语句，一次执行）
+## 79、eval 是做什么的？
+`eval`功能是把对应的字符串解析成JS代码并运行;但不安全,非常耗性能。原因在于：该过程会执行两次：
+- 一次解析成 js 语句
+- 一次执行 js 语句
 
 
-## 80、❓attribute 和 property 的区别是什么？
+## 80、attribute 和 property 的区别是什么？
+中文翻译`property`：属性，`attribute`：特性
+- `property`是DOM中的属性，是JavaScript里的对象；
+  > property是这个DOM元素作为对象，其附加的内容，例如childNodes、firstChild等。
+- `attribute`是HTML标签上的特性，它的值只能够是字符串；
+  > attribute就是dom节点自带的属性，例如html中常用的id、class、title、align等。
 
 
-## 81、❓谈一谈你理解的函数式编程？
-函数式编程是种编程方式，它将电脑运算视为函数的计算。函数编程语言最重要的基础是λ演算（lambda calculus），而且λ演算的函数可以接受函数当作输入（参数）和输出（返回值）。
+## 81、谈一谈你理解的函数式编程？
+主要的编程范式有三种：命令式编程、声明式编程、函数式编程。
+> 函数式编程思想是把运算过程抽象成一个函数，定义好输入参数，只关心它的输出结果。
 
-优势特点：代码简洁、开发快速、命令式实现、函数式实现、易于理解，抽象度高、没有副作用，变量无状态
+函数式编程能够更大程度上复用代码，减少冗余，vue3.0重构运用了大量的函数式编程，react也是如此。
 
 
 ## 82、❓UIWebView 和 JavaScript 之间是怎么交互的?
+参考：https://blog.csdn.net/weixin_30898109/article/details/97440493
 
 
-## 83、❓在 js 中哪些会被隐式转换为 false
-Undefined、null、关键字 false、NaN、零、空字符串
+## 83、在 js 中哪些会被隐式转换为 false
+`Undefined`、`null`、`关键字 false`、`NaN`、`零`、`空字符串`
 
 
 ## 84、列举浏览器对象模型 BOM 里常用的至少 4 个对象，并列举 window 对象的常用方法至少 5 个？
-- 对象：Window，document，location，screen，history，navigator。
-- 方法：alert()，confirm()，prompt()，open()，close()。
+- 对象：`Window`，`Document`，`Location`，`Screen`，`History`，`Navigator`。
+  - `window`对象 ，是 JS 的最顶层对象，其他的 BOM 对象都是`window`对象的属性；
+  - `document`对象，文档对象；
+  - `location`对象，浏览器当前 URL 信息；
+  - `navigator`对象，浏览器本身信息；
+  - `screen`对象，客户端屏幕信息；
+  - `history`对象，浏览器访问历史信息；
+- 方法：`alert()`，`confirm()`，`prompt()`，`open()`，`close()`。
+  > 参考：https://www.runoob.com/jsref/obj-window.html
 
 
 ## 85、外部 JS 文件出现中文字符，会出现什么问题，怎么解决？
-会出现乱码，加 charset="GB2312";
+会出现乱码，设置编码
+```html
+<meta charset="GB2312">
+或者
+response.setContentType("text/html;charset=UTF-8");
+```
 
 
-## 86、定时器 setInterval 有一个有名函数 fn1，setInterval（fn1, 500）与 setInterval（fn1(), 500）有什么区别？
-第一个是重复执行每 500 毫秒执行一次，后面一个只执行一次。
+## 86、定时器 setInterval 有一个有名函数 fn1，setInterval(fn1, 500)与 setInterval(fn1(), 500)有什么区别？
+```js
+function fn1 () {
+  console.log(1)
+}
+setInterval(fn1, 500) // 每隔 500ms 执行一次
+setInterval(fn1(), 500) // 只执行一次
+```
+第一个是重复执行每 500 毫秒执行一次，后面一个只执行一次。原因:
 
 
 ## 87、自动分号
 有时 JavaScript 会自动为代码行补上缺失的分号，即自动分号插入（Automatic SemicolonInsertion，ASI）。<br>
-因为如果缺失了必要的`;`，代码将无法运行，语言的容错性也会降低。ASI 能让我们忽略那些不必要的。<br>
-请注意，ASI 只在换行符处起作用，而不会在代码行的中间插入分号。<br>
-如果 JavaScript 解析器发现代码行可能因为缺失分号而导致错误，那么它就会自动补上分号。并且，只有在代码行末尾与换行符之间除了空格和注释之外没有别的内容时，它才会这样做。
+因为如果缺失了必要的`;`，代码将无法运行。如果 JavaScript 解析器发现代码行可能因为缺失分号而导致错误，那么它就会自动补上分号。并且，只有在代码行末尾与换行符之间除了空格和注释之外没有别的内容时，它才会这样做。
+```js
+var a = 1
+(() => {
+  console.log(123)
+})()
+```
+会报错: `Uncaught TypeError: 1 is not a function`
 
 
-## 88、❓你用过 require.js吗？它有什么特性？
-（1）实现 js 文件的异步加载，避免网页失去响应；
-（2）管理模块之间的依赖性，便于代码的编写和维护
+## 88、你用过 require.js吗？它有什么特性？
+> `require.js`核心原理：核心是 js 的加载模块，通过正则匹配模块以及模块的依赖关系，保证文件加载的先后顺序，根据文件的路径对加载过的文件做了缓存。
+- （1）实现 js 文件的异步加载，避免网页失去响应；
+- （2）管理模块之间的依赖性，便于代码的编写和维护;
 
 
 ## 89、内置函数(原生函数)
-- String
-- Number
-- Boolean
-- Object
-- Function
-- Array
-- Date
-- RegExp
-- Error
-- Symbol
+JavaScript 的内建函数(built-in function)，也叫原生函数(native function)。
+- Number()
+- String()
+- Boolean()
+- Function()
+- Array()
+- Object()
+- Symbol()
+- Error()
+- Date()
+- RegExp()
+
+原生函数可以被当作构造函数来使用，但是构造出来的值都是对象类型的：
+```js
+var str = new String('hello world')
+typeof str  // 'object'
+Object.prototype.toString.call(str)  // '[object String]'
+
+var str = 'hello world'
+typeof str  // 'string'
+Object.prototype.toString.call(str)  // '[object String]'
+```
+通过构造函数（如`new String("hello world")`）创建出来的是封装了基本类型值（如`"hello world"`）的封装对象。注意的是
+```js
+!!Boolean(false) // false ==> Boolean(false)=false ==> !!false ==> false
+!!new Boolean(false) // true ==> new Boolean(false)={false} ==> !!{false} ==> true
+```
 
 
 ## 90、❓对象浅拷贝和深拷贝有什么区别
-**浅拷贝**指的是将一个对象的属性值复制到另一个对象，如果有的属性的值为引用类型的话，那么会将这个引用的地址复制给对象，因此两个对象会有同一个引用类型的引用。浅拷贝可以使用  Object.assign 和展开运算符来实现。
+深拷贝和浅拷贝是只针对Object和Array这样的引用数据类型的。
+> 参考：https://www.cnblogs.com/yizhilin/p/13458738.html
 
-**深拷贝**相对浅拷贝而言，如果遇到属性值为引用类型的时候，它新建一个引用类型并将对应的值复制给它，因此对象获得的一个新的引用类型而不是一个原有类型的引用。深拷贝对于一些对象可以使用 JSON 的两个函数来实现，但是由于 JSON 的对象格式比 js 的对象格式更加严格，所以如果属性值里边出现函数或者 Symbol 类型的值时，会转换失败。
+**浅拷贝**
+> 浅拷贝只复制指向某个对象的指针，而不复制对象本身，新旧对象还是共享同一块内存。浅拷贝可以使用`Object.assign`和`扩展运算符`来实现。
+
+**深拷贝**
+> 深拷贝会另外创造一个一模一样的对象，新对象跟原对象不共享内存，修改新对象不会改到原对象。深拷贝对于一些对象可以使用`JSON`的`stringify`和`parse`两个函数来实现，但是由于 JSON 的对象格式比js的对象格式更加严格，所以如果属性值里边出现函数或者 Symbol 类型的值时，会转换失败。
 
 
-## 91、如何编写高性能的 Javascript？
-- 使用 DocumentFragment 优化多次 append
-- 通过模板元素 clone ，替代 createElement
-- 使用一次 innerHTML 赋值代替构建 dom 元素
-- 使用 firstChild 和 nextSibling 代替 childNodes 遍历 dom 元素
-- 使用 Array 做为 StringBuffer ，代替字符串拼接的操作
-- 将循环控制量保存到局部变量
-- 顺序无关的遍历时，用 while 替代 for
-- 将条件分支，按可能性顺序从高到低排列
-- 在同一条件子的多（ >2 ）条件分支时，使用 switch 优于 if
-- 使用三目运算符替代条件分支
-- 需要不断执行的时候，优先考虑使用 setInterval
+## 91、==如何编写高性能的 Javascript？==
+- 遵循严格模式："use strict";
+- 将JS脚本放在页面底部，加快渲染页面；
+- 将JS脚本将脚本成组打包，减少请求；
+- 尽量使用局部变量来保存全局变量；
+- 尽量减少使用闭包；
+- 使用window对象属性方法时，省略window；
+- 尽量减少对象成员嵌套；
+- 缓存DOM节点的访问；
+- 通过避免使用 eval() 和 Function() 构造器；
+- 给 setTimeout() 和 setInterval() 传递函数而不是字符串作为参数；
+- 尽量使用直接量创建对象和数组；
+- 最小化重绘(repaint)和回流(reflow)。上原文出处链接及本声明。
+- 原文链接：https://blog.csdn.net/qq_52710857/article/details/127077560
 
 
 ## 92、documen.write 和 innerHTML 的区别?
@@ -4497,7 +4564,7 @@ Web 模板引擎是为了使用户界面与业务数据（内容）分离而产�
 </html>
 ```
 输出结果如下：
-![202302150946079.png](https://imgs.itchenliang.club/img/202302150946079.png)
+![202302150946079.png](http://img.itchenliang.club/img/202302150946079.png)
 
 
 ## 106、❓知道什么是 webkit 么? 知道怎么用浏览器的各种工具来调试和 debug 代码么?
@@ -6613,11 +6680,6 @@ https://blog.csdn.net/qq_19446965/article/details/102982047
 - 堆（数据结构）：堆可以被看成是一棵树，如：堆排序；
 - 栈（数据结构）：一种先进后出的数据结构。
 
-
-## 277、eval 是做什么的？
-`eval`功能是把对应的字符串解析成JS代码并运行;但不安全,非常耗性能。原因在于：该过程会执行两次：
-- 一次解析成 js 语句
-- 一次执行 js 语句
 
 
 ## 手写EventEmitter 实现

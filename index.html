@@ -11,9 +11,13 @@
 <body>
 <button id="btn">按钮</button>
 <script>
-var a = [3, 1, 2, 3, 5];
-let max = a.sort((a, b) => b - a)[0]
-console.log(max)
+  let obj = { name: '123' }
+  let obj1 = Object.assign({}, obj)
+
+  document.querySelector('#btn').addEventListener('click', () => {
+    obj.name = '张三'
+    console.log(obj1)
+  })
 </script>
 </body>
 

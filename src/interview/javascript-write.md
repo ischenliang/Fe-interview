@@ -1343,5 +1343,5 @@ console.log(arr.myFindIndex(item => item.age === 18))
 ## 40、
 
 
-![202302091646396.png](https://imgs.itchenliang.club/img/202302091646396.png)
+![202302091646396.png](http://img.itchenliang.club/img/202302091646396.png)
 

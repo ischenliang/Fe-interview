@@ -52,7 +52,7 @@ src和href都是HTML中特定元素的属性，都可以用来引入外部的资
 ## 4、script标签中defer和async的区别
 如果没有`defer`或`async`属性，浏览器会立即加载并执行相应的脚本。它不会等待后续加载的文档元素，读取到就会开始加载和执行，这样就阻塞了后续文档的加载。
 下图可以直观的看出三者之间的区别:
-![202302071528472.png](https://imgs.itchenliang.club/img/202302071528472.png)
+![202302071528472.png](http://img.itchenliang.club/img/202302071528472.png)
 其中蓝色代表js脚本网络加载时间，红色代表js脚本执行时间，绿色代表html解析。
 **defer 和 async属性都是去异步加载外部的JS脚本文件，它们都不会阻塞页面的解析**，其区别如下：
 - **执行顺序**：多个带async属性的标签，不能保证加载的顺序；多个带defer属性的标签，按照加载顺序执行；
@@ -325,7 +325,7 @@ sizes就是指默认显示128px，如果宽度大于360px，则显示340px。
 
 **转换**：
 - 可以通过`display`属性对行内元素和块级元素进行切换(主要看第 2、3、4三个值)：
-![202302081532078.png](https://imgs.itchenliang.club/img/202302081532078.png)
+![202302081532078.png](http://img.itchenliang.club/img/202302081532078.png)
 
 ## 9、⭐对web worker的理解
 在 HTML 页面中，如果在执行脚本时，页面的状态是不可相应的，直到脚本执行完成后，页面才变成可相应。web worker 是运行在后台的 js，独立于其他脚本，不会影响页面的性能。 并且通过 postMessage 将结果回传到主线程。这样在进行复杂操作的时候，就不会阻塞主线程了。 
@@ -645,7 +645,7 @@ HTML5 提供的应用程序 API 主要有：
 3. 分别用`<area>`标记针对相应位置互粉出多个矩形作用区域，并设定好链接参数`href`
 例：
 ```html
-<img src="https://imgs.itchenliang.club/img/202302081532078.png" alt="" usemap="#Map" width="400" height="600" />
+<img src="http://img.itchenliang.club/img/202302081532078.png" alt="" usemap="#Map" width="400" height="600" />
 <map name="Map" id="Map">
   <area alt="" title="" href="#" shape="poly"
     coords="65,71,98,58,114,90,108,112,79,130,56,116,38,100,41,76,52,53,83,34,110,33,139,46,141,75,145,101,127,115,113,133,85,132,82,131,159,117" />
@@ -653,7 +653,7 @@ HTML5 提供的应用程序 API 主要有：
 </map>
 ```
 注意：上面代码中可以点击的区域是有👆手势，如下图所示
-![202302090916219.png](https://imgs.itchenliang.club/img/202302090916219.png)
+![202302090916219.png](http://img.itchenliang.club/img/202302090916219.png)
 
 ## 37、🔥a元素除了用于导航外，还有什么作用？
 href属性中的url可以是浏览器支持的任何协议，所以a标签可以用来手机拨号`<a href="tel:110">110</a>`，也可以用来发送短信`<a href="sms:110">110</a>`，还有邮件等等。
@@ -1010,9 +1010,9 @@ FOUC：主要指的是样式闪烁的问题，由于浏览器渲染机制（比�
 回流必定会发生重绘，重绘不一定会引发回流。回流所需的成本比重绘高的多，改变父节点里的子节点很可能会导致父节点的一系列回流。
 
 常见引起重绘属性和方法：
-![2023021017252910.png](https://imgs.itchenliang.club/img/2023021017252910.png)
+![2023021017252910.png](http://img.itchenliang.club/img/2023021017252910.png)
 常见引起回流属性和方法：
-![202302101725448.png](https://imgs.itchenliang.club/img/202302101725448.png)
+![202302101725448.png](http://img.itchenliang.club/img/202302101725448.png)
 
 ## 74、如何减少回流？（浏览器绘制过程）
 - （1）使用 transform 替代 top
@@ -1186,7 +1186,7 @@ getCurrentPosition()
 - Time To First Byte (TTFB) - TTFB 是浏览器请求发送到服务器的时间+服务器处理请求时间+响应报文的第一字节到达浏览器的时间. 我们用这个指标来判断你的web服务器是否性能不够, 或者说你是否需要使用CDN.
 - Downloading - 这是浏览器用来下载资源所用的时间. 这段时间越长, 说明资源越大. 理想情况下, 你可以通过控制资源的大小来控制这段时间的长度.
 
-![202302101806373.png](https://imgs.itchenliang.club/img/202302101806373.png)
+![202302101806373.png](http://img.itchenliang.club/img/202302101806373.png)
 
 **根据瀑布图进行性能优化**<br>
 那么我们如何是一个web页面加载的更快并且创造更好的用户体验呢? 瀑布图提供是三个直观的玩意儿来协助我们达成这一目标:
@@ -1195,9 +1195,9 @@ getCurrentPosition()
 - 最后, 通过优化资源请求顺序来加快渲染时间. 从图上看, 就是将绿色的"开始渲染"线向左移. 这条线向左移动的越远越好.
 
 如图所示，select2_metro.css在位置上要比avatar1_small.png和index.js靠后，但是优先级确实最高(Higthest-->High-->Medium-->Low),所以这个下载顺序是：select2_metro.css-->index.js-->avatar1_small.png
-![202302101807294.png](https://imgs.itchenliang.club/img/202302101807294.png)
+![202302101807294.png](http://img.itchenliang.club/img/202302101807294.png)
 Connection ID:可以看到总共有6个值--166718、166774、166775、166776、166777、166778，因为浏览器并发数limit是6；如果两个url相同，就表示两个资源的下载共用的同一个tcp长连接
-![202302101807472.png](https://imgs.itchenliang.club/img/202302101807472.png)
+![202302101807472.png](http://img.itchenliang.club/img/202302101807472.png)
  
 
 ## 92、扫描二维码登录网页是什么原理，前后两个事件是如何联系的？
