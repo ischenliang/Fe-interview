@@ -11,13 +11,10 @@
 <body>
 <button id="btn">按钮</button>
 <script>
-  let obj = { name: '123' }
-  let obj1 = Object.assign({}, obj)
-
-  document.querySelector('#btn').addEventListener('click', () => {
-    obj.name = '张三'
-    console.log(obj1)
-  })
+  const demo = function () {
+    console.log('aa')
+  }
+  demo()
 </script>
 </body>
 
