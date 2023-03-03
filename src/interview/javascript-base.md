@@ -4767,15 +4767,19 @@ window.location.search // ?ver=1.0&id=timlq
 ```
 
 
-## 99、==window.location.hash  返回的是什么？==
+## 99、window.location.hash返回的是什么？
 锚点，返回值：#love ；
+```js
+// 比如当前url是 http://dev.app.puliedu.com/#/backstage/sampleLabs
+window.location.hash // #/backstage/sampleLabs
+```
 
 
-## 100、window.location.reload() 作用？
+## 100、window.location.reload()作用？
 刷新当前页面
 
 
-## 101、BOM 对象有哪些，列举 window 对象？
+## 101、BOM对象有哪些，列举window对象？
 - window对象 ，是JS的最顶层对象，其他的BOM对象都是window对象的属性；
 - document对象，文档对象；
 - location对象，浏览器当前URL信息；
@@ -4784,21 +4788,27 @@ window.location.search // ?ver=1.0&id=timlq
 - history对象，浏览器访问历史信息；
 
 
-## 102、❓简述 readonly 与 disabled 的区别
+## 102、简述 readonly 与 disabled 的区别
+`readonly`和`disabled`是用在表单中的两个属性，它们都能够做到使用户不能够更改表单域中的内容。
+> 表单元素设置`disabled`后，当我们将表单以POST或GET的方式提交的话，这个元素的值不会被传递出去，而`readonly`会将该值传递出去。
+
+**区别**：
+- `readonly`只针对`input(text/password)`和`textarea`有效
+- `disabled`对于所有的表单元素都有效，包括`select`, `radio`, `checkbox`, `button`等
 
 
-## 103、❓为什么扩展 javascript 内置对象不是好的做法？
+## 103、为什么扩展 javascript 内置对象不是好的做法？
+因为扩展内置对象会影响整个程序中所使用到的该内置对象的原型属性。
 
 
 ## 104、什么是三元表达式？“三元”表示什么意思？
 三元如名字表示的三元运算符需要三个操作数。<br>
-语法是`条件 ? 结果1 : 结果2;` 这里你把条件写在问号(?)的前面后面跟着用冒号(:)分隔的结果1和结果2。满足条件时结果1否则结果2。
+语法是`条件 ? 结果1 : 结果2;` 这里你把条件写在问号(`?`)的前面后面跟着用冒号(`:`)分隔的结果1和结果2。满足条件时结果1否则结果2。
 
 
 ## 105、简述一下 Handlebars 的基本用法？
-> 参考：https://blog.csdn.net/henryhu712/article/details/125755611
+> Web 模板引擎是为了使用户界面与业务数据（内容）分离而产生的，Handlebars 是 JavaScript 一个语义模板库，通过对 view 和 data 的分离来快速构建 Web 模板。它采用"Logic-less template"（无逻辑模版）的思路，在加载时被预编译，而不是到了客户端执行到代码时再去编译， 这样可以保证模板加载和运行的速度。
 
-Web 模板引擎是为了使用户界面与业务数据（内容）分离而产生的，Handlebars 是 JavaScript 一个语义模板库，通过对 view 和 data 的分离来快速构建 Web 模板。
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -4837,15 +4847,34 @@ Web 模板引擎是为了使用户界面与业务数据（内容）分离而产�
 ![202302150946079.png](http://img.itchenliang.club/img/202302150946079.png)
 
 
-## 106、❓知道什么是 webkit 么? 知道怎么用浏览器的各种工具来调试和 debug 代码么?
-Webkit 是浏览器引擎，包括 html 渲染和 js 解析功能，手机浏览器的主流内核，与之相对应的引擎有 Gecko（Mozilla Firefox 等使用）和 Trident（也称 MSHTML，IE 使用）。 对于浏览器的调试工具要熟练使用，主要是页面结构分析，后台请求信息查看，js 调试工具使用，熟练使用这些工具可以快速提高解决问题的效率。
+## 106、知道什么是 webkit 么? 知道怎么用浏览器的各种工具来调试和 debug 代码么?
+`Webkit`是一种浏览器引擎，Chrome和safari浏览器的内核。所谓浏览器引擎，其主要工作就是对html文件的解析和JS的执行，同时也可以提供一些工具，例如，调试工具`firebug`的内部实现。
+> 与之相对应的引擎有`Gecko`(Mozilla Firefox等使用)和`Trident`(也称 MSHTML，IE使用)。
+
+对于浏览器的调试工具要熟练使用，主要是页面结构分析，后台请求信息查看，js调试工具使用，熟练使用这些工具可以快速提高解决问题的效率。
 
 
 ## 107、❓如何测试前端代码? 知道 BDD, TDD, Unit Test 么? 知道怎么测试你的前端工程么(mocha, sinon, jasmin, qUnit..)?
+### BDD, TDD, Unit Test
+**TDD**
+> `TDD`英文全称为：`Test Driven Development`表示测试驱动开发，它是一种测试驱动开发，它是一种测试先于编写代码的思想用于指导软件开发。简单地说就是先根据需求写测试用例，再代码实现，接着测试，循环此过程直到产品的实现。
+特点:
+- 有利于更加专注软件设计
+- 清晰地了解软件的需求
+- 很好的诠释了代码即文档
+
+**BDD**
+> `BDD`英文全称为：`Behavior Driven Development`表示行为驱动开发，它鼓励软件开发者，测试人员和非技术人员或者商业参与者之间的协作。BDD可以看作是对`TDD`的一种补充，或者说是`TDD`的一个分支。`BDD`更加依赖于需求行为和文档来驱动开发，这些文档的描述跟测试代码很相似。e2e测试更多是和BDD的开发模式进行结合。
+
+**unit test**
+> `unit test`为单元测试，主要用于测试开发人员编写的代码是否正确，这部分工作都是由开发人员自己来做的。
+
+### mocha
+
 
 
 ## 108、如何添加 html 元素的事件，有几种方法？请列举
-方法一：在HTML元素当中绑定事件
+**方法一：在HTML元素当中绑定事件**
 ```html
 <div class="wrap" onclick="show()">绑定事件一</div>
 <script type="text/javascript">
@@ -4854,7 +4883,7 @@ Webkit 是浏览器引擎，包括 html 渲染和 js 解析功能，手机浏览
   }
 </script>
 ```
-方法二：使用js给元素绑定事件
+**方法二：使用js给元素绑定事件**
 ```html
 <div class="wrap" id="btn">绑定事件二</div>
 <script type="text/javascript">
@@ -4865,7 +4894,7 @@ Webkit 是浏览器引擎，包括 html 渲染和 js 解析功能，手机浏览
   }
 </script>
 ```
-方法三：使用事件注册函数
+**方法三：使用事件注册函数**
 ```html
 <div class="wrap" id="btn">绑定事件三</div>
 <script type="text/javascript">
@@ -4878,16 +4907,83 @@ Webkit 是浏览器引擎，包括 html 渲染和 js 解析功能，手机浏览
 ```
 
 
-## 109、❓如何自定义事件？
-原生提供了 3 个方法实现自定义事件
-1. createEvent，设置事件类型，是 html 事件还是 鼠标事件
-2. initEvent 初始化事件，事件名称，是否允许冒泡，是否阻止自定义事件
-3. dispatchEvent 触发事件
+## 109、如何自定义事件？
+自定义事件有如下三种方式:
+- **1、`createEvent`、`initEvent`、`dispatchEvent`三件套**
+  - `createEvent`设置事件类型，是 html 事件还是 鼠标事件
+  - `initEvent`初始化事件，事件名称，是否允许冒泡，是否阻止自定义事件
+  - `dispatchEvent`触发事件
+  ```html
+  <div style="width:100px;height:100px;background-color: bisque;" id="div01"></div>
+  <script>
+    // 1、创建事件.
+    var event = document.createEvent('Event');
+    const el = document.getElementById("div01")
+    // 2、初始化一个点击事件，可以冒泡，无法被取消
+    event.initEvent('dianJi', true, false);
+    // 3、设置事件监听.
+    el.addEventListener('dianJi', function(e) {
+      console.log('打印了', e)
+    }, false);
+    // 4、触发事件监听
+    el.dispatchEvent(event);
+  </script>
+  ```
+- **2、`Event()`**
+  ```html
+  <div style="width:100px;height:100px;background-color: bisque;" id="div01"></div>
+  <script>
+    // 1、创建事件.
+    const event = new Event('custom');
+    const el = document.getElementById("div01")
+    // 2、设置事件监听.
+    el.addEventListener('custom', (e) => {
+      console.log('打印', e)
+    });
+    // 3、触发事件监听
+    // 必须使用Dom元素将该事件分发出去，否则无法进行监听
+    el.dispatchEvent(event);
+  </script>
+  ```
+- **3、`CustomEvent()`**
+  ```html
+  <div style="width:100px;height:100px;background-color: bisque;" id="div01"></div>
+  <script>
+    // 1、创建事件.
+    const event = new CustomEvent('custom', { detail: { language: 'JavaScript' } });
+    const el = document.getElementById("div01")
+    // 2、设置事件监听.
+    el.addEventListener('custom', (e) => {
+      console.log('打印', e.detail) //  { language: 'JavaScript' }
+    });
+    // 3、触发事件监听
+    // 必须使用Dom元素将该事件分发出去，否则无法进行监听
+    el.dispatchEvent(event);
+  </script>
+  ```
 
 
 ## 110、target 和 currentTarget 区别？
-- event.target：返回触发事件的元素
-- event.currentTarget：返回绑定事件的元素
+- `event.target`：返回触发事件的元素
+- `event.currentTarget`：返回绑定事件的元素
+
+两者在没有冒泡的情况下，是一样的值，但在用了事件委托的情况下，就不一样了；
+```html
+<ul id="ulT">
+  <li class="item1">fsda</li>
+  <li class="item2">ewre</li>
+  <li class="item3">qewe</li>
+  <li class="item4">xvc</li>
+  <li class="item5">134</li>
+</ul>
+<script type="text/javascript">
+document.getElementById("ulT").onclick = function (event) {
+  console.log(event.target);
+  console.log(event.currentTarget);
+}
+</script>
+```
+`currentTarget`始终是监听事件者，而`target`是事件的真正发出者。
 
 
 ## 111、❓什么是原型属性？
