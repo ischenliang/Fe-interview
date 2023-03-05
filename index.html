@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
- 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
 </head>
- 
 <body>
-<div style="width:100px;height:100px;background-color: bisque;" id="div01"></div>
+<div class="navbar">
+  <a href="#/home">首页</a>
+  <a href="#/about">关于</a>
+  <a href="#/404">404</a>
+</div>
+<div id="app">
+  default  
+</div>
 <script>
-  // 1、创建事件.
-  const event = new CustomEvent('custom', { detail: { language: 'JavaScript' } });
-  const el = document.getElementById("div01")
-  // 2、设置事件监听.
-  el.addEventListener('custom', (e) => {
-    console.log('打印', e.detail) //  { language: 'JavaScript' }
-  });
-  // 3、触发事件监听
-  // 必须使用Dom元素将该事件分发出去，否则无法进行监听
-  el.dispatchEvent(event);
+  // 报错：A rest parameter must be last in a parameter list.
+  function add (x, ...rest, y) {
+  }
+
+  window.onerror = (e) => {
+    console.log(e)
+  }
 </script>
 </body>
- 
 </html>
