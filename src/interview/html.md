@@ -345,7 +345,7 @@ sizes就是指默认显示128px，如果宽度大于360px，则显示340px。
   <html lang="en" manifest="index.manifest">
   ```
 - （2）在`cache.manifest`文件中编写需要离线存储的资源：
-  ```txt
+  ```
   CACHE MANIFEST
     #v0.11
     CACHE:
@@ -1333,4 +1333,4 @@ service workers：一个服务器与浏览器之间的中间人角色，如果�
 
 
 <!-- ======================================== 评论区 ======================================== -->
-<valine-comment/>
+<!-- <valine-comment/> -->

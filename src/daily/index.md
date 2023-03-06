@@ -1,10 +1,10 @@
 # 每日一题
 
 ## memail演示
-<mermaid-img></mermaid-img>
+<!-- <mermaid-img></mermaid-img> -->
 
 ## katex演示
-<math-katex>
+<!-- <math-katex>
 \left\{
 \begin{array}{ll}
 K_{1}=z_{k},&L_{1}=f(x_{k},y_{k},z_{k}),\\
@@ -23,7 +23,7 @@ c = \\pm\\sqrt{a^2 + b^2}
 
 <math-katex>
 \displaystyle \left( \sum_{k=1}^n a_k b_k \right)^2 \leq \left( \sum_{k=1}^n a_k^2 \right) \left( \sum_{k=1}^n b_k^2 \right)
-</math-katex>
+</math-katex> -->
 
 
 ## mark演示
@@ -48,4 +48,4 @@ Add as many paragraphs as you like.
 
 
 
-<valine-comment/>
+<!-- <valine-comment/> -->

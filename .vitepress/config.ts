@@ -11,7 +11,7 @@ export default {
   // 主题
   appearance: true,
   // 删除后部紧跟的.html
-  cleanUrls: true,
+  cleanUrls: false,
   srcDir: 'src/',
   outDir: 'dist/',
 
