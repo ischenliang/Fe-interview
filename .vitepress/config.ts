@@ -1,4 +1,5 @@
 import interviewSide from './sidebar/interview'
+import noteSide from './sidebar/note'
 import footnote from 'markdown-it-footnote'
 // import gemoji from 'remark-gemoji'
 import mark from 'markdown-it-mark'
@@ -87,6 +88,7 @@ export default {
           ],
         },
       ],
+      "/note/": [...noteSide]
     },
 
     // 右上角社交账号

@@ -7,6 +7,7 @@ import PostMeta from "../components/post-meta.vue"
 import MermaidImg from "../components/mermaid-img.vue"
 import MathKatex from "../components/math-katex.vue"
 import LayoutTop from "../components/layout-top.vue"
+import cTag from "../components/c-tag.vue"
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { h } from "vue";
 
@@ -22,6 +23,7 @@ export default {
     app.component('post-meta', PostMeta)
     app.component('mermaid-img', MermaidImg)
     app.component('math-katex', MathKatex)
+    app.component('c-tag', cTag)
 
     // 全局注册element-plus组件
     import("element-plus").then((module) => {

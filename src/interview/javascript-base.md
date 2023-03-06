@@ -3599,6 +3599,20 @@ foo = function() {
   // Some code
 };
 ```
+**函数声明赋值优先于变量声明赋值**
+- 函数声明赋值，是在执行上下文的开始阶段进行的
+- 变量声明赋值，是在执行赋值语句的时候进行赋值的；
+```js
+var getName = function() {
+  console.log(4);
+};
+
+function getName() {
+  console.log(5);
+}
+getName()
+```
+可以看到输出的结果是`4`。
 
 
 ## 63、require 与 import 的区别
@@ -7525,7 +7539,7 @@ for (let i = 0; i < 5; i++) {
 ```
 
 
-## 224、一道常被人轻视的前端 JS 面试题
+## 224、❓一道常被人轻视的前端 JS 面试题
 ```js
 function Foo() {
   getName = function() {
@@ -7548,24 +7562,26 @@ function getName() {
 }
 
 //请写出以下输出结果：
-Foo.getName(); // 2
-getName(); // 4
-Foo().getName(); // 1
-getName(); // 1
-new Foo.getName(); // 2
-new Foo().getName(); // 3
-new new Foo().getName(); // 3
+Foo.getName(); // 2 ==> 直接调用“函数二”
+getName(); // 4 ==> 调用“函数四”，函数声明赋值优先于变量声明赋值
+Foo().getName(); // 1 ==> 调用“函数一”，此时里的getName = function() {} 等价于 window.getName = function () {}
+getName(); // 1 ==> 调用函数一执行后得到的 window.getName = function () {}，即调用“函数一”
+new Foo.getName(); // 2 ==> 调用“函数二”
+new Foo().getName(); // 3 ==> 等价于 (new Foo()).getName() ==> 即调用“函数三”
+new new Foo().getName(); // 3 ==> 等价于 (new (new Foo())).getName() ==> 调用“函数三”
 ```
 
 
 ## 225、如何确定页面的可用性时间，什么是 Performance API？
 Performance API 用于精确度量、控制、增强浏览器的性能表现。这个 API 为测量网站性能，提供以前没有办法做到的精度。
 
-使用 getTime 来计算脚本耗时的缺点，首先，getTime方法（以及 Date 对象的其他方法）都只能精确到毫秒级别（一秒的千分之一），想要得到更小的时间差别就无能为力了。其次，这种写法只能获取代码运行过程中的时间进度，无法知道一些后台事件的时间进度，比如浏览器用了多少时间从服务器加载网页。
+使用`getTime`来计算脚本耗时的缺点:
+- 首先，`getTime`方法（以及 Date 对象的其他方法）都只能精确到毫秒级别（一秒的千分之一），想要得到更小的时间差别就无能为力了
+- 其次，这种写法只能获取代码运行过程中的时间进度，无法知道一些后台事件的时间进度，比如浏览器用了多少时间从服务器加载网页。
 
-为了解决这两个不足之处，ECMAScript 5引入“高精度时间戳”这个 API，部署在 performance 对象上。它的精度可以达到1毫秒的千分之一（1秒的百万分之一）。
-- navigationStart：当前浏览器窗口的前一个网页关闭，发生 unload 事件时的 Unix 毫秒时间戳。如果没有前一个网页，则等于 fetchStart 属性。
-- loadEventEnd：返回当前网页 load 事件的回调函数运行结束时的 Unix 毫秒时间戳。如果该事件还没有发生，返回 0。
+为了解决这两个不足之处，ECMAScript 5引入“高精度时间戳”这个 API，部署在`performance`对象上。它的精度可以达到1毫秒的千分之一（1秒的百万分之一）。
+- `navigationStart`：当前浏览器窗口的前一个网页关闭，发生`unload`事件时的`Unix`毫秒时间戳。如果没有前一个网页，则等于`fetchStart`属性。
+- `loadEventEnd`：返回当前网页`load`事件的回调函数运行结束时的`Unix`毫秒时间戳。如果该事件还没有发生，返回`0`。
 
 根据上面这些属性，可以计算出网页加载各个阶段的耗时。比如，网页加载整个过程的耗时的计算方法如下：
 ```js
@@ -7582,14 +7598,44 @@ var pageLoadTime = t.loadEventEnd - t.navigationStart;
 
 
 ## 227、js 中倒计时的纠偏实现？
-在前端实现中我们一般通过 setTimeout 和 setInterval 方法来实现一个倒计时效果。但是使用这些方法会存在时间偏差的问题，这是由于 js 的程序执行机制造成的，setTimeout 和 setInterval 的作用是隔一段时间将回调事件加入到事件队列中，因此事件并不是立即执行的，它会等到当前执行栈为空的时候再取出事件执行，因此事件等待执行的时间就是造成误差的原因。
+在前端实现中我们一般通过`setTimeout`和`setInterval`方法来实现一个倒计时效果。
+> 但是使用这些方法会存在时间偏差的问题，这是由于 js 的程序执行机制造成的，`setTimeout`和`setInterval`的作用是隔一段时间将回调事件加入到事件队列中，因此事件并不是立即执行的，它会等到当前执行栈为空的时候再取出事件执行，因此事件等待执行的时间就是造成误差的原因。
 
 一般解决倒计时中的误差的有这样两种办法：
 - （1）第一种是通过前端定时向服务器发送请求获取最新的时间差，以此来校准倒计时时间。
 - （2）第二种方法是前端根据偏差时间来自动调整间隔时间的方式来实现的。这一种方式首先是以 setTimeout 递归的方式来实现倒计时，然后通过一个变量来记录已经倒计时的秒数。每一次函数调用的时候，首先将变量加一，然后根据这个变量和每次的间隔时间，我们就可以计算出此时无偏差时应该显示的时间。然后将当前的真实时间与这个时间相减，这样我们就可以得到时间的偏差大小，因此我们在设置下一个定时器的间隔大小的时候，我们就从间隔时间中减去这个偏差大小，以此来实现由于程序执行所造成的时间误差的纠正。
+  ```js
+  const interval = 1000
+  // 从服务器和活动开始时间计算出的时间差，这里测试用 50000ms
+  let ms = 50000
+  let count = 0
+  // 开始倒计时的时间
+  const startTime = new Date().getTime()
+  let timer = null
+  if (ms >= 0) {
+    timer = setTimeout(func, interval)
+  }
+
+  function func () {
+    count++
+    const delaytime = new Date().getTime() - (startTime + count * interval) // A
+    if (delaytime < 0) { 
+      delaytime = 0 
+    }
+    let nextTime = interval - delaytime
+    ms -= interval
+    console.log(`误差：${delaytime} ms，下一次执行：${nextTime} ms 后，离活动开始还有：${ms} ms`)
+    if (ms <= 0) {
+      clearTimeout(timer)
+    } else {
+      timer = setTimeout(func, nextTime)
+    }
+  }
+  ```
 
 
-## 228、❓进程间通信的方式？
+## 228、进程间通信的方式？
+[进程间的六种通信方式](https://blog.csdn.net/GMLGDJ/article/details/124627224)
 1. 管道通信
 2. 消息队列通信
 3. 信号量通信
@@ -7601,12 +7647,70 @@ var pageLoadTime = t.loadEventEnd - t.navigationStart;
 ## 229、微信的JSSDK都有哪些内容？如何接入？
 微信JS-SDK：是开发者在网页上通过JavaScript代码使用微信原生功能的工具包，开发者可以使用它在网页上录制和播放微信语音、监听微信分享、上传手机本地图片、拍照等许多能力。
 
-JSSDK使用步骤
-- 步骤一：绑定域名
+JSSDK使用步骤: [微信JS-SDK说明文档](https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html)
+- 步骤一：绑定域名<br>
+  先登录微信公众平台进入“公众号设置”的“功能设置”里填写“JS接口安全域名”。
 - 步骤二：引入JS文件
-- 步骤三：通过config接口注入权限验证配置
-- 步骤四：通过ready接口处理成功验证
-- 步骤五：通过error接口处理失败验证
+  ```html
+  <!-- 在需要调用JS接口的页面引入JS文件 -->
+  <script src="http://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+  <!-- 如需进一步提升服务稳定性，当上述资源不可访问时，可改访问 -->
+  <script src="http://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+  ```
+- 步骤三：通过`config`接口注入权限验证配置<br>
+  所有需要使用JS-SDK的页面必须先注入配置信息，否则将无法调用（同一个url仅需调用一次，对于变化url的SPA的web app可在每次url变化时进行调用）
+  ```js
+  wx.config({
+    debug: true, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+    appId: '', // 必填，公众号的唯一标识
+    timestamp: , // 必填，生成签名的时间戳
+    nonceStr: '', // 必填，生成签名的随机串
+    signature: '',// 必填，签名
+    jsApiList: [] // 必填，需要使用的JS接口列表
+  });
+  ```
+  js-sdk签名算法
+    - 1、获取`access_token`
+      ```
+      GET https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
+      参数说明：
+        - grant_type：必填，获取access_token填写client_credential
+        - appid：必填，第三方用户唯一凭证，即APPID，到“微信公众平台-开发-开发管理-开发设置”页中获得
+        - secret：必填，第三方用户唯一凭证密钥，即appsecret，到“微信公众平台-开发-开发管理-开发设置”页中获得
+      ```
+      获得`jsapi_ticket`之后，就可以生成JS-SDK权限验证的签名了。
+    - 2、签名算法
+      ```
+      签名生成规则：
+        参与签名的字段包含：
+        - noncestr：随机字符串
+        - jsapi_ticket：有效的access_token
+        - timestamp：时间戳
+        - url：当前网页的URL，不包含#及其后面部分
+        对所有待签名参数按照字段名的ASCII码从小到大排序（字典序，即a-z）后，使用URL键值对的格式（即key1=value1&key2=value2…）拼接成字符串string1。
+        这里需要注意的是所有参数名均为小写字符。对string1作sha1加密，字段名和字段值都采用原始值，不进行URL 转义。
+        即signature=sha1(string1)。例如：
+          - noncestr=Wm3WZYTPz0wzccnW
+          - jsapi_ticket=sM4AOVdWfPE4DxkXGEs8VMCPGGVi4C3VM0P37wVUCFvkVAy_90u5h9nbSlYy3-Sl-HhTdfl2fzFy1AOcHKP7qg
+          - timestamp=1414587457
+          - url=http://mp.weixin.qq.com?params=value
+        第一步：对所有待签名参数按照字段名的ASCII 码从小到大排序（字典序）后，使用URL键值对的格式（即key1=value1&key2=value2…）拼接成字符串string1
+          jsapi_ticket=sM4AOVdWfPE4DxkXGEs8VMCPGGVi4C3VM0P37wVUCFvkVAy_90u5h9nbSlYy3-Sl-HhTdfl2fzFy1AOcHKP7qg&noncestr=Wm3WZYTPz0wzccnW&timestamp=1414587457&url=http://mp.weixin.qq.com?params=value
+        第二步：对string1进行sha1签名，得到signature
+          0f9de62fce790f9a083d5c99e95740ceb90c27ed
+      ```
+- 步骤四：通过`ready`接口处理成功验证
+  ```js
+  wx.ready(function(){
+    // config信息验证后会执行ready方法，所有接口调用都必须在config接口获得结果之后，config是一个客户端的异步操作，所以如果需要在页面加载时就调用相关接口，则须把相关接口放在ready函数中调用来确保正确执行。对于用户触发时才调用的接口，则可以直接调用，不需要放在ready函数中。
+  });
+  ```
+- 步骤五：通过`error`接口处理失败验证
+  ```js
+  wx.error(function(res){
+    // config信息验证失败会执行error函数，如签名过期导致验证失败，具体错误信息可以打开config的debug模式查看，也可以在返回的res参数中查看，对于SPA可以在这里更新签名。
+  });
+  ```
 
 
 ## 230、H5页面在微信中如何禁止分享给好友和朋友圈？
@@ -7619,18 +7723,18 @@ document.addEventListener('WeixinJSBridgeReady', function onBridgeReady() {
 
 
 ## 240、什么是本地存储的有效期？
-本地存储的四种方式：cookie，localStorage, sessionStorage, indexDB
-- cookie: 通过 expires/max-age 设置过期时间。如不指定，则为 session cookie, 即一次会话有效。
-- localStorage: 持久存储，需主动清除
-- sessionStorage: 会话存储，会话结束（浏览器，标签页关闭）自动清除。
-- indexDB: 持久存储，需主动删除。
+本地存储的四种方式：`cookie`，`localStorage`, `sessionStorage`, `indexDB`
+- **cookie**: 通过`expires/max-age`设置过期时间。如不指定，则为`session cookie`, 即一次会话有效。
+- **localStorage**: 持久存储，需主动清除
+- **sessionStorage**: 会话存储，会话结束（浏览器，标签页关闭）自动清除。
+- **indexDB**: 持久存储，需主动删除。
 
 
-## 241、❓ECMAScript 和 JavaScript 的关系
-前者是后者的规格，后者是前者的一种实现
+## 241、ECMAScript 和 JavaScript 的关系
+前者是后者的规格，后者是前者的一种实现。在日常场合，这两个词是可以互换的。
 
 
-## 242、prototype、__proto__与constructor的关系
+## 242、`prototype`、`__proto__`与`constructor`的关系
 **`__proto__`被称为隐式原型，`prototype`被称为显式原型。**<br>
 ### 牢记两点
 -  ①`__proto__`和`constructor`属性是对象所独有的，`prototype`属性是函数所独有的，万物皆对象，方法/函数`Function`是对象(`Function instanceof Object ==> true`)，方法的原型`Function.prototype`是对象(`Function.prototype instanceof Object ==> true`)，因此，它们都会具有对象共有的特点。所以函数也拥有`__proto__`和`constructor`属性;
@@ -7753,8 +7857,119 @@ console.log(animal.__proto__ === Animal.prototype) // true
 
 
 
-## 243、❓setTimeout和setImmediate以及process.nextTick的区别
-https://www.cnblogs.com/cdwp8/p/4065846.html
+## 243、`setTimeout`和`setImmediate`以及`process.nextTick`的区别
+### setTimeout()
+`setTimeout()`只是将事件插入了"任务队列"，必须等到当前代码（执行栈）执行完，主线程才会去执行它指定的回调函数。要是当前代码耗时很长，有可能要等很久，所以并没有办法保证，回调函数一定会在`setTimeout()`指定的时间执行。
+```js
+setTimeout(function(){
+  console.log('0')
+}, 0);// 意思是回调函数加入事件队列的队尾，主线程和事件队列的函数执行完成之后立即执行定时器的回调函数，如果定时器的定时是相同的，就按定时器回调函数的先后顺序来执行。
+console.log(1);
+setTimeout(function(){
+  console.log(2);
+}, 1000);
+setTimeout(function(){
+  console.log(4);
+}, 1000);
+console.log(3);
+//1 3 0 2 4
+```
+
+### setImmediate()
+`setImmediate()`是将事件插入到事件队列尾部，主线程和事件队列的函数执行完成之后立即执行`setImmediate`指定的回调函数，和`setTimeout(fn,0)`的效果差不多，但是当他们同时在同一个事件循环中时，执行顺序是不定的。
+```js
+console.log('1');
+
+setImmediate(function () {
+  console.log('2');
+});
+
+setTimeout(function () {
+  console.log('3');
+}, 0);
+
+process.nextTick(function () {
+  console.log('4');
+});
+//1 4 2 3也可能是1 4 3 2
+```
+
+### process.nextTick()
+`process.nextTick()`方法可以在当前"执行栈"的尾部-->下一次Event Loop（主线程读取"任务队列"）之前-->触发process指定的回调函数。也就是说，它指定的任务总是发生在所有异步任务之前，当前主线程的末尾。（nextTick虽然也会异步执行，但是不会给其他io事件执行的任何机会）
+```js
+process.nextTick(function A() {
+  console.log(1);
+  process.nextTick(function B(){
+    console.log(2);
+  });
+});
+
+setTimeout(function C() {
+  console.log(3);
+}, 0)
+// 1
+// 2
+// 3
+```
+当然这样也是一样的：
+```js
+setTimeout(function C() {
+    console.log(3);
+}, 0)
+process.nextTick(function A() {
+  console.log(1);
+  process.nextTick(function B(){
+    console.log(2);
+  });
+});
+// 1
+// 2
+// 3
+```
+当然这样还是一样的：
+```js
+setTimeout(function C() {
+  console.log(3);
+}, 0)
+process.nextTick(function A() {
+  process.nextTick(function B(){
+    console.log(2);
+  });
+  console.log(1);
+});
+// 1
+// 2
+// 3
+```
+最后`process.maxTickDepth()`的缺省值是1000，如果超过会报`exceed callback stack`。官方认为在递归中用`process.nextTick`会造成饥饿`event loop`，因为`nextTick`没有给其他异步事件执行的机会，递归中推荐用`setImmediate`
+```js
+复制代码
+foo = function(bar) {
+  console.log(bar);
+  return process.nextTick(function() {
+    return f(bar + 1);
+  });
+};
+setImmediate(function () {
+  console.log('1001');
+});
+foo(1);//注意这样不会输出1001，当递归执行到1000次是就会报错exceed callback stack，
+/*
+foo = function(bar) {
+    console.log(bar);
+　　 if(bar>1000){
+      return;
+    }
+    return process.nextTick(function() {
+                return f(bar + 1);
+    });
+};
+setImmediate(function () {
+      console.log('1001');
+});
+foo(1);
+*/
+```
 
 
 ## 244、JS运行机制（Event Loop）
@@ -7765,13 +7980,13 @@ JS执行是单线程的，它是基于事件循环的。
 4. 主线程不断重复第三步。
 
 
-## 245、ES6 都有什么 Iterator 遍历器
-1. 遍历器（Iterator）是一种接口，为各种不同的数据结构提供统一的访问机制。任何数据结构只要部署 Iterator 接口，就可以完成遍历操作（即依次处理该数据结构的所有成员）
-2. Iterator 的作用有三个：
+## 245、ES6 都有什么`Iterator`遍历器
+1. 遍历器（`Iterator`）是一种接口，为各种不同的数据结构提供统一的访问机制。任何数据结构只要部署`Iterator`接口，就可以完成遍历操作（即依次处理该数据结构的所有成员）
+2. `Iterator`的作用有三个：
   - 一是为各种数据结构，提供一个统一的、简便的访问接口；
   - 二是使得数据结构的成员能够按某种次序排列；
-  - 三是 ES6 创造了一种新的遍历命令 for... of 循环，Iterator 接口主要供 for... of 消费。
-3. 默认部署了 Iterator 的数据有 Array、Map、Set、String、TypedArray、arguments、NodeList 对象，ES6 中有的是 Set、Map、
+  - 三是 ES6 创造了一种新的遍历命令`for... of`循环，`Iterator`接口主要供`for... of`消费。
+3. 默认部署了`Iterator`的数据有`Array`、`Map`、`Set`、`String`、`TypedArray`、`arguments`、`NodeList`对象，ES6 中有的是`Set`、`Map`。
 
 
 ## 246、ES6 中类的定义
@@ -7884,13 +8099,13 @@ console.log(v_parent); // {name: "小白"}  没有tell方法和type属性
 
 
 ## 247、谈谈你对 ES6 的理解
-es6 是一个新的标准，它包含了许多新的语言特性和库，是 JS 最实质性的一次升级。 比如'箭头函数'、'字符串模板'、'generators(生成器)'、'async/await'、'解构赋值'、'class'等等，还有就是引入 module 模块的概念。
+`es6`是一个新的标准，它包含了许多新的语言特性和库，是 JS 最实质性的一次升级。
+> 比如`'箭头函数'`、`'字符串模板'`、`'generators(生成器)'`、`'async/await'`、`'解构赋值'`、`'class'`等等，还有就是引入`module`模块的概念。
 
 
 ## 248、说说你对 promise 的了解
-Promise 是异步编程的一种解决方案，比传统的解决方案——回调函数和事件监听——更合理和更强大。
-
-所谓 Promise，简单说就是一个容器，里面保存着某个未来才会结束的事件（通常是一个异步操作）的结果。从语法上说，Promise 是一个对象，从它可以获取异步操作的消息。Promise 提供统一的 API，各种异步操作都可以用同样的方法进行处理。
+`Promise`是异步编程的一种解决方案，比传统的解决方案——`回调函数`和`事件监听`——更合理和更强大。
+> 所谓 Promise，简单说就是一个容器，里面保存着某个未来才会结束的事件（通常是一个异步操作）的结果。从语法上说，`Promise`是一个对象，从它可以获取异步操作的消息。`Promise`提供统一的 API，各种异步操作都可以用同样的方法进行处理。
 
 Promise 对象有以下两个特点:
 - 对象的状态不受外界影响。Promise 对象代表一个异步操作，有三种状态：pending（进行中）、fulfilled（已成功）和rejected（已失败）。只有异步操作的结果，可以决定当前是哪一种状态，任何其他操作都无法改变这个状态。这也是Promise这个名字的由来，它的英语意思就是“承诺”，表示其他手段无法改变。
@@ -7902,14 +8117,14 @@ Promise 对象有以下两个特点:
 - 变量的声明
 - 变量的赋值
 
-原理：ES6 变量的解构赋值本质上是“模式匹配”, 只要等号两边的模式相同，左边的变量就会被赋予匹配的右边的值，如果匹配不成功变量的值就等于 undefined
+原理：ES6 变量的解构赋值本质上是“模式匹配”, 只要等号两边的模式相同，左边的变量就会被赋予匹配的右边的值，如果匹配不成功变量的值就等于 `undefined`。
 
 
-## 250、Array.from() 与 Array.reduce()
+## 250、`Array.from()`与`Array.reduce()`
 - `Array.from()`方法就是将一个类数组对象或者可遍历对象转换成一个真正的数组
 - `Array.reduce()`方法对累加器和数组中的每个元素 (从左到右)应用一个函数，将其减少为单个值。
 
-Array.from()
+**`Array.from()`**
 ```js
 // 1、将类数组对象转换为真正数组：
 let arrayLike = {
@@ -7955,9 +8170,9 @@ console.log(Array.from([12, 45, 47, 56, 213, 4654, 154]));
 ```
 
 
-## 251、var let 在 for 循环中的区别
+## 251、var、let 在 for 循环中的区别
 ```js
-//使用var声明，得到3个3
+// 使用var声明，得到3个3
 var a = [];
 for (var i = 0; i < 3; i++) {
   a[i] = function () {
@@ -8001,7 +8216,7 @@ console.log(j);//报错 j is not defined
 
 ## 252、模板字符串
 就是这种形式`${varible}`, 在以往的时候我们在连接字符串和变量的时候需要使用这种方式`'string' + varible + 'string'`但是有了模版语言后我们可以使用`string ${varible} string`这种进行连接。基本用途有如下：
-1. 基本的字符串格式化，将表达式嵌入字符串中进行拼接，用${}来界定。
+1. 基本的字符串格式化，将表达式嵌入字符串中进行拼接，用`${}`来界定。
   ```js
   // es5
   var name = "lux";
@@ -8028,10 +8243,10 @@ console.log(j);//报错 j is not defined
 
 ## 253、箭头函数需要注意的地方
 箭头函数有几个使用注意点。
-- （1）函数体内的 this 对象，就是定义时所在的对象，而不是使用时所在的对象。
-- （2）不可以当作构造函数，也就是说，不可以使用 new 命令，否则会抛出一个错误。
-- （3）不可以使用 arguments 对象，该对象在函数体内不存在。如果要用，可以用 rest 参数代替。
-- （4）不可以使用 yield 命令，因此箭头函数不能用作 Generator 函数。
+- （1）函数体内的`this`对象，就是定义时所在的对象，而不是使用时所在的对象。
+- （2）不可以当作构造函数，也就是说，不可以使用`new`命令，否则会抛出一个错误。
+- （3）不可以使用`arguments`对象，该对象在函数体内不存在。如果要用，可以用`rest`参数代替。
+- （4）不可以使用`yield`命令，因此箭头函数不能用作`Generator`函数。
 
 
 ## 254、ES6 如何动态加载 import
@@ -8043,15 +8258,15 @@ import("lodash").then(_ => {
 
 
 ## 255、箭头函数和普通函数有什么区别
-- 函数体内的 this 对象，就是定义时所在的对象，而不是使用时所在的对象，用 call apply bind 也不能改变 this 指向
-- 不可以当作构造函数，也就是说，不可以使用 new 命令，否则会抛出一个错误。
-- 不可以使用 arguments 对象，该对象在函数体内不存在。如果要用，可以用 rest 参数代替。
-- 不可以使用 yield 命令，因此箭头函数不能用作 Generator 函数。
-- 箭头函数没有原型对象 prototype
+- 函数体内的`this`对象，就是定义时所在的对象，而不是使用时所在的对象，用`call apply bind`也不能改变`this`指向
+- 不可以当作构造函数，也就是说，不可以使用`new`命令，否则会抛出一个错误。
+- 不可以使用`arguments`对象，该对象在函数体内不存在。如果要用，可以用`rest`参数代替。
+- 不可以使用`yield`命令，因此箭头函数不能用作`Generator`函数。
+- 箭头函数没有原型对象`prototype`
 
 
-## 256、Promise 构造函数是同步执行还是异步执行，那么 then 方法呢？
-promise构造函数是同步执行的，then方法是异步执行的
+## 256、Promise 构造函数是同步执行还是异步执行，那么`then`方法呢？
+`promise`构造函数是同步执行的，`then`方法是异步执行的
 ```js
 const promise = new Promise((resolve, reject) => {
   console.log(1)
@@ -8068,19 +8283,171 @@ console.log(4)
 输出结果：1 2 4 3
 
 
-## 257、❓Promise. all并发限制
+## 257、Promise. all并发限制
+`Promise.all`可以保证，`promises`数组中所有`promise`对象都达到`resolve`状态，才执行`then`回调。
+> 场景：如果你的`promises`数组中每个对象都是`http`请求，或者说每个对象包含了复杂的调用处理。而这样的对象有几十万个。那么会出现的情况是，你在瞬间发出几十万 http 请求（tcp 连接数不足可能造成等待），或者堆积了无数调用栈导致内存溢出。这时候，我们就需要考虑**对`Promise.all`做并发限制**。
+
+**`Promise.all`并发限制指的是，每个时刻并发执行的`promise`数量是固定的，最终的执行结果还是保持与原来的`Promise.all`一致。**
+> 现在已经有的成熟解决方案：`tiny-async-pool`、`es6-promise-pool`、`p-limit`
+
+**手写实现**: 
+```js
+function PromiseLimit(funcArray, limit = 5) {
+  let i = 0;
+  const result = [];
+  const executing = [];
+  const queue = function() {
+    if (i === funcArray.length) return Promise.all(executing);
+    const p = funcArray[i++]();
+    result.push(p);
+    const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+    executing.push(e);
+    if (executing.length >= limit) {
+      return Promise.race(executing).then(
+        () => queue(),
+        e => Promise.reject(e)
+      );
+    }
+    return Promise.resolve().then(() => queue());
+  };
+  return queue().then(() => Promise.all(result));
+}
+```
+```js
+// 效果演示
+// 测试代码
+const result = [];
+for (let index = 0; index < 10; index++) {
+  result.push(function() {
+    return new Promise((resolve, reject) => {
+      console.log("开始" + index, new Date().toLocaleString());
+      setTimeout(() => {
+        resolve(index);
+        console.log("结束" + index, new Date().toLocaleString());
+      }, parseInt(Math.random() * 10000));
+    });
+  });
+}
+PromiseLimit(result).then(data => {
+  console.log(data);
+});
+```
 
 
-## 258、❓介绍下 Promise. all 使用、原理实现及错误处理
+首先先看一下要实现的效果，有一个定时器，在`1000,5000,3000,2000s`之后输出时间，每次并发为`2`。也就是先执行`1000`和`5000`，等到`1000`完成后，开始执行`3000`，以此类推直到所有任务完成（先实现这样一个简单的并发控制，并没有对`promise`数组拿到结果，执行`then`）
+```js
+const timeout = i => new Promise(resolve => {
+  console.log(i);
+  setTimeout(() => resolve(i), i)
+});
+asyncPools(2, [1000, 5000, 3000, 2000], timeout)
+```
+`asyncPools`接受三个参数（`poolLimit`, `array`, `iteratorFn`）
+- `poolLimit`：并发限制
+- `array`：需要执行的并发数组
+- `iteratorFn`：具体执行的`promise`函数
+```js
+function asyncPools(poolLimit,array,fnInter) {
+  let doing = [];
+  let i =0;
+  function pp(){
+    if(i>=array.length) {
+      return;
+    }
+    let e = fnInter(array[i++]); //初始化promise
+    e.then(()=>doing.splice(doing.indexOf(e),1))  //完成之后从doing删除
+    doing.push(e); //放进doing列表
+    if(doing.length>=poolLimit) {  //超出限制的话
+      Promise.race(doing).then(pp); //监听每完成一个就再放一个
+    }
+    else {  //否则直接放进去
+      pp();
+    }
+  }
+  pp();
+}
+```
+
+
+## 258、介绍下`Promise. all`使用、原理实现及错误处理
+### Promise.all如何使用
+对于`Promise.all(arr)`来说，在参数数组中所有元素都变为决定态后，然后才返回新的`promise`。
+```js
+// 以下 demo，请求两个 url，当两个异步请求返还结果后，再请求第三个 url
+const p1 = request(`http://some.url.1`)
+const p2 = request(`http://some.url.2`)
+Promise.all([p1, p2])
+  .then((datas) => { // 此处 datas 为调用 p1, p2 后的结果的数组
+    return request(`http://some.url.3?a=${datas[0]}&b=${datas[1]}`)
+  })
+  .then((data) => {
+    console.log(msg)
+  })
+```
+
+### Promise.all原理实现
+```js
+function promiseAll(promises){
+  return new Promise(function(resolve,reject){
+    if(!Array.isArray(promises)){
+      return reject(new TypeError("argument must be anarray"))
+    }
+    var countNum = 0;
+    var promiseNum = promises.length;
+    var resolvedvalue = new Array(promiseNum);
+    for(var i = 0; i < promiseNum; i++){
+      (function(i){
+        Promise.resolve(promises[i]).then(function(value){
+          countNum++;
+          resolvedvalue[i]=value;
+          if(countNum===promiseNum){
+            return resolve(resolvedvalue)
+          }
+      }, function(reason){
+        return reject(reason)
+      )})(i)
+    }
+  })
+}
+var p1 = Promise.resolve(1),
+p2 = Promise.resolve(2),
+p3 = Promise.resolve(3);
+promiseAll([p1,p2,p3]).then(function(value){
+  console.log(value)
+})
+```
+
+### Promise.all错误处理
+有时候我们使用`Promise.all()`执行很多个网络请求，可能有一个请求出错，但我们并不希望其他的网络请求也返回`reject`，要错都错，这样显然是不合理的。如何做才能做到`promise.all`中即使一个`promise`程序`reject`，`promise.all`依然能把其他数据正确返回呢?
+1. 为每个promise关联一个错误的处理函数
+  ```js
+  var p1 = Promise.resolve(3).catch(function(err) {
+    return err;
+  });
+  var p2 = Promise.reject(2).catch(function(err) {
+    return err;
+  });
+  var p3 = new Promise((resolve, reject) => {
+    setTimeout(resolve, 100, "foo");
+  }).catch(function(err) {
+    return err;
+  }); 
+  
+  Promise.all([p1, p2, p3]).then(values => { 
+    console.log(values); // [3, 2, "foo"]
+  }).catch(function(err) {
+    console.log(1); //不会走到这里
+  });
+  ```
 
 
 ## 259、❓请介绍Promise，异常捕获
 
 
-## 260、❓设计并实现 Promise. race()
+## 260、❓设计并实现`Promise.race()`
 
 
-## 270、❓模拟实现一个 Promise. finally
+## 270、❓模拟实现一个`Promise.finally`
 
 
 ## 271、用Promise对象实现的 Ajax
