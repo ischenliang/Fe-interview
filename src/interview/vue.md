@@ -6,16 +6,144 @@ MVVM模式（Model-View-ViewModel）是一种将数据模型（Model）、视图
 - ViewModel 是一个同步 View 和 Model 的对象（桥梁）;
 
 
-## 2、❓谈谈你对Vue中响应式数据的理解？Vue3.0响应式原理是？vue2响应式原理？
-参考：https://baijiahao.baidu.com/s?id=1719835163199162055&wfr=spider&for=pc
+## 2、谈谈你对Vue中响应式数据的理解？Vue3响应式原理是？Vue2响应式原理？
+::: tip 响应式数据的理解
+响应式数据就是当数据发生改变时，UI页面做出响应。Vue 的响应式，是指当数据改变后，Vue 会通知到使用该数据的代码；例如: 视图渲染中使用了数据，数据改变后，视图也会自动更新。
+:::
+
+::: tip Vue3响应式原理
+- 通过`Proxy（代理）`： 拦截对象中任意属性的变化，包括：属性值的读写，属性的增加，属性的删除等。
+- 通过`Reffect（反射）`： 对源对象的属性进行操作
+```js
+new Proxy(data,{
+  //拦截读取属性值
+  get(target, prop){
+    return Reflect.get(target, prop)
+  },
+  //拦截设置属性值或添加新属性
+  set(target, prop, value){
+    return Reflect.set(target, prop, value)
+  },
+  //拦截删除属性
+  deleteProperty(target, prop){
+    return Reflect.deleteProperty(target, prop)
+  }
+})
+```
+:::
+
+::: tip Vue2响应式原理
+- 通过`Object.defineProperty`遍历对象的每一个属性，把每一个属性变成一个`getter`和`setter`函数，读取属性的时候调用`getter`，给属性赋值的时候就会调用`setter`.
+- 当运行`render`函数的时候，发现用到了响应式数据，这时候就会运行`getter`函数，然后`watcher（发布订阅）`就会记录下来。当响应式数据发生变化的时候，就会调用`setter`函数，`watcher`就会再记录下来这次的变化，然后通知`render`函数，数据发生了变化，然后就会重新运行`render`函数，重新生成虚拟`dom`树。
+:::
+
+### ❓Vue3响应式数据实现
+
+### ❓Vue2响应式数据实现
+```js
+
+```
 
 
-## 3、❓Vue中如何检测数组的变化?
-Vue提供了一个叫做 `Vue.set(array, index, value)` 的API，用于检测数组的变化。它会监听数组并触发视图更新。此外，也可以使用 splice、push、pop 等方法来添加或删除数组中的元素，以触发视图更新。
+## 3、Vue中如何检测数组的变化?
+数组可以用`defineProperty`进行监听。但是考虑性能原因，不能数组一百万项每一项都循环监听（那样性能太差了）。所以没有使用`Ojbect.defineProperty`对数组每一项进行拦截，而是选择**劫持数组原型上的个别方法并重写**。
+
+具体重写的有：
+> `push`、`pop`、`shift`、`unshift`、`sort`、`reverse`、`splice`
+
+::: warning vue中修改数组的注意事项
+- 在Vue中修改数组的索引和长度，是无法被监控到并做响应式视图更新的。需要通过以上7种变异方法修改数组才会触发数组对应`watcher`进行更新。
+- 数组中如果是对象数据类型的也会进行递归劫持。 
+- 如果情节需要，通过索引来修改数组里的内容。可以通过`Vue.$set()`方法来进行处理，或者使用`splice`方法实现。（其实`$set`内部的核心也是`splice`方法）
+:::
+
+::: warning 注意
+不是直接粗暴重写了`Array.prototype`上的`push`等方法，而是通过原型链继承与函数劫持进行的移花接木。并且只监听调用了`defineReactive`函数时传进来的数组。
+:::
+::: tip 实现思路
+以`push`为例，而是利用`Object.create(Array.prototype)`生成新的数组对象，该对象的`__proto__`指向`Array.prototype`。并在对象身上创建`push`等函数，利用「函数劫持」，在函数内部`Array.prototype.push.call`调用原有`push`方法，并执行自己劫持的代码(如视图更新)。最后将需要绑定的数组的`__proto__`由指向`Array.prototype`改向指成拥有重写方法的新数组对象。具体看下边源码仿写，真实`Array.prototype`里的祖宗级别`push`等方法没有动。
+:::
+
+### 手写实现
+```js
+const state = [1, 2, 4] // 待监听的数组
+const contentEl = document.querySelector('.array-content')
+const btnEl = document.querySelector('#btn')
+
+// 渲染函数
+function render () {
+  contentEl.innerHTML = state
+}
+render() // 首次需要渲染
+
+// 获取数组的原型对象，即是获取原型链上绑定的push、pop等函数
+const originalArray = Array.prototype
+// 创建一个对象作为拦截器
+let arrayMethods = Object.create(originalArray)
+
+// 劫持数组
+function defineReactive (obj) {
+  // 函数劫持: 改写这个新对象身上的push、splice等数组方法
+  obj.push = function (...args) {
+    // 还是调用原生的push方法
+    originalArray.push.apply(this, args) // 或者用call(this, ...args)
+    // 视图更新
+    render()
+  }
+  // 将需要绑定的数组的原型链 __proto__ 指向重写方法的新数组对象
+  obj.__proto__ = arrayMethods
+}
+defineReactive(state) // 劫持数组对象
+
+// 更改数据，观察dom修改
+btnEl.addEventListener('click', () => {
+  state.push(Math.round(Math.random() * 10 + 1))
+})
+```
 
 
 ## 4、Vue中如何进行依赖收集的?
-Vue中依赖收集是通过观察者（Observer）和计算属性（Computed）实现的。观察者会在数据发生变化时将更新到计算属性，从而触发视图重新渲染。计算属性也能够监听一些其他值的变化，以便更新DOM。
+所谓依赖就是`Wather`，视图中谁用到了这个响应式数据就更新谁，换句话说: 
+> 我们把“谁用到了这个响应式数据”称为“谁依赖了这个响应式数据”，我们给每个数据都建一个依赖数组(因为一个数据可能被多处使用)，谁依赖了这个数据(即谁用到了这个数据)我们就把谁放入这个依赖数组中，那么当这个数据发生变化的时候，我们就去它对应的依赖数组中，把每个依赖都通知一遍，告诉他们："你们依赖的数据变啦，你们该更新啦！"。这个过程就是**依赖收集**。
+::: tip 1、何时收集依赖？何时通知依赖更新？
+在可观测的数据获取时会触发`getter`属性，那么我们就可以在`getter`收集这个依赖，同样，当这个数据发生变化时会触发`setter`属性，那么我们就可以在`setter`中通知依赖更新视图等操作。
+
+**在getter中收集依赖，在setter中通知依赖更新。先收集依赖，即把用到该数据的地方收集起来，然后等属性发生变化时，把之前收集好的依赖循环触发一遍就行了。**
+:::
+
+::: tip 2、把依赖收集到哪里？
+在前面我们说到会给每个数据都建一个依赖数组，谁依赖了这个数据我们就把谁放入这个依赖数组中。单单用一个数组来存放依赖的话，功能好像有点欠缺并且代码过于耦合。我们应该将依赖数组的功能扩展一下，更好的做法是我们应该为每一个数据都建立一个依赖管理器，把这个数据所有的依赖都管理起来。即下面代码中的**依赖管理器Dep类**
+```js
+export default class Dep {
+  constructor () {
+    // 依赖数组
+    this.subs = []
+  }
+  // 添加一个依赖
+  addSub (sub) {
+    this.subs.push(sub)
+  }
+  // 删除一个依赖
+  removeSub (sub) {
+    const subs = this.subs
+    if (subs.length) {
+      const index = subs.findIndex(el => el === sub)
+      if (index > -1) {
+        subs.splice(index, 1)
+      }
+    }
+  }
+  // 通知所有依赖更新
+  notify () {
+    const subs = this.subs
+    for (let i = 0; i < subs.length; i++) {
+      subs[i].update()
+    }
+  }
+}
+```
+:::
+
 
 
 ## 5、如何理解Vue中的模板编译原理?

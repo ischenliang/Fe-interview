@@ -1,7 +1,6 @@
 # typescript面试题汇总
 TypeScript 是 Microsoft 开发的JavaScript 的开源超集，用于在不破坏现有程序的情况下添加附加功能。
-参考：https://www.yiibai.com/interview/1900
-参考：https://blog.csdn.net/Sheyami/article/details/121264301
+
 ## 1、👍Typescript是什么？为什么需要 TypeScript？TypeScript有哪些特性？
 TypeScript 是由 Microsoft 开发和维护的免费开源编程语言。它是 JavaScript 的强类型超集，可编译为纯 JavaScript。它是一种用于应用程序级 JavaScript 开发的语言。对于熟悉 C#、Java 和所有强类型语言的开发人员来说，TypeScript 非常容易学习和使用。
 
@@ -421,12 +420,152 @@ add(10, 20); // returns 30
 ```
 
 
-## 28、❓如何让接口的所有属性都可选？
-你可以使用partial映射类型轻松地将所有属性设为可选。
+## 28、如何让接口的所有属性都可选？
+使用`Partial`实用程序类型使一个类中的所有属性都是可选的，例如`const emp: Partial<Employee> = {};`。 `Partial`实用程序类型构造一个新类型，其中提供的类型的所有属性都设置为可选。
+```ts
+interface Employee {
+  id: number;
+  name: string;
+  salary: number;
+}
+
+const emp: Partial<Employee> = {};
+emp.name = 'James';
+```
+使用`Partial`实用程序类型来构造一个新类型，其中提供的类型的所有属性都设置为可选。
+```ts
+const obj = {
+  id: 1,
+  name: 'James',
+  salary: 100,
+};
+
+// type T = {
+//     id?: number | undefined;
+//     name?: string | undefined;
+//     salary?: number | undefined;
+// }
+type T = Partial<typeof obj>;
+```
+**注意**: 我们必须使用`typeof`类型运算符，因为`Partial`需要一个类型。我们可以在 TypeScript 的 Github 存储库中看到内置的`Partial`类型是如何实现的。
+```ts
+/**
+ * Make all properties in T optional
+ */
+type Partial<T> = {
+    [P in keyof T]?: T[P];
+};
+```
+`?: `语法称为映射修饰符，用于影响可选性。我们还可以看到`+?:`正在使用，它达到了相同的结果。 如果不添加前缀，则假定为`+`。
+::: tip 提示
+实用程序类型基本上采用所提供类型的所有属性并将它们标记为可选。
+:::
+映射修饰符可以以两种方式影响可选性，例如 我们还可以使用它们来制作接口所需的所有属性，方法是在`?:`前加上减号`-?:`。
+::: tip 提示
+如果我们不添加前缀，则假定为`+`，就像在`Partial`实用程序类型中一样。
+:::
+```ts
+/**
+ * Make all properties in T required
+ */
+type Required<T> = {
+  [P in keyof T]-?: T[P];
+};
+```
+这是`Required`实用程序类型的代码，它使得所提供类型的所有属性都是必需的。
+> 请注意，唯一更改的字符是问号前面的减号，以使用删除可选性的映射修饰符。
 
 
-## 29、❓什么时候应该使用关键字unknown？
-unknown，如果你不知道预先期望哪种类型，但想稍后分配它，则应该使用该any关键字，并且该关键字将不起作用。
+## 29、什么时候应该使用关键字unknown？
+`unknown`是一种类似于`any`的特殊类型。示例如下：
+```ts
+let x: unknown;
+```
+**推荐使用`unknown`而不是`any`，因为它提供了更安全的类型--如果想对`unknown`进行操作，必须使用类型断言或缩小到一个特定的类型。**
+
+### unknown和any的区别
+我们知道`any`类型的变量可以被赋给任何值。
+```ts
+let myVar: any = 0;
+myVar = '1';
+myVar = false;
+```
+我们也可以为`unknown`类型变量分配任何值：
+```ts
+let myVar: unknown = 0;
+myVar = '1';
+myVar = false;
+```
+从上面例子还无法看出两者的区别，接下来我们看另外的例子。
+
+为了更好地理解`unknown`和`any`之间的区别，我们先从编写一个想要调用其唯一参数的函数开始。
+- any类型
+  ```ts
+  function demo (callback: any) {
+    callback() // Uncaught (in promise) TypeError: callback is not a function
+  }
+  demo(1)
+  ```
+  上面代码中`callback`参数是任何类型的，所以语句`callback()`不会触发类型错误。我们可以用`any`类型的变量做任何事情。但是运行会抛出一个运行时错误:`TypeError: callback is not a function`。`1`是一个数字，不能作为函数调用，TypeScript并没有保护代码避免这个错误。
+  > 既允许`demo()`函数接受任何类型的参数，又要强制对该参数进行类型检查防止上面这种报错，接下来看`unknown`类型。
+- unknown类型
+  ```ts
+  function demo (callback: unknown) {
+    callback()
+  }
+  demo(1)
+  ```
+  此时可以看到，我们的编译器在报错，提示`此表达式不可调用。类型 "{}" 没有调用签名。`，与`any`相反，对于`unknown`类型，TypeScript会保护我们不调用可能不是函数的东西。但是还是会报错，如何解决呢？
+  - 在使用一个`unknown`类型的变量之前，你需要进行类型检查: 所以我们只需要检查`callback`是否是一个函数类型即可。
+    ```ts
+    function demo (callback: unknown) {
+      if (typeof callback === 'function') {
+        callback()
+      }
+    }
+    demo(1)
+    ```
+
+### unknown和any的心智模式
+理解两者区别的规则:
+- 可以将任何东西赋给`unknown`类型，但在进行类型检查或类型断言之前，不能对`unknown`进行操作
+- 可以把任何东西分配给`any`类型，也可以对`any`类型进行任何操作
+  - `unknown`示例：
+    ```ts
+    function demo(callback: unknown) {
+      // 可以将任何东西赋给 `unknown` 类型，
+      // 但在进行类型检查或类型断言之前，不能对 `unknown` 进行操作
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }
+    demo(1); // You can assign anything to `unknown` type
+    ```
+    类型检查`typeof callback === 'function'`，检查`callback`是否为函数，如果是，则可以调用。
+  - `any`示例：
+    ```ts
+    function demo(callback: any) {
+      // 可以对 `any` 类型执行任何操作
+      callback();
+    }
+    demo(1); // 可以把任何东西分配给`any`类型
+    ```
+    如果`callback`是`any`, TypeScript就不会强制`callback()`语句进行任何类型检查。
+
+对于Typescript对`unknown`类型的防御性，但我们要对未知类型执行某些操作时如何处理:
+- **方法一:使用类型断言缩小未知范围**
+  ```ts
+  let notSure:unknown = "sisterAn"
+  console.log((notSure as string).toLowerCase());
+  ```
+- **使用类型守卫进行类型收缩**
+  ```ts
+  let notSure:unknown = "sisterAn"
+  if(typeof notSure === "string"){
+    console.log((notSure as string).toLowerCase());
+  }
+  ```
+
 
 
 ## 30、什么是装饰器，它们可以应用于什么？
@@ -734,15 +873,56 @@ TypeScript 有以下缺点：
 
 
 ## 49、TypeScript中any,never,unknown和viod有什么区别？
-1. unknown类型和any类型类似。与any类型不同的是unknown类型可以接受任意类型赋值，但是unknown类型赋值给其他类型前，必须被断言
-2. never，never表示永远不存在的类型。比如一个函数总是抛出错误，而没有返回值。或者一个函数内部有死循环，永远不会有返回值。函数的返回值就是never类型。
-3. void, 没有显示的返回值的函数返回值为void类型。如果一个变量为void类型，只能赋予undefined或者null。
+1. `unknown`类型和`any`类型类似。与`any`类型不同的是`unknown`类型可以接受任意类型赋值，但是`unknown`类型赋值给其他类型前，必须进行断言或守卫。
+2. `never`，`never`表示永远不存在的类型。比如一个函数总是抛出错误，而没有返回值。或者一个函数内部有死循环，永远不会有返回值。函数的返回值就是`never`类型。
+  ```ts
+  //抛出异常
+  function error(msg:string):never{
+      throw new Error(msg)
+  }//抛出异常会直接中断程序运行，这样程序就运行不到返回值那一步了，即具有不可到达的终点，也就永不存在返回了
+
+  //死循环
+  function loopForever():never{
+      while(true){}
+  } //同样程序永远无法运行到函数返回值那一步  即永不存在返回
+  ```
+  变量也可以声明为`never`类型，因为它是永不存在的值的类型，所以任何类型都不能赋值给`never`类型(除了`never`本身之外, 即使`any`也不可以赋值给`never`)。
+  ```ts
+  let never1:never
+  // any 也不能分配给never
+  let any1: any = "sisterAn"
+  never1 = any1 // error
 
 
-## 50、❓TypeScript 中 never 和 void 的区别
-- void 表示没有任何类型（可以被赋值为 null 和 undefined）。
-- never 表示一个不包含值的类型，即表示永远不存在的值。
-- 拥有 void 返回值类型的函数能正常运行。拥有 never 返回值类型的函数无法正常返回，无法终止，或会抛出异常。
+  // 作为函数返回值的never
+  let never2: never = (()=>{
+    throw new Error("Throw error")
+  })()
+  never1 = never2
+  ```
+3. `void`, 没有显示的返回值的函数返回值为`void`类型。如果一个变量为`void`类型，只能赋予`undefined`或者`null`(注意,`“strickNullChecks”:true`时会报错)和`void`本身。
+  ```ts
+  function hello(): void{
+    console.log("hello sisterAn");
+  }
+
+  let void1:void
+  let null1:null = null
+  let nud1:undefined = undefined
+  let void2:void
+
+  void1 = void2
+  void1 = und1
+  void1 = null1 //type "null" is not assignable to type 'void'
+  ```
+
+## 50、TypeScript 中 never 和 void 的区别
+- `void`表示没有任何类型（可以被赋值为`null`和`undefined`）。
+- `never`表示一个不包含值的类型，即表示永远不存在的值。
+
+拥有`void`返回值类型的函数能正常运行。拥有`never`返回值类型的函数无法正常返回，无法终止，或会抛出异常。
+- 用于函数时`never`表示函数用于执行不步(抛出异常或死到返回值那一循环)的返回值类型，即永不存在值的类型。
+- 用于函数时`void`则表示没有返回值，不返回或返回`undefined`
 
 
 ## 51、安装 Typescript 的最低要求是什么？或者如何获得 TypeScript 并安装它？

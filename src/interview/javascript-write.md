@@ -1341,7 +1341,16 @@ console.log(arr.myFindIndex(item => item.age === 18))
 ## 39、setTimeout() 实现 setInterval()
 
 
-## 40、
+## 40、轮播图
+
+
+## 41、手风琴
+
+
+## 42、放大镜
+
+
+## 43、3D动画效果
 
 
 ![202302091646396.png](http://img.itchenliang.club/img/202302091646396.png)
