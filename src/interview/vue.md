@@ -102,7 +102,7 @@ btnEl.addEventListener('click', () => {
 ```
 
 
-## 4、Vue中如何进行依赖收集的?
+## 4、❓Vue中如何进行依赖收集的?
 所谓依赖就是`Wather`，视图中谁用到了这个响应式数据就更新谁，换句话说: 
 > 我们把“谁用到了这个响应式数据”称为“谁依赖了这个响应式数据”，我们给每个数据都建一个依赖数组(因为一个数据可能被多处使用)，谁依赖了这个数据(即谁用到了这个数据)我们就把谁放入这个依赖数组中，那么当这个数据发生变化的时候，我们就去它对应的依赖数组中，把每个依赖都通知一遍，告诉他们："你们依赖的数据变啦，你们该更新啦！"。这个过程就是**依赖收集**。
 ::: tip 1、何时收集依赖？何时通知依赖更新？
@@ -146,111 +146,844 @@ export default class Dep {
 
 
 
-## 5、如何理解Vue中的模板编译原理?
+## 5、❓如何理解Vue中的模板编译原理?
 
 
-## 6、Vue生命周期钩子是如何实现的?
+## 6、❓Vue生命周期钩子是如何实现的?
 
 
 ## 7、Vue组件生命周期有哪些？vue2和vue3的生命周期对比？
+### Vue2生命周期
+vue生命周期分为8个阶段，即分别:
+- 创建前: `beforeCreate`
+  > 表示实例完全被创建出来之前，vue实例的挂载元素`$el`和数据对象`data`都为`undefined`，还未初始化。初始化一些默认的声明周期函数和默认的事件，`data`和`methods`中的数据都没初始化。
+- 创建后: `created`
+  > 数据对象`data`已存在，可以调用`methods`中的方法，操作`data`中的数据，但`dom`未生成，`$el`未存在。
+- 载入前: `beforeMount`
+  > vue实例的`$el`和`data`都已初始化，挂载之前为虚拟的`dom`节点，模板已经在内存中编辑完成了，但是尚未把模板渲染到页面中。
+- 载入后: `mounted`
+  > vue实例挂载完成，`data.message`成功渲染。内存中的模板，已经真实的挂载到了页面中，用户已经可以看到渲染好的页面了。实例创建期间的最后一个生命周期函数，当执行完`mounted`就表示，实例已经被完全创建好了，DOM渲染在`mounted`中就已经完成了。
+- 更新前: `beforeUpdate`
+  > 当`data`变化时，会触发`beforeUpdate`方法。`data`数据尚未和最新的数据保持同步。
+- 更新后: `updated`
+  > 当`data`变化时，会触发`updated`方法。页面和`data`数据已经保持同步了。
+- 销毁前: `beforeDestroy`
+  > 组件销毁之前调用，在这一步，实例仍然完全可用。
+- 销毁后: `destroyed`
+  > 组件销毁之后调用，对`data`的改变不会再触发周期函数，vue实例已解除事件监听和`dom`绑定，但`dom`结构依然存在。
 
+### Vue3生命周期
+vue2中的`beforecreate`和`created`生命周期钩子已经被`setup`方法取代，除此之外vue3还有9个生命周期钩子:
+- `onBeforeMount`: 在组件被挂载之前被调用
+  > 当这个钩子被调用时，组件已经完成了其响应式状态的设置，但还没有创建 DOM 节点，它即将首次执行 DOM渲染过程(即首次调用`redner`函数)。
+- `onMounted`: 在组件挂载完成后执行
+  > 这个钩子通常用于执行需要访问组件所渲染的 DOM 树。
+- `onBeforeUpdate`: 在组件即将因为响应式状态变更而更新其 DOM 树之前调用
+  > 数据更新时调用，发生在虚拟 DOM 打补丁之前。这里适合在更新之前访问现有的 DOM，比如手动移除已添加的事件监听器。
+- `onUpdated`: 在组件因为响应式状态变更而更新其 DOM 树之后调用
+  > 会在组件的任意 DOM 更新后被调用，这些更新可能是由不同的状态变更导致的。如果你需要在某个特定的状态更改后访问更新后的 DOM，请使用 `nextTick()`作为替代。
+- `onBeforeUnmount`: 在组件实例被卸载之前调用
+  > 当这个钩子被调用时，组件实例依然还保有全部的功能。
+- `onUnmounted`: 在组件实例被卸载之后调用
+  > 可以在这个钩子中手动清理一些副作用，例如计时器、DOM 事件监听器或者与服务器的连接。
+- `onActivated`: 组件实例是`<KeepAlive>`缓存树的一部分，当组件被插入到 DOM 中时调用
+  > 被`keep-alive`缓存的组件激活时调用。
+- `onDeactivated`: 若组件实例是`<KeepAlive>`缓存树的一部分，当组件从 DOM 中被移除时调用
+  > 被`keep-alive`缓存的组件停用时调用。
+- `onErrorCaptured`: 在捕获了后代组件传递的错误时调用
+  > 当捕获一个来自子孙组件的错误时被调用。此钩子会收到三个参数：错误对象、发生错误的组件实例以及一个包含错误来源信息的字符串。此钩子可以返回`false`以阻止该错误继续向上传播。
 
-## 8、vue.mixin的使用场景和原理?
-
-
-## 9、Vue的组件data为什么必须是一个函数?
-
-
-## 10、请说明nextTick的原理？
-
-
-## 11、computed、watch和method的区别是什么?
-
-
-## 12、Vue.set方法是如何实现的?
-
-
-## 13、Vue为什么要用虚拟Dom？
-
-
-## 14、Vue的diff算法原理是什么?
-
-
-## 15、既然vue通过数据劫持可以精准的探测数据变化，为什么还要进行diff检测差异?
-响应式数据变化，Vue确实可以在数据变化的时候，响应式系统可以立刻得知。但是如何每个属性都添加watcher的话，性能会非常的差。
-
-粒度过细，会导致更新不精准
-
-所以采用watcher + Diff算法来检测差异。
-
-
-## 16、请说明key的作用和原理
-
-
-## 17、谈谈对组件的理解
-组件化开发能大幅提高应用开发效率、测试性、复用性<br>
-常用的组件化技术：属性、自定义事件、插槽<br>
-
-特点：
-- 降低更新范围，值重新渲染变化的组件
-- 高内聚、低耦合、单向数据流
-
-
-## 18、请描述组件的渲染流程
-
-
-## 19、请描述组件的更新流程
-
-
-## 20、异步组件原理
-
-
-## 21、函数组件的优势和原理
-
-
-## 22、组件的传值方式有哪些？Vue组件之间通信方式有哪些？
-组件之间的通信种类
-- 父组件向子组件通信
-- 子组件向父组件通信
-- 隔代组件间通信
-- 兄弟组件间通信
-
-
-## 23、$attrs是为了解决什么问题出现的?
-
-
-## 24、v-for和v-if哪个优先级更高?
-
-
-## 25、v-mode是如何实现的?
-
-
-## 26、Vue的普通Slot以及作用域Slot的区别
-
-
-## 27、Vue.use是干什么的?
-
-
-## 28、组件写name有啥好处?
-1. 可以通过名字找到对应的组件（递归组件） 
-2. 可以通过name属性实现缓存功能 (keep-alive)
-3. 可以通过name来识别组件（跨级组件通信时非常重要）
+使用示例:
 ```js
-Vue.extend = function () {
-  if(name) {
-    Sub.options.componentd[name] = Sub
+import { onMounted } from 'vue'
+export default {
+  setup () {
+  onMounted(() => {
+    console.log('mounted in the composition api!')
+  })
   }
 }
 ```
 
 
+
+## 8、Vue.mixin的使用场景和原理?
+`mixin(混入)`，提供了一种非常灵活的方式，来分发`Vue`组件中的可复用功能。
+> 本质其实就是一个js对象，它可以包含我们组件中任意功能选项，如`data、components、methods、created、computed`等等，当组件初始化的时候，会调用`mergeOptions`方法进行合并，采用策略模式针对不同的属性进行合并。如果混入的数据和本身组件的数据有冲突，采用本身的数据为准。
+
+**使用场景**
+> 在日常的开发中，我们经常会遇到在不同的组件中经常会需要用到一些相同或者相似的代码，这些代码的功能相对独立。这时，可以通过Vue的`mixin`功能将相同或者相似的代码提出来。例如：两个组件都在使用`websocket`连接。
+
+
+## 9、Vue的组件data为什么必须是一个函数?
+为了保证组件的独立性和可复用性，如果`data`是个函数的话，每复用一次组件就会返回新的`data`，类似于给每个组件实例创建一个私有的数据空间，保护各自的数据互不影响。
+- 如果组件`data`是一个对象，对象属于引用类型，两个组件中设置的`data`都会指向同一个内存地址，会造成互相污染，产生副作用。
+- 但是组件`data`是一个函数，组件实例化的时候这个函数将会被调用，返回一个对象，计算机会给这个对象分配一个内存地址，实例化几次就分配几个内存地址，他们的地址都不一样，所以每个组件中的数据不会相互干扰，改变其中一个组件的状态，其它组件不变。
+```js
+var parent = {
+  name: '张三',
+  age: 40
+}
+var child = parent
+child.name = '涨小三'
+child.age = 18
+console.log(parent) // {name: "涨小三", age: 18}
+console.log(child) // {name: "涨小三", age: 18}
+```
+
+
+## 10、❓请说明nextTick的原理？
+
+
+## 11、computed、watch和methods的区别是什么?
+`watch`是监听数据，`computed`是计算属性，`methods`是方法。
+- `computed`属性的结果会被缓存，除非依赖的响应式属性变化才会重新计算。主要当作属性来使用；
+- `methods`方法表示一个具体的操作，主要书写业务逻辑；
+- `watch`一个对象，键是需要观察的表达式，值是对应回调函数。主要用来监听某些特定数据的变化，从而进行某些具体的业务逻辑操作；可以看作是 `computed`和`methods`的结合体；
+  - `watch`适用于：需要在数据变化时执行异步或开销较大的操作时
+- `computed`必定要有`return`值；`watch`没有`return`值。
+
+::: tip 区别
+- `computed`和`methods`相比，最大区别是`computed`有缓存，只在相关响应式依赖发生改变时它们才会重新求值，意味着`computed`依赖的属性没有变化，那么多次访问`computed`属性就不会重新计算；`methods`则是看到一次计算一次。
+- `watch`和`computed`相比，`computed`是计算出一个属性，而`watch`则可能是做别的事情，如上报数据。
+:::
+
+## 12、❓Vue.set方法是如何实现的?
+
+
+## 13、Vue为什么要用虚拟Dom？
+::: tip 什么是虚拟 DOM？
+Virtual DOM理解为一个简单的JS对象，包含`tag`(标签名)、`props | attrs`(属性)、`children`(子元素对象)三个属性。
+:::
+起初我们在使用`原生js/jquery`时，不可避免的会大量操作DOM，而DOM的变化又会引发回流和重绘，从而降低页面渲染性能。而虚拟DOM的主要目的就是为了减少频繁操作DOM而引起回流重绘所引发的性能问题。
+
+虚拟DOM(Virtual DOM)，起始本质就是一个js对象，当数据发生变化时，我们不直接操作真实DOM，因为很昂贵，我们去操作这个js对象，就不会触发大量回流重绘操作，再加上diff算法，可以找到两个虚拟DOM之间改变的部分，从而最小量的去一次性更新真实DOM，而不是频繁操作DOM，性能得到了大大的提升。
+
+具备跨平台优势，由于Virtual DOM 是以JavaScript对象为基础而不依赖真实平台环境，所以使它具有了跨平台的能力，比如说浏览器平台、Weex、Node等。
+
+
+## 14、❓Vue的diff算法原理是什么?如何实现？
+::: tip 为什么要用Diff算法
+由于在浏览器中操作DOM是很昂贵的，频繁的操作DOM，会产生一定的性能问题，这就是虚拟DOM的产生原因。虚拟DOM本质上是JavaScript对象，是对真实DOM的抽象状态变更时，记录新树与旧树的差异，最后把差异更新到真正的DOM中。
+
+即使使用了Virtual DOM来进行真实DOM的渲染，在页面更新的时候，也不能全量地将整颗Virtual DOM进行渲染，而是去渲染改变的部分，这时候就需要一个计算Virtual DOM树改变部分的算法了，这个算法就是Diff算法。
+
+diff算法的作用：用来修改DOM的一小段，不会引起dom树的重绘
+:::
+
+
+## 15、既然vue通过数据劫持可以精准的探测数据变化，为什么还要进行diff检测差异?
+响应式数据变化，Vue确实可以在数据发生变化时，响应式系统可以立刻得知。但是如果给每个属性都添加`watcher`用于更新的话，绑定细粒度过高，会产生大量的`watcher`，则会造成过大的内存和依赖追踪的开销，从而降低性能。而细粒度过低会造成无法侦测到变化，则导致更新不精准的问题。
+
+所以vue采用了中等细粒度的方案(`watcher` + `diff`)来检测差异，只针对组件级别的进行响应式监听，这样知道哪个组件发生了变化，再对组件进行`diff`算法找到具体变化的位置。这里可以在讲一下`diff`的原理。
+
+
+## 16、❓请说明key的作用和原理
+::: tip 作用
+key就是一个标识，主要是被用在虚拟DOM算法中，在新旧`nodes`对比时辨识`VNodes`，相当于唯一标识ID，不会出现在真实DOM中。
+:::
+::: tip 原理
+https://blog.csdn.net/cun_king/article/details/120714227
+:::
+
+
+## 17、谈谈对组件的理解
+组件系统是Vue的另一个重要概念，因为它是一个抽象，允许我们使用小型、独立和通常可复用的组件构建大型应用。几乎任何类型的应用界面都可以抽象为一个组件树。
+
+组件就是对局部视图的封装，每个组件包含了
+- HTML结构`template`
+- CSS样式`style`
+- JavaScript行为（`script`，`data数据`、`methods行为`）
+  - 常用组件技术：属性prop、自定义事件、插槽，它们主要用于组件通信、扩展等。
+
+组件化开发能大幅提高了开发效率、代码的复用性、增强可维护性，更好的去解决软件上的高耦合、低内聚、无重用的三大代码问题。
+
+特点：
+- 可重用性: 每个组件都是具有独立功能的，它可以被使用在多个ui场景
+- 可维护性: 每个小的组件仅仅包含自己的逻辑，更容易被理解和维护
+- 可测试性: 每个组件都是独立的，那么可以对各个组件单独进行测试
+- 降低更新范围，值重新渲染变化的组件
+- 高内聚、低耦合、单向数据流
+
+
+## 18、❓请描述vue组件的渲染流程
+渲染组件时，会通过`Vue.extend`方法创建子组件的构造函数，并且进行实例化。最后手动调用了`$mount()`进行挂载，更新组件时会进行`patchVnode`流程，核心就是`diff`算法。
+
+
+## 19、❓请描述vue组件的更新流程
+
+
+## 20、❓异步组件原理
+
+
+## 21、❓函数组件的优势和原理
+
+
+## 22、组件的传值方式有哪些？Vue组件之间通信方式有哪些？
+组件之间的通信种类: 
+- `props/$emit`
+- `vuex/pinia`
+- `ref && $refs`
+- `eventBus`(事件总线)
+- `$attrs/$listeners`
+- `provide/inject`
+- `$parent/$children`
+- `localStorage、sessionStorage、Cookies`
+- `slot`插槽
+
+常见使用场景可以分为三类：
+- **父子通信**
+  - 父向子传递数据是通过`props`，子向父是通过`events（$emit）`；
+  - 通过父链/子链也可以通信（`$parent/$children`）；
+  - `ref和$refs`也可以访问组件实例；
+  - `provide/inject`API；
+  - `$attrs/$listeners`；
+  - `slot`插槽；
+  ```html
+  Child.vue:
+  <template>
+    <div>
+      <slot :user="user"></slot>
+    </div>
+  </template>
+  <script>
+  export default{
+    data(){
+      return {
+      user:{ name:"oldCode" }
+      }
+    }
+  }
+  </script>
+  
+  Parent.vue:
+  <template>
+    <div>
+      <child v-slot="slotProps">
+        {{ slotProps.user.name }}
+      </child>
+    </div>
+  </template>
+  ```
+- **兄弟通信**
+  - `eventBus`；
+  - `Vuex`；
+- **跨级通信**
+  - `eventBus`；
+  - `Vuex`；
+  - `provide/inject`API；
+  - `$attrs/$listeners`；
+
+
+## 23、$attrs/$listeners是为了解决什么问题出现的?
+- `$attrs`是一个内置属性，指父组件传递的、除了自己定义的`props`属性、`class`和`style`之外的所有属性，一般用在子组件的子元素上。
+- `$listeners`是一个内置属性，它是一个对象，里面包含了作用在这个组件上的所有监听器，你就可以配合`v-on="$listeners"`将所有的事件监听器指向这个组件的某个特定的子元素。（相当于子组件继承父组件的事件）。
+- `inheritAttrs`，默认值`true`，默认情况下父作用域的不被认作`props`的`attribute`绑定，将会“回退”且作为普通的`HTML attribute`应用在子组件的根元素上。简单来说默认情况下，父组件通过`props`传递给子组件的属性，如果在子组件中没有使用`props`绑定，那么默认会绑定在`HTML`元素上。
+
+::: tip `$attrs`演示
+例子：A 组件引用`B`组件，并为其绑定了三个属性`foo`、`bar`、`baz`
+```html
+<template>
+  <div>
+    <h1>A组件</h1>
+    <com-b :foo="foo" :bar="bar" :baz="baz"></com-b>
+  </div>
+</template>
+<script lang="ts">
+import ComB from './ComB.vue'
+export default {
+  components: {
+    ComB
+  },
+  data () {
+    return {
+      foo: 'foo',
+      bar: 'bar',
+      baz: 'baz'
+    }
+  }
+}
+</script>
+```
+B组件中定义的属性为`props: ['foo', 'bar']`那么在`B`组件中打印`$attrs`，就是除了`props`之外的属性`baz`。此时，`B`又引用了组件`C`并向其传递了一个属性`qux`：
+```html
+<template>
+  <div>
+    <h2>B组件</h2>
+    <div>foo: {{ foo }}</div>
+    <div>bar: {{ bar }}</div>
+    <com-c :qux="'qux'" v-bind="$attrs"></com-c>
+  </div>
+</template>
+<script lang="ts">
+import ComC from './ComC.vue'
+export default {
+  components: {
+    ComC
+  },
+  props: {
+    foo: String,
+    bar: String
+  },
+  created () {
+    console.log(this.$attrs) // {baz: 'baz'}
+  }
+}
+</script>
+```
+而`C`组件中定义了`props: ['baz', 'qux']`，此时在 C 组件中打印的`$attrs`是空的。
+```html
+<template>
+  <div>
+    <h3>C组件</h3>
+    <div>qux: {{ qux }}</div>
+    <div>baz: {{ baz }}</div>
+  </div>
+</template>
+<script lang="ts">
+export default {
+  props: {
+    qux: String,
+    baz: String
+  },
+  created () {
+    console.log(this.$attrs) // {}
+  }
+}
+</script>
+```
+:::
+
+::: tip `inheritAttrs`演示
+例子: `A`组件中引入`B`组件并传入`foo`、`bar`、`demo`属性
+```html
+<template>
+  <div>
+    <h1>A组件</h1>
+    <com-b :foo="'foo'" :bar="'bar'" :demo="'demo'"></com-b>
+  </div>
+</template>
+<script lang="ts">
+import ComB from './ComB.vue'
+export default {
+  components: {
+    ComB
+  }
+}
+</script>
+```
+在`B`组件在`props`中只绑定了`foo`、`bar`两个prop，并且使用默认的`inheritAttrs: true`
+```html
+<template>
+  <div>
+    <h2>B组件</h2>
+  </div>
+</template>
+<script lang="ts">
+export default {
+  inheritAttrs: true,
+  props: {
+    foo: String,
+    bar: String
+  }
+}
+</script>
+```
+运行程序看`html`资源树结构如下:
+![202303081530484.png](http://img.itchenliang.club/img/202303081530484.png)
+将`B`组件中的`inheritAttrs: true`，改成`inheritAttrs: false`，重新查看`HTML`资源目录树结构如下:
+![202303081532074.png](http://img.itchenliang.club/img/202303081532074.png)
+:::
+
+::: tip `$listeners`演示
+例子：`A`组件引用`B`组件，并为其绑定了两个事件`method1`、`method1`
+```html
+<template>
+  <div>
+    <h1>A组件</h1>
+    <com-b @method1="handleMethod1" @method2="handleMethod2"></com-b>
+  </div>
+</template>
+<script lang="ts">
+import ComB from './ComB.vue'
+export default {
+  components: {
+    ComB
+  },
+  methods: {
+    handleMethod1 (target) {
+      console.log('method1 running: ', target)
+    },
+    handleMethod2 (target) {
+      console.log('method2 running: ', target)
+    }
+  }
+}
+</script>
+```
+`B`中定义了一个`button`并绑定点击事件触发`this.$emit('method1', 'b组件')`，同时`B`组件又引用了组件`C`并向其传递了`v-on="$listeners"`：
+```html
+<template>
+  <div>
+    <h2>B组件</h2>
+    <button @click="handleClick">点击触发method1</button>
+    <com-c v-on="$listeners"></com-c>
+  </div>
+</template>
+<script lang="ts">
+import ComC from './ComC.vue'
+export default {
+  components: {
+    ComC
+  },
+  created () {
+    console.log('B: ', this.$listeners) // {method1: ƒ, method2: ƒ}
+  },
+  methods: {
+    handleClick () {
+      this.$emit('method1', 'b组件')
+    }
+  }
+}
+</script>
+```
+而`C`组件中也定义了`button`并绑定点击事件触发`this.$emit('method2', 'c组件')`。
+```html
+<template>
+  <div>
+    <h3>C组件</h3>
+    <button @click="handleClick">点击触发method2</button>
+  </div>
+</template>
+<script lang="ts">
+export default {
+  created () {
+    console.log('C: ', this.$listeners) // {method1: ƒ, method2: ƒ}
+  },
+  methods: {
+    handleClick () {
+      this.$emit('method2', 'c组件')
+    }
+  }
+}
+</script>
+```
+运行程序可以看到控制台输出结果如下:
+```
+B:  {method1: ƒ, method2: ƒ}
+C:  {method1: ƒ, method2: ƒ}
+
+点击B组件中的 "点击触发method1" 按钮，控制台输出: 
+method1 running:  b组件
+
+然后再点击C组件中的 "点击触发method2" 按钮，控制台输出:
+method2 running:  c组件
+```
+:::
+
+## 24、v-for和v-if哪个优先级更高?
+- Vue2中，`v-for`的优先级高于`v-if`；
+- Vue3中，`v-if`的优先级高于`v-for`；
+注意: **永远不要把`v-if`和`v-for`同时用在同一个元素上**。
+
+
+## 25、❓v-model是如何实现的?
+
+
+## 26、Vue的普通Slot以及作用域Slot的区别
+- **普通插槽**: 就是放在子组件的一个占位
+  ```html
+  <!-- 子组件 -->
+  <template>
+    <div>
+      <p>子组件</p>
+      <!-- 普通插槽占位 -->
+      <slot></slot>
+    </div>
+  </template>
+  <!-- 父组件 -->
+  <template>
+    <div>
+      <p>父组件</p>
+      <com-child>我是插槽占位填充内容</com-child>
+    </div>
+  </template>
+  ```
+  ![202303081614585.png](http://img.itchenliang.club/img/202303081614585.png)
+- **作用域插槽**: 作用域插槽可以拿到子组件里面的属性。在子组件中传入属性然后渲染。简单来说在父组件能够在插槽中访问到子组件的数据。
+  ```html
+  <!-- 子组件 -->
+  <template>
+    <div>
+      <p>子组件</p>
+      <slot v-bind:user="{ name: '张三', age: 23 }"></slot>
+    </div>
+  </template>
+
+  <!-- 父组件 -->
+  <template>
+    <div>
+      <p>父组件</p>
+      <com-b>
+        <template v-slot="slotProps">
+          我是叫{{ slotProps.user.name }}，今年{{ slotProps.user.age }}岁
+        </template>
+      </com-b>
+    </div>
+  </template>
+  ```
+  ![202303081619388.png](http://img.itchenliang.club/img/202303081619388.png)
+- **具名插槽**: 有时我们需要多个插槽，对于这样的情况，`<slot>`元素有一个特殊的`attribute：name`，不带`name`的`<slot>`出口带有隐含的名字`default`。
+  ```html
+  <!-- 子组件 -->
+  <template>
+    <div>
+      <p>子组件</p>
+      <slot name="title"></slot>
+      <slot name="author" v-bind="{ name: '张三' }"></slot>
+      <slot></slot>
+      <slot></slot>
+      <slot name="content"></slot>
+      <slot :name="slotName"></slot>
+      <slot name="meta" v-bind="{ tags: ['vue', 'vite'], type: 'web前端学习' }"></slot>
+    </div>
+  </template>
+  <script>
+  export default {
+    data () {
+      return {
+        slotName: 'time'
+      }
+    }  
+  }
+  </script>
+
+  <!-- 父组件 -->
+  <template>
+    <div>
+      <p>父组件</p>
+      <com-b>
+        <!-- 具名插槽 -->
+        <template v-slot:title>
+          <h1>标题</h1>
+        </template>
+
+        <!-- 具名插槽 + 作用域插槽 -->
+        <template v-slot:author="data">
+          <p>作者：{{ data.name }}</p>
+        </template>
+
+        <!-- 具名插槽的缩写 -->
+        <template #content>
+          <article>我是内容...</article>
+        </template>
+
+        <!-- 独占插槽的简写: default插槽可以省略名称 -->
+        <template v-slot>
+          <p>我是默认区域</p>
+        </template>
+
+        <!-- 动态插槽名 -->
+        <template v-slot:[slotName]>
+          <p>时间: 2022-08-19</p>
+        </template>
+
+        <!-- 插槽解构 -->
+        <template v-slot:meta="{ tags, type }">
+          <p>分类: {{ type }}, 标签: {{ tags }}</p>
+        </template>
+      </com-b>
+    </div>
+  </template>
+  <script lang="ts">
+  import ComB from './ComB.vue'
+  export default {
+    components: {
+      ComB
+    },
+    data () {
+      return {
+        slotName: 'time'
+      }
+    }
+  }
+  </script>
+  ```
+  ![2023030816341910.png](http://img.itchenliang.club/img/2023030816341910.png)
+
+
+## 27、❓Vue.use是干什么的？原理是什么？
+`Vue.use()`用于安装`Vue.js`插件。
+> 注意: **当`install`方法被同一个插件多次调用，插件将只会被安装一次**。
+::: tip 开发插件
+插件有如下两个方式开发。
+- 如果插件是一个对象，必须提供`install`方法。
+  ```js
+  /**
+   * 开发插件
+    */
+  export default {
+    install: function (Vue, options) {
+      Vue.prototype.$plugin1 = 'plugin1'
+      console.log(options) // {name: '张三', age: 23}
+    }
+  }
+  /**
+   * 使用插件
+    */
+  import plugin1 from './plugin'
+  Vue.use(plugin1, {
+    name: '张三',
+    age: 23
+  })
+  Vue.use(plugin1, {
+    name: '张三',
+    age: 23
+  })
+  console.log(Vue.prototype.$plugin1) // plugin1
+  ```
+  从上面代码中可以看到，我们注册了两次plugin1插件，但是控制台只有一次输出`{name: '张三', age: 23}`
+- 如果插件是一个函数，它会被作为`install`方法。`install`方法调用时，会将 Vue 作为参数传入。
+  ```js
+  /**
+   * 开发插件
+    */
+  function install (Vue, options) {
+    Vue.prototype.$plugin2 = 'plugin2'
+  }
+  export default install
+
+  /**
+   * 使用插件
+    */
+  import plugin2 from './plugin'
+  Vue.use(plugin2)
+  console.log(Vue.prototype.$plugin2) // plugin2
+  ```
+:::
+
+::: tip `Vue.use()`原理
+:::
+
+
+## 28、组件写name有啥好处？路由name的作用？
+::: tip 组件name作用
+1. 可以通过`name`找到对应的组件，在组件做自身递归调用时使用，如 tree-item；
+2. 可以通过`name`属性实现缓存功能，`keep-alive`依赖`name`做缓存；
+3. 可以通过`name`来识别组件（跨级组件通信时非常重要）;
+4. 可以通过`name`在vue-devtools调试工具里显示组件名称，方便快速找到对应组件；
+:::
+::: tip 路由name作用
+```js
+
+export default new Router({
+  mode: 'history',
+  routes: [
+    {
+      path: '/',
+      name: 'Hello',
+      component: Hello
+    }, {
+      path: '/text',
+      name: 'text',
+      component: text
+    }, {
+      path: '/text/:id',
+      name: 'textDetail',
+      component: param
+    }
+  ]
+})
+```
+1. 路由的`name`是路由对象中的一个配置选项
+2. 通过`name`属性，为一个页面中不同的`router-view`渲染不同的组件,如：将`Hello`渲染在`name`为`Hello`的`router-view`中，将`text`渲染在`name`为`text`的`router-view`中。不设置`name`的将为默认的渲染组件。
+  ```html
+  <template>
+    <div id="app">
+      <!-- 默认的渲染组件 -->
+      <router-view></router-view>
+      <!-- 将渲染Hello组件 -->
+      <router-view  name="Hello"></router-view>
+      <!-- 将渲染text组件 -->
+      <router-view  name="text"></router-view>
+    </div>
+  </template>
+  ```
+3. 路由跳转时，通过`params`形式传参时，必须传入`name`
+  ```js
+  router.push({
+    name: 'textDetail',
+    params: {
+      id: 1
+    }
+  })
+  ```
+4. 在组件中可以使用`this.$router.name`获取组件在`routes`中定义的名称，方便做一些逻辑判断: 例如 是否显示footer栏
+  ```js
+  export default {
+    watch: {
+      '$router': {
+        immediate: true,
+        handler: (val, old) => {
+          this.showFooter = val.name === 'Home'
+        }
+      }
+    }
+  }
+  ```
+:::
+
+
 ## 29、vue的修饰符有哪些?
+**事件修饰符**
+- `.stop`: 阻止事件冒泡
+- `.prevent`: 阻止事件默认行为
+- `.once`: 点击事件只会触发一次
+- `.native`: 在自定义组件上使用，使其当做原生HTML标签看待
+- `.self`: 只当在`event.target`是当前元素自身时触发处理函数，即事件不是从内部元素触发的
+- `.capture`: 添加事件监听器时使用事件捕获模式，即内部元素触发的事件先在此处理，然后才交由内部元素进行处理
+- `.exact`:  修饰符允许你控制由精确的系统修饰符组合触发的事件。
+```html
+<a v-on:click.stop="doThis"></a>
+
+<!-- 随便按那个键 + 鼠标点击都会触发 -->
+<button v-on:click.ctrl="onClick">A</button>
+<!-- 只有按ctrl键 + 鼠标点击才会触发 -->
+<button v-on:click.ctrl.exact="onClick">A</button>
+```
+
+**按键修饰符**
+> 在监听键盘事件时，添加按键修饰符，通常用于`keydown`和`keyup`事件
+- 按键码: 在键盘事件后面添加`.xxx`，用于监听按了哪个键。常用按键码如下: 
+  - `.enter`
+  - `.tab`
+  - `.delete`( (捕获“删除”和“退格”键))
+  - `.esc`
+  - `.up`
+  - `.down`
+  - `.space`等。
+```html
+<!-- 按enter键调用submit方法 -->
+<input @keyup.enter="submit" />
+
+<!-- 组合使用: Ctrl + C -->
+<input v-on:keyup.alt.67="clear">
+```
+
+**表单修饰符|v-model修饰符**
+- `.lazy`: 在表单输入时不会马上显示在页面，而是等输入完成失去焦点时才会显示；
+- `.trim`: 过滤表单输入时首尾的空格；
+- `.number`: 限制输入数字或将输入的数据转为数字
+
+**鼠标按键修饰符**
+> 限制处理函数仅响应特定的鼠标按钮。
+- `.left`: 鼠标左键被点击；
+- `.right`: 鼠标右键被点击；
+- `.middle`: 鼠标中键被点击；
+```html
+<!-- 表示只有点击鼠标右键时才处理 onClick 函数，同时阻止浏览器右键的默认行为 -->
+<button @click.right.prevent="onClick">点击我</button>
+```
 
 
 ## 30、如何理解自定义指令?
+我们日常使用的`v-for`、`v-if`、`v-model`等等都称为指令，这些是vue的内置指令，这些指定都是我们可以直接使用的。
+::: tip 自定义指令
+为了更好地满足开发需求，最大化的让开发者个性化开发，Vue暴露了自定义指令的API，让我们除了使用内置至另外，还可以开发自定义指令，定义好后和内置指令方式类似，例如我们开发一个`v-perms`指令，用于判断该用户是否有该按钮的操作权限。
+
+注册自定义指令方式主要有两种:
+- 全局自定义指令
+  ```js
+  // 注册一个全局自定义指令 `v-perms`
+  Vue.directive('perms', {
+    // 指令第一次绑定到元素时调用，只调用一次，可以进行一次性的初始化设置
+    // el: 指令所绑定的元素，可以用来直接操作 DOM
+    // binding: 一个对象，包含以下 property
+    //   name：指令名，不包括 v- 前缀。
+    //   value：指令的绑定值，例如：v-my-directive="1 + 1" 中，绑定值为 2。
+    //   oldValue：指令绑定的前一个值，仅在 update 和 componentUpdated 钩子中可用。无论值是否改变都可用。
+    //   arg：传给指令的参数，可选。例如 v-my-directive:foo 中，参数为 "foo"。
+    //   expression：字符串形式的指令表达式。例如 v-my-directive="1 + 1" 中，表达式为 "1 + 1"。
+    //   modifiers：一个包含修饰符的对象。例如：v-my-directive.foo.bar 中，修饰符对象为 { foo: true, bar: true }。
+    // vnode：Vue 编译生成的虚拟节点
+    // oldVnode：上一个虚拟节点，仅在 update 和 componentUpdated 钩子中可用。
+    bind: (el, binding, vnode, oldVnode) => {
+
+    },
+    // 被绑定元素插入父节点时调用
+    inserted: (el, binding, vnode) => {
+      // 表示拥有 字典新增、字典更新、资源查看 权限
+      const perms = ['dict:add', 'dict:update', 'resource:detail']
+      console.log(binding.arg)
+
+      // 不在此权限中则不显示按钮
+      if (!perms.includes(binding.value)) {
+        el.parentNode.removeChild(el)
+      }
+    },
+    // 所在组件的 VNode 更新时调用
+    update: () => {
+
+    },
+    // 指令所在组件的 VNode 及其子 VNode 全部更新后调用
+    componentUpdated: () => {
+
+    },
+    // 指令与元素解绑时调用，只调用一次
+    unbind: () => {
+
+    }
+  })
+  ```
+  使用自定义指令
+  ```html
+  <button v-perms:dict="'dict:add'">字典新增</button>
+  <button v-perms:dict="'dict:delete'">字典删除</button>
+  <button v-perms:resource="'resource:detail'">资源查看</button>
+  ```
+  可以看到浏览器控制栏输出了`dict dict resource`，以及页面效果如下
+  ![202303081756489.png](http://img.itchenliang.club/img/202303081756489.png)
+  由于我们没有`dict:delete`权限，所以此时`字典删除`按钮就没有显示。
+- 注册局部指令
+  ```js
+  directives: {
+    perms: {
+      // 指令的定义
+      inserted: function (el) {
+        // other code
+      }
+    }
+  }
+  ```
+  - 动态指令参数: `v-mydirective:[argument]="value"`，`argument`参数可以根据组件实例数据进行更新！
+  ```js
+  Vue.directive('pin', {
+    bind: function (el, binding, vnode) {
+      el.style.position = 'fixed'
+      var s = (binding.arg === 'left' ? 'left' : 'top')
+      el.style[s] = binding.value + 'px'
+    }
+  })
+  ```
+  使用
+  ```html
+  <template>
+    <div v-pin:[direction]="200"></div>
+  </template>
+  <script>
+    export default {
+      data () {
+        return {
+          direction: 'left'
+        }
+      }
+    }
+  </script>
+  ```
+:::
 
 
-## 31、keep-alive平时在哪里使用?原理是什么?
+## 31、==keep-alive平时在哪里使用？原理是什么？==
 
 
 ## 32、谈谈Vue的性能优化有哪些?
