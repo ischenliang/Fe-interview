@@ -969,7 +969,7 @@ export default new Router({
     }
   })
   ```
-  使用
+  使用<br>
   ```html
   <template>
     <div v-pin:[direction]="200"></div>
@@ -1105,72 +1105,993 @@ Vue3比Vue2性能快1.2到1.5倍。
 
 
 
-## 38、==为什么不建议用index作为key?==
-> https://www.cnblogs.com/yingzi1028/archive/2022/09/05/16647253.html
+## 38、为什么不建议用index作为key？
+**首先明白key的作用？**
+> `key`的特殊`attribute`主要用在 Vue 的虚拟 DOM 算法，在新旧`nodes`对比时辨识`VNodes`。如果不使用`key`，Vue 会使用一种最大限度减少动态元素并且尽可能的尝试就地修改/复用相同类型元素的算法。而使用`key`时，它会基于`key`的变化重新排列元素顺序，并且会移除`key`不存在的元素。
+- `key`在`diff`算法的作用，就是用来判断是否是同一个节点。
+- Vue 中使用`虚拟 dom`且根据`diff`算法进行新旧 DOM 对比，从而更新真实`dom`，`key`是`虚拟 DOM`对象的唯一标识, 在`diff`算法中`key`起着极其重要的作用，`key`可以管理可复用的元素，减少不必要的元素的重新渲染,也要让必要的元素能够重新渲染。
+
+::: tip 总结
+- 用`index`作为`key`时，在对数据进行，逆序添加，逆序删除等破坏顺序的操作时，会产生没必要的真实`DOM`更新，从而导致效率低
+- 用`index`作为`key`时，如果结构中包含输入类的`DOM`，会产生错误的`DOM`更新
+- 在开发中最好每条数据使用唯一标识固定的数据作为`key`，比如后台返回的 ID，手机号，身份证号等唯一值
+- 如果不存在对数据逆序添加，逆序删除等破坏顺序的操作时，仅用于渲染展示用时，使用`index`作为`key`也是可以的（但是还是不建议使用，养成良好开发习惯）
+:::
+
+**为什么key 值不建议用index？**
+> 尤大大在vue2文档中明确支出：建议尽可能在使用`v-for`时提供`key`属性，除非遍历输出的DOM内容非常简单，或者是刻意依赖默认行为以获取性能上的提升。简单来说就是如果使用`index`做`key`，那么直接底层帮你传进去好了，又何必多此一举。
+- **1、性能消耗**<br>
+  使用`index`做`key`，破坏顺序操作的时候， 因为每一个节点都找不到对应的`key`，导致部分节点不能复用,所有的新`vnode`都需要重新创建。
+  - 例子一: 使用`index`做`key`，点击`新增数据`按钮新增一条数据，只需要将新增这一条数据的`dom`渲染即可，我们看看实际效果。
+    ```html
+    <template>
+      <div id="app">
+        <button @click="handleClick">添加数据</button>
+        <ul>
+          <li v-for="(item, index) in list" :key="index">{{ item.id }} - {{ item.name }} - {{ item.age }}</li>
+        </ul>
+      </div>
+    </template>
+    <script lang="ts">
+    export default {
+      data () {
+        return {
+          list: [
+            { id: 1, name: '张三', age: 23 },
+            { id: 2, name: '李四', age: 24 }
+          ]
+        }
+      },
+      methods: {
+        handleClick () {
+          const obj = { id: 3, name: '王五', age: 25 }
+          this.list = [obj, ...this.list]
+        }
+      }
+    }
+    </script>
+    ```
+    - 打开浏览器的开发工具，修改数据的文本，后面加上`-我没变`，此时数据如下
+      ![202303091056495.png](http://img.itchenliang.club/img/202303091056495.png)
+    - 点击`添加数据`按钮，可以发现我们的`dom`整体都变了，很奇怪，我们明明只是新增了一条数据，那么只需要将新增这一条数据的dom渲染出来就行了，而实际是所有`dom`都改变了，整体而言性能方面消耗就大了(数据量大的话)。
+      ![202303091058074.png](http://img.itchenliang.club/img/202303091058074.png)
+    - 我们来看看上面的diff算法整体过程图
+      ![202303091102557.png](http://img.itchenliang.club/img/202303091102557.png)
+      当我们在前面加了一条数据时`index`顺序就会被打断，导致新节点`key`全部都改变了，所以导致我们页面上的数据都被重新渲染了。
+  - 例子二: 在`例子一`的基础上将`key`修改成唯一不重复的值时。
+    ```html
+    <li v-for="(item, index) in list" :key="item.id">{{ item.id }} - {{ item.name }} - {{ item.age }}</li>
+    ```
+    同样打开浏览器的开发工具，修改数据的文本，后面加上`-我没变`，然后点击`新增数据`按钮，效果如下:
+    ![202303091106468.png](http://img.itchenliang.club/img/202303091106468.png)
+    从上图可以看出，我们点击`新增数据`按钮时，只是在添加了新增的一条数据的`dom`，而我们其他的`dom`并没有重新渲染。
+  - 例子三: 计算出使用`index`作为`key`渲染数据量较大的开销
+    - 使用`index`作为`key`
+      ```html
+      <template>
+        <div id="app">
+          <button @click="handleClick">添加数据</button>
+          <ul>
+            <li v-for="(item, index) in list" :key="index">
+              {{ item.id }} - {{ item.name }}
+            </li>
+          </ul>
+        </div>
+      </template>
+      <script lang="ts">
+      export default {
+        data () {
+          return {
+            list: []
+          }
+        },
+        methods: {
+          handleClick () {
+            const obj = { id: 'student-10000', name: 'student10000' }
+            this.list.unshift(obj)
+          }
+        },
+        created () {
+          for (let i = 0; i < 10000; i++) {
+            this.list.push({
+              id: 'student-' + i,
+              name: 'student-' + i
+            })
+          }
+        },
+        beforeUpdate () {
+          console.time('for')
+        },
+        updated () {
+          console.timeEnd('for')
+        }
+      }
+      </script>
+      ```
+      点击`新增数据`按钮，看到控制台输出时间`for: 44.164794921875 ms`，即代表我们操作一条数据，`dom`渲染更新耗时。
+    - 使用`item.id`作为key: 将前一个例子的`:key="index"`改成如下
+      ```html
+      <li v-for="(item, index) in list" :key="item.id">
+        {{ item.id }} - {{ item.name }}
+      </li>
+      ```
+      点击`新增数据`按钮，看到控制台输出时间`for: 36.15087890625 ms`，即代表我们操作一条数据，`dom`渲染更新耗时。从两个结果对比来看，使用`index`为`key`的情况耗时更长。
+- **2、数据错位**<br>
+  上面例子可能觉得用`index`做`key`只是影响页面加载的效率，认为少量的数据影响不大，那面下面这种情况，可能用`index`就可能出现一些意想不到的问题了，还是上面的场景，这时我先再每个文本内容后面加一个`input`输入框，并且手动在输入框内填写一些内容，然后通过`button`向前追加一位同学看看
+  ```html
+  <template>
+    <div id="app">
+      <button @click="handleClick">添加数据</button>
+      <ul>
+        <li v-for="(item, index) in list" :key="index">
+          {{ item.id }} - {{ item.name }}
+          <input type="text">
+        </li>
+      </ul>
+    </div>
+  </template>
+  <script lang="ts">
+  export default {
+    data () {
+      return {
+        list: [
+          { id: 1, name: '张三', age: 23 },
+          { id: 2, name: '李四', age: 24 }
+        ]
+      }
+    },
+    methods: {
+      handleClick () {
+        const obj = { id: 3, name: '王五', age: 25 }
+        this.list.unshift(obj)
+      }
+    }
+  }
+  </script>
+  ```
+  手动在每一项后面input中输入对应的名称
+  ![202303091127227.png](http://img.itchenliang.club/img/202303091127227.png)
+  然后点击`新增数据`按钮，结果如下
+  ![202303091128136.png](http://img.itchenliang.club/img/202303091128136.png)
+  这时候我们就会发现，在添加之前输入的数据错位了。添加之后王五的输入框残留着张三的信息，这很显然不是我们想要的结果。diff算法更新流程图如下
+  ![2023030911285610.png](http://img.itchenliang.club/img/2023030911285610.png)
+  从上面比对图可以看出来这时因为采用`index`作为`key`时，当在比较时，发现虽然文本值变了，但是当继续向下比较时发现`DOM`节点还是和原来一摸一样，就复用了，但是没想到`input`输入框残留输入的值，这时候就会出现输入的值出现错位的情况。
+  - 将上面的`:key="index"`，改成`:key="item.id"`效果图如下:
+    ![202303091133392.png](http://img.itchenliang.club/img/202303091133392.png)
+    可以看出我们的数据错位问题也就修复了，此时的diff算法更新流程图如下
+    ![202303091135519.png](http://img.itchenliang.club/img/202303091135519.png)
+
+**解决方案**
+> 只要保证`key`唯一不变就行，一般在开发中用的比较多就是下面三种情况:
+- 在开发中最好每条数据使用唯一标识固定的数据作为`key`，比如后台返回的 ID，手机号，身份证号等唯一值
+- 可以采用`Symbol`作为`key`，`Symbol`是 ES6 引入了一种新的原始数据类型`Symbol`，表示独一无二的值，最大的用法是用来定义对象的唯一属性名。 
+  ```js
+  let a = Symbol('测试')
+  let b = Symbol('测试')
+  console.log(a === b) // false
+  ```
+- 可以采用`uuid`作为`key`，`uuid`是 Universally Unique Identifier 的缩写，它是在一定的范围内（从特定的名字空间到全球）唯一的机器生成的标识符。
 
 
-## 39、怎么缓存当前的组件？缓存后怎么更新
+## 39、怎么缓存当前的组件？缓存后怎么更新？
+开发中缓存组件使用`keep-alive`组件。
+- `keep-alive`是vue中的内置组件，能在组件切换过程中将状态保留在内存中，防止重复渲染DOM
+- `keep-alive`包裹动态组件时，会缓存不活动的组件实例，而不是销毁它们
+- `keep-alive`可以设置以下`props`属性：
+  - `include`: 字符串或正则表达式。只有名称匹配的组件会被缓存
+  - `exclude`: 字符串或正则表达式。任何名称匹配的组件都不会被缓存
+  - `max`: 数字。最多可以缓存多少组件实例
+```html
+<!-- 基本用法 -->
+<keep-alive>
+  <component :is="view"></component>
+</keep-alive>
+<!-- 使用includes和exclude： -->
+<keep-alive include="a,b">
+  <component :is="view"></component>
+</keep-alive>
+<keep-alive :include="/a|b/">
+  <component :is="view"></component>
+</keep-alive>
+<keep-alive :include="['a', 'b']">
+  <component :is="view"></component>
+</keep-alive>
+```
+
+**更新方式**: 设置了`keep-alive`缓存的组件，会多出两个生命周期钩子（`activated`与`deactivated`）
+- `activated`: 被`keep-alive`缓存的组件激活时调用。
+- `deactivated`: 被`keep-alive`缓存的组件失活时调用。
+  - 首次进入组件时：`beforeRouteEnter` > `beforeCreate` > `created` > `mounted` > `activated` > `... ...` > `beforeRouteLeave` > `deactivated`
+  - 再次进入组件时：`beforeRouteEnter` > `activated` > `... ...` > `beforeRouteLeave` > `deactivated`
+```html
+<!-- App.vue -->
+<div id="app" class='wrapper'>
+  <keep-alive>
+    <!-- 需要缓存的视图组件 --> 
+    <router-view v-if="$route.meta.keepAlive"></router-view>
+  </keep-alive>
+  <!-- 不需要缓存的视图组件 -->
+  <router-view v-if="!$route.meta.keepAlive"></router-view>
+</div>
+
+<!-- 具体的组件 -->
+<template>
+
+</template>
+<script>
+export default {
+  name: 'Demo',
+  methods: {
+    // 获取数据
+    listGet ()
+  },
+  activated () {
+    // 激活时获取数据
+    this.listGet()
+  }
+}
+</script>
+```
 
 
 ## 40、Vue中组件和插件有什么区别？
+::: tip Vue组件是什么？
+组件(`Component`)就是把图形、非图形的各种逻辑均抽象为一个统一的概念（组件）来实现开发的模式，在Vue中每一个`.vue`文件都可以视为一个组件。
+
+组件的优势: 
+- 降低整个系统的耦合度，在保持接口不变的情况下，我们可以替换不同的组件快速完成需求，例如输入框，可以替换为日历、时间、范围等组件作具体的实现
+- 调试方便，由于整个系统是通过组件组合起来的，在出现问题的时候，可以用排除法直接移除组件，或者根据报错的组件快速定位问题，之所以能够快速定位，是因为每个组件之间低耦合，职责单一，所以逻辑会比分析整个系统要简单
+- 提高可维护性，由于每个组件的职责单一，并且组件在系统中是被复用的，所以对代码进行优化可获得系统的整体升级
+:::
+::: tip Vue插件是什么？
+插件(`Plugin`)通常用来为 Vue 添加全局功能。插件的功能范围没有严格的限制，一般有下面几种：
+- 添加全局方法或者属性。如: `vue-custom-element`
+- 添加全局资源：指令/过滤器/过渡等。如`vue-touch`
+- 通过全局混入来添加一些组件选项。如`vue-router`
+- 添加 Vue 实例方法，通过把它们添加到`Vue.prototype`上实现
+- 一个库，提供自己的 API，同时提供上面提到的一个或多个功能。如`vue-router`、`momentjs`
+:::
+::: tip 两者区别？
+两者的区别主要表现在以下几个方面：
+- **1、编写形式**
+  - 编写组件: 编写一个组件，可以有很多方式，我们最常见的就是`vue`单文件的这种格式，每一个`.vue`文件我们都可以看成是一个组件
+    ```html
+    <template>
+    </template>
+    <script>
+    export default{ 
+      ...
+    }
+    </script>
+    <style>
+    </style>
+    ```
+    还可以通过`template`属性编写组件
+    ```html
+    <template id="testComponent">     // 组件显示的内容
+        <div>component!</div>   
+    </template>
+    
+    Vue.component('componentA',{ 
+      template: '#testComponent'  
+      template: `<div>component</div>`  // 组件内容少可以通过这种形式
+    })
+    ```
+  - 编写插件: ue插件的实现应该暴露一个`install`方法。这个方法的第一个参数是 Vue 构造器，第二个参数是一个可选的选项对象
+    ```js
+    MyPlugin.install = function (Vue, options) {
+      // 1. 添加全局方法或 property
+      Vue.myGlobalMethod = function () {
+        // 逻辑...
+      }
+      // 2. 添加全局资源
+      Vue.directive('my-directive', {
+        bind (el, binding, vnode, oldVnode) {
+          // 逻辑...
+        }
+        ...
+      })
+      // 3. 注入组件选项
+      Vue.mixin({
+        created: function () {
+          // 逻辑...
+        }
+        ...
+      })
+      // 4. 添加实例方法
+      Vue.prototype.$myMethod = function (methodOptions) {
+        // 逻辑...
+      }
+    }
+    ```
+- **2、注册形式**
+  - 组件注册: vue组件注册主要分为全局注册与局部注册
+    - 全局注册: 全局注册通过`Vue.component`方法，第一个参数为组件的名称，第二个参数为传入的配置项
+      ```js
+      Vue.component('my-component-name', {
+        template: `<div></div>`
+      })
+      ```
+    - 局部注册: 只需在用到的地方通过`components`属性注册一个组件
+      ```js
+      import MyComponent from '@/components/my-component.vue'
+      export default {
+        components: {
+          'my-component': MyComponent
+        }
+      }
+      ```
+  - 插件注册: 插件的注册通过`Vue.use()`的方式进行注册（安装），第一个参数为插件的名字，第二个参数是可选择的配置项
+    ```js
+    Vue.use(插件名字, { /* ... */} )
+    ```
+    注意: 
+      - 注册插件的时候，需要在调用`new Vue()`启动应用之前完成
+      - `Vue.use`会自动阻止多次注册相同插件，只会注册一次
+- **3、使用场景**
+  - 组件使用: 是用来构成你的`App`的业务模块，它的目标是`App.vue`
+  - 插件使用: 是用来增强你的技术栈的功能模块，它的目标是`Vue`本身，简单来说，插件就是指对`Vue`的功能的增强或补充
+:::
 
 
 ## 41、Composition API 与 Options API 有什么不同？
+对于vue2中`Options API`开发的项目，普遍会存在以下问题: 
+- 代码的可读性随着组件变大而变差
+  - 一个功能往往需要在不同的vue配置项中定义属性和方法，比较分散
+  - 项目过大后`methods`中可能包含几十个方法，往往分不清哪个方法对应着哪个功能
+  - **耦合度相对较高**
+- 每一种代码复用的方式，都存在缺点，例如: `data`中定义的变量每个组件都需要重新定义，例如分页数据定义
+  ```js
+  // Options API：每个组件都需要定义如下结构
+  export default {
+    data () {
+      return {
+        list: {
+          page: 1,
+          size: 10,
+          total: 0,
+          data: []
+        }
+      }
+    },
+    methods: {
+      getList () {
+        // ...
+      }
+    }
+  }
+
+  // Composition API：则直接封装成hooks，每次直接引入调用即可
+  import { reactive } from 'vue'
+  function usePage () {
+    const list = reactive({
+      page: 1,
+      size: 10,
+      total: 0,
+      data: []
+    })
+    const getList = (url, filters) => {
+      axios({
+        url: url,
+        method: 'post',
+        data: filters
+      }).then(res => {
+        list.data = res.data.data
+        list.total = res.data.total
+      })
+    }
+    return {
+      list,
+      getList
+    }
+  }
+  // 在不同组件都调用该方法即可
+  const { list, getList } = usePage()
+  ```
+- `TypeScript`支持有限
+::: tip Options API
+Options API，即大家常说的选项API，即以`vue`为后缀的文件，通过定义`methods`，`computed`，`watch`，`data`等属性与方法，共同处理页面逻辑
+```js
+export default {
+  data () {
+    return {
+      功能A,
+      功能B
+    }
+  },
+  methods: {
+    功能A,
+    功能B
+  },
+  computed: {
+    功能A,
+    功能B
+  }
+}
+```
+上面代码中当组件变得复杂，导致对应属性的列表也会增长，这可能会导致组件难以阅读和理解。
+:::
+::: tip Composition API
+又称组合式API，组件根据逻辑功能来组织的，一个功能所定义的所有API会放在一起(**更加的高内聚，低耦合**)，即使项目很大，功能很多，我们都能快速定位到这个功能所用到的所有API。
+
+两个优点: **逻辑组织，逻辑复用**
+```js
+// 功能A
+function useA () {
+  const aData = reactive({
+    count: 0
+  })
+  const aFunc = () => {
+
+  }
+  const aComputed = computed(() => {
+    return aData.count * 2
+  })
+  return {
+    aData,
+    aFunc,
+    aComputed
+  }
+}
+// 功能B
+function useB () {
+  const bData = reactive({
+    count: 0
+  })
+  const bFunc = () => {
+
+  }
+  const bComputed = computed(() => {
+    return bData.count * 2
+  })
+  return {
+    bData,
+    bFunc,
+    bComputed
+  }
+}
+// 使用，可以在多个组件导入使用
+const { aData, aFunc, aComputed } = useA()
+const { bData, bFunc, bComputed } = useB()
+```
+上面的代码可以用下图来表示
+![202303091441291.png](http://img.itchenliang.club/img/202303091441291.png)
+:::
+
+两者区别的对比图: 每一种颜色代表某一个功能的所有API
+![2023030914512710.png](http://img.itchenliang.club/img/2023030914512710.png)
+
+**Composition API能与Options API一起使用吗**
+> 是可以的
+```html
+<template>
+  <div>
+    <p>count: {{ count }}</p>
+    <button @click="inrement">自增</button>
+  </div>
+</template>
+<script lang="ts">
+import { getCurrentInstance, onMounted } from 'vue'
+export default {
+  data () {
+    return {
+      count: 0
+    }
+  },
+  setup(props) {
+    const instance = getCurrentInstance()
+    onMounted(() => {
+      console.log(instance.proxy.count)
+    })
+  },
+  methods: {
+    inrement () {
+      this.count++
+    }
+  }
+}
+</script>
+```
 
 
-## 42、为什么要使用异步组件？
+## 42、❓为什么要使用异步组件？实现原理？
+**什么是异步组件?**
+> 异步组件就是定义的时候什么都不做，只在组件需要渲染（组件第一次显示）的时候进行加载渲染并缓存，缓存是以备下次访问。
+
+**为什么要使用异步组件？**
+> 在系统功能比较多时，页面首次加载没有必要一次把所有功能代码都下载到客户端，需要把那些非首页的代码按功能拆分为一个个组件，按照用户操作异步下载和渲染。因此，异步组件主要解决的是按需加载的问题，保证系统首屏加载时间不超过3秒，减少用户等待时间，提高系统的性能。
+- 异步组件可以减少打包的结果。会将异步组件分开打包，会采用异步的方式加载组件，可以有效的解决一个组件过大的问题。不使用异步组件，如果组件功能比较多打包出来的结果就会变大。
+- 异步组件的核心可以给组件定义变成一个函数，函数里面可以用`import`语法，实现文件的分割加载，`import`语法是`webpack`提供的，采用的就是`jsonp`。
+```js
+components:{
+  VideoPlay:(resolve) => import("@/components/VideoPlay")
+}
+
+components:{
+  VideoPlay(resolve) {
+    require(["@/components/VideoPlay"], resolve)
+  }
+}
+```
+
+**实现原理？**
+> 在`createComponent`方法中，会有相应的异步组件处理，首先定义一个`asyncFactory`变量，然后进行判断，如果组件是一个函数，然后会去调`resolveAsyncComponent`方法，然后将赋值在`asyncFactory`上的函数传进去，会让`asyncFactory`马上执行，执行的时候并不会马上返回结果，因为他是异步的，返回的是一个`promise`，这时候这个值就是`undefined`，然后就会先渲染一个异步组件的占位，空虚拟节点。如果加载完之后会调`factory`函数传入`resolve`和`reject`两个参数，执行后返回一个成功的回调和失败的回调，`promise`成功了就会调`resolve`，`resolve`中就会调取`forceRender`方法强制更新视图重新渲染，`forceRender`中调取的就是`$forceUpdate`，同时把结果放到`factory.resolved`上，如果强制刷新的时候就会再次走`resolveAsyncComponent`方法，这时候有个判断，如果有成功的结果就把结果直接放回去，这时候`resolveAsyncComponent`返回的就不是`undefined`了，就会接的创建组件，初始化组件，渲染组件。
+```html
+https://blog.csdn.net/qq_42072086/article/details/109642272
+```
 
 
 ## 43、子组件可以直接改变父组件的数据么，说明原因？
+子组件不可以直接改变父组件的数据。这样做主要是为了维护父子组件的单向数据流。每次父级组件发生更新时，子组件中所有的`prop`都将会刷新为最新的值。如果强行这样做了，Vue会在浏览器的控制台中发出警告。
+> Vue提倡单向数据流，即父级`props`的更新会流向子组件，但是反过来则不行。这是为了防止意外的改变父组件状态，使得应用的数据流变得难以理解，导致数据流混乱。如果破坏了单向数据流，当应用复杂时，`debug`的成本会非常高。<br>
+> 只能通过`$emit`派发一个自定义事件，父组件接收到后，由父组件修改。
 
 
 ## 44、怎么监听vuex数据的变化？
+::: tip Vue2-vuex
+基础数据定义
+```js
+// vuex
+const store = new Vuex.Store({
+  state: {
+    count: 0
+  },
+  mutations: {
+    updateCount (state, payload) {
+      state.count += 1
+    }
+  }
+})
+```
+- **方案一**: 在组件中通过组件的`watch`方法来做
+  ```html
+  <template>
+    <div>
+      <p>{{ count }}</p>
+      <button @click="updateCount">添加数据</button>
+    </div>
+  </template>
+  <script lang="ts">
+  import { count } from 'console';
+  import { mapMutations, mapState } from 'vuex'
+  export default {
+    computed: {
+      ...mapState({
+        count: state => state.count
+      })
+    },
+    methods: {
+      ...mapMutations(['updateCount'])
+    },
+    watch: {
+      count: {
+        handler(val, old) {
+          console.log(val, old)
+        }
+      }
+    }
+  }
+  </script>
+  ```
+- **方案二**: vuex中`store`对象本身提供了`watch`函数 ,可以利用该函数进行监听
+  ```js
+  <template>
+    <div id="app">
+      <p>{{ count }}</p>
+      <button @click="monitorCount">添加数据</button>
+    </div>
+  </template>
+  <script lang="ts">
+  import { mapMutations, mapState } from 'vuex'
+  export default {
+    data () {
+      return {
+        fn: null
+      }
+    },
+    computed: {
+      ...mapState({
+        count: state => state.count
+      })
+    },
+    methods: {
+      ...mapMutations(['updateCount']),
+      monitorCount () {
+        this.updateCount()
+        if (this.count >= 5) {
+          // 停止监听
+          this.fn()
+        }
+      }
+    },
+    created () {
+      this.fn = this.$store.watch((state, getter) => {
+        return state.count
+      }, (val, old) => {
+        console.log(val, old)
+      })
+    }
+  }
+  </script>
+  ```
+- **方案三**: vuex中`store`对象本身提供了`subscribe`函数用于订阅`store`的`mutation`
+  ```html
+  <template>
+    <div>
+      <p>{{ count }}</p>
+      <button @click="monitorCount">添加数据</button>
+    </div>
+  </template>
+  <script lang="ts">
+  import { mapMutations, mapState } from 'vuex'
+  export default {
+    data () {
+      return {
+        fn: null
+      }
+    },
+    computed: {
+      ...mapState({
+        count: state => state.count
+      })
+    },
+    methods: {
+      ...mapMutations(['updateCount']),
+      monitorCount () {
+        this.updateCount()
+        if (this.count >= 5) {
+          // 停止监听
+          this.fn()
+        }
+      }
+    },
+    created () {
+      this.fn = this.$store.subscribe((mutation, state) => {
+        if (mutation.type === 'updateCount') {
+          console.log(state.count)
+        }
+      })
+    }
+  }
+  </script>
+  ```
+:::
+::: tip Vue3-pinia
+基础数据定义
+- 注册pinia，main.ts
+  ```js
+  import { createApp } from 'vue'
+  import { createPinia } from 'pinia'
+  import App from './App.vue'
+
+  const pinia = createPinia()
+
+  const app = createApp(App)
+  app.use(pinia)
+  app.mount('#app')
+  ```
+- 定义store
+  ```js
+  import { defineStore } from 'pinia'
+  export const useCounterStore = defineStore('counter', () => {
+    const count = ref(0)
+    function increment() {
+      count.value++
+    }
+    return { count, increment }
+  })
+  ```
+
+- **方案一**: 在组件中使用Composition API`watch`方法
+  ```html
+  <template>
+    <div>
+      <p>{{ counterStore.counter }}</p>
+      <button @click="counterStore.increment">新增</button>
+    </div>
+  </template>
+  <script lang="ts" setup>
+  import useCounterStore from '@/stores/counter';
+  import { watch } from 'vue'
+
+  const counterStore = useCounterStore()
+
+  watch(() => counterStore.counter, (val, old) => {
+    console.log(val, old)
+  })
+  </script>
+  ```
+- **方案二**: 类似于 Vuex 的`subscribe`方法，你可以通过`store`的`$subscribe()`方法侦听`state`及其变化
+  ```ts
+  import useCounterStore from '@/stores/counter';
+  const counterStore = useCounterStore()
+  counterStore.$subscribe((mutation, state) => {
+    if (mutation.type === 'direct' && mutation.storeId === 'counter') {
+      console.log(state.counter)
+    }
+  })
+  ```
+:::
 
 
-## 45、vue3 自定义全局指令、局部指令？
+## 45、vue3自定义全局指令、局部指令？
+::: tip 全局指令
+```js
+const app = createApp({})
+// 使 v-focus 在所有组件中都可用
+app.directive('focus', {
+  // 在绑定元素的 attribute 前
+  // 或事件监听器应用前调用
+  created(el, binding, vnode, prevVnode) {
+  },
+  // 在元素被插入到 DOM 前调用
+  beforeMount(el, binding, vnode, prevVnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都挂载完成后调用
+  mounted(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件更新前调用
+  beforeUpdate(el, binding, vnode, prevVnode) {},
+  // 在绑定元素的父组件
+  // 及他自己的所有子节点都更新后调用
+  updated(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件卸载前调用
+  beforeUnmount(el, binding, vnode, prevVnode) {},
+  // 绑定元素的父组件卸载后调用
+  unmounted(el, binding, vnode, prevVnode) {}
+})
+
+// 简化形式
+app.directive('color', (el, binding) => {
+  // 这会在 `mounted` 和 `updated` 时都调用
+  el.style.color = binding.value
+})
+```
+:::
+::: tip 局部指令
+```js
+// 在模板中启用 v-focus
+const vFocus = {
+  mounted: (el) => el.focus()
+}
+```
+上面名称`vFocus`即可以在模板中以`v-focus`的形式使用。在没有使用`<script setup>`的情况下，自定义指令需要通过`directives`选项注册：
+```js
+export default {
+  setup() {
+    /*...*/
+  },
+  directives: {
+    // 在模板中启用 v-focus
+    focus: {
+      /* ... */
+    }
+  }
+}
+```
+:::
+指令使用
+```html
+<div v-color="color"></div>
+<div v-demo="{ color: 'white', text: 'hello!' }"></div>
+<!-- 动态指令参数 -->
+<div v-example:[arg]="value"></div>
+<!-- 指令修饰符 -->
+<div v-example:foo.bar="baz">
+binding 参数会是一个这样的对象：
+{
+  arg: 'foo',
+  modifiers: { bar: true },
+  value: /* `baz` 的值 */,
+  oldValue: /* 上一次更新时 `baz` 的值 */
+}
+<!-- 组件上使用：不推荐 -->
+<MyComponent v-demo="test" />
+```
 
 
-## 46、Vue computed 实现？
+## 46、❓Vue computed实现？
 
 
-## 47、Vue中diff算法原理？
+## 47、❓Vue中diff算法原理？
 
 
 ## 48、动态给vue的data添加一个新的属性时会发生什么？怎样解决？
+会发现新的属性已经添加成功，但是视图并未刷新。
+> 在于在Vue实例创建时，`obj.b`并未声明，因此就没有被Vue转换为响应式的属性(即没有通过`Object.defineProperty`拦截)，自然就不会触发视图的更新。
+
+**解决方案**
+- 使⽤Vue的`$set()`方法给对象添加新属性
+- 定义一个全局的`key`在元素上绑定`key`，通过更新`key`来实现视图的更新。
+
+**总结数据更新了视图未更新的两种情况**：
+- 该属性不是在创建Vue对象时添加的，而是在创建Vue对象之后添加的，创建Vue对象时未声明该属性，没有被Vue转换为响应式属性，也就不会触发视图更新。
+- Vue对象的属性太多，管理的变量太多，管理不过来，没有及时刷新到视图。这种情况可能会随机出现在不同的属性上，随着属性的增加，出现频率也会增加，最好的方式是重构，尽量减少Vue管理的变量。
 
 
 ## 49、v-if和v-show区别？
+- `v-if`是根据判断条件来动态的增删`DOM`元素；
+- `v-show`是根据判断条件来动态的进行显示和隐藏`DOM`元素，就是修改`display`属性在`block`和`none`切换；
+- `v-if`的切换开销高，会触发回流重绘；
+- `v-show`的初始渲染开销高；
+- `v-show`的性能比`v-if`高；
+- 如果需要频繁切换某个元素的显示/隐藏时，使用`v-show`会更加节省性能上的开销；
+- 如果在运行时条件很少改变，使用`v-if`更好；
 
 
 ## 50、从0到1自己构架一个vue项目，说说有哪些步骤、哪些重要插件、目录结构你会怎么组织？
+可以选择vuejs官方提供的`create-vue`脚手架创建，或者使用vitejs提供的`create-vite`脚手架创建，或者使用`vue-cli`脚手架安装。
+1. 安装node.js
+2. 创建空项目并初始化`npm init -y`
+3. 安装`vite`: `npm install vite`
+4. 安装`vue`和`@vitejs/plugin-vue`: `npm install vue @vitejs/plugin-vue`
+5. 创建`main.js`
+6. 创建`App.vue`
+7. 安装路由`vue-router`和状态管理`pinia`并配置
+8. 安装组件库`element-plus`并配置
+
+目录结构
+```
+- node_modules         项目依赖包的保存目录
+- public               静态资源目录
+  - index.html         首页入口.html文件
+- src                  源码目录
+  - api                接口目录
+  - components         公共组件目录
+  - assets             资源目录，会被编译
+  - routes             路由目录
+  - store              状态管理目录
+  - styles             样式文件目录
+  - utils              工具目录
+  - views              页面视图目录
+  - App.vue            根组件
+  - main.js            入口js文件
+- vite.config.js       vite项目配置文件
+- package.json         npm包配置文件，定义项目的npm脚本、依赖包等信息
+- .gitignore           用来配置那些文件不归git管理
+- README.md            项目的说明文档，markdown格式
+```
 
 
 ## 51、Vue2 的 Vue3 区别？
-参考：https://www.cnblogs.com/guopeng27/p/16767478.html
+1. vue2和vue3双向数据绑定原理发生了改变
+  - vue2: 利用了es5的一个API`Object.definepropert()`对数据进行劫持 结合发布订阅模式来实现的。
+  - vue3: 使用了es6的`proxy`API对数据进行处理
+2. Vue3支持碎片（`Fragments`）
+  - 就是说vue3可以拥有多个根节点
+3. Composition API
+  - Vue2 与vue3 最大的区别: vue2使用`Options API`(选项式API)，对比vue3`Composition API`(组合式API)。选项式API在代码里分割了不同得属性：`data`,`computed`,`methods`等；组合式API能让我们使用方法来分割，相比于旧的API使用属性来分组，这样代码会更加简便和整洁。
+4. 创建响应式数据的方式不同
+  - vue2: 采用在`options`的`data`属性中定义
+  - vue3: 则是使用`ref`、`reactive`等响应式API定义
+5. 生命周期不同
+6. vue3更好地支持typescript
 
 
 ## 52、Vue3带来了什么改变？Vue3带来了什么新特性？
-参考：https://zhuanlan.zhihu.com/p/352910102
-参考：https://developer.aliyun.com/article/921386
+改变:
+- 性能的提升，打包大小减少41%，初次渲染快55%, 更新渲染快133%，内存减少54%
+- 使用Proxy代替defineProperty实现响应式，重写虚拟DOM的实现和Tree-Shaking
+- diff算法优化
+- 移除`.sync`改为`v-model`参数
+- 移除`filter`过滤器
+
+新特性:
+- Composition API(组合式API)，`setup`作为组合函数的入口函数
+- 单文件组件中的组合式 API 语法糖 (`<script setup>`): vue3.2新增
+- `Teleport`组件: 传送门，之前都是放在APP里，用这个可随意放置
+- `Emits`组件选项: 
+- `Fragments`片段: template下可以有多个根节点
+- 单文件组件中的状态驱动的 CSS 变量 (`<style> 中的 v-bind`)
+- `Suspense`: 可以嵌套层级中等待嵌套的异步依赖项
 
 
-## 53、vue3响应式数据的判断？
+## 53、Vue3响应式数据的判断？
+- `isRef`: 检查一个值是否为一个`ref`对象
+- `isReactive`: 检查一个对象是否是由`reactive`创建的响应式代理
+- `isReadonly`: 检查一个对象是否是由`readonly`创建的只读代理
+- `isProxy`: 检查一个对象是否是由`reactive`、`readonly`、`shallowReactive`或`shallowReadonly`方法创建的代理
+```ts
+const foo = ref('foo')
+const bar = reactive({ count: 0 })
+const copyBar = readonly(bar)
+console.log(isRef(foo)) // true
+console.log(isReactive(bar)) // true
+console.log(isReadonly(copyBar)) // true
+console.log(isProxy(foo)) // false
+```
 
 
-## 54、vue3的常用 Composition API有哪些？
+## 54、Vue3的常用 Composition API有哪些？
+- `setup()`: 组件中使用组合式 API 的入口
+- `ref()`
+- `reactive()`
+- `readonly()`
+- `computed()`
+- `watch()`
+- `watchEffect()`
+- `isRef()`
+- `unref()`
+- `toRef()`
+- `toRefs()`
+- `isProxy()`
+- `isReactive()`
+- `isReadonly()`
+- `markRow()`
+- `toRaw()`
+- `provide()`、`inject()`
+- `onMounted()`
+- `onActivated()`
 
 
 ## 55、Composition API 实现代码逻辑复用？
-https://blog.csdn.net/qq_38689395/article/details/122260297
+封装成一个个的`hooks`函数，例如:
+```ts
+import { reactive } from 'vue'
+function usePage () {
+  const list = reactive({
+    page: 1,
+    size: 10,
+    total: 0,
+    data: []
+  })
+  const getList = (url, filters) => {
+    axios({
+      url: url,
+      method: 'post',
+      data: filters
+    }).then(res => {
+      list.data = res.data.data
+      list.total = res.data.total
+    })
+  }
+  return {
+    list,
+    getList
+  }
+}
+```
+在组件中使用只需要
+```ts
+import { usePage } from '@/hooks'
+const { list, getList } = usePage()
+```
 
 
 ## 56、Vue3 如何实现响应式？
+通过调用`ref`、`reactive`等组合式函数API创建响应式数据
+```ts
+const count = ref(0)
+const user = reactive({
+  name: '张三',
+  age: 23
+})
+```
 
 
-## 57、v-model 参数用法？
+## 57、Vue3的v-model参数用法？
+默认情况下，`v-model`在组件上都是使用`modelValue`作为`prop`，并以`update:modelValue`作为对应的事件。我们可以通过给`v-model`指定一个参数来更改这些名字：
+```html
+<template>
+  <div>
+    <input type="text" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" />
+    <input type="text" :value="title" @input="$emit('update:title', $event.target.value)" />
+  </div>
+</template>
+<script setup>
+defineProps({
+  modelValue: string
+  title: string
+})
+defineEmits(['update:title', 'update:modelValue'])
+</script>
+```
+组件使用
+```html
+<my-component v-model:title="bookTitle" v-model="username"></my-component>
+```
 
 
-## 58、watch 和 watchEffect 的区别？
+## 58、==watch 和 watchEffect 的区别？==
 
 
 ## 59、setup 中如何获取组件实例？
