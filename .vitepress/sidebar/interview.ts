@@ -74,12 +74,12 @@ const arr = [
     text: "构建工具篇",
     items: [
       { text: 'npm', link: '/interview/npm' },
-      { text: "vue-cli", link: "/interview/vue-cli" },
+      { text: "babel", link: "/interview/babel" },
       { text: "webpack", link: "/interview/webpack" },
       { text: "vite", link: "/interview/vite" },
-      { text: "gulp", link: "/interview/gulp" },
       { text: "rollup", link: "/interview/rollup" },
-      { text: "babel", link: "/interview/babel" },
+      { text: "vue-cli", link: "/interview/vue-cli" },
+      { text: "gulp", link: "/interview/gulp" },
       { text: 'eslint', link: '/interview/eslint' },
       { text: 'prettier', link: '/interview/prettier' }
     ],

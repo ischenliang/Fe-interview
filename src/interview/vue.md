@@ -1069,8 +1069,10 @@ Vue3比Vue2性能快1.2到1.5倍。
 - `cacheHandler`
 - `SSR`优化
   - 当有大量静态的内容时候，这些内容会被当做纯字符串推进一个buffer里面， 即使存在动态的绑定，会通过模板插值嵌入进去。这样会比通过虚拟dmo来渲染的快上很多很多。
-  - 当静态内容大到一定量级时候，会用_createStaticVNode方法在客户端去生成一个static node， 这些静态node，会被直接innerHtml，就不需要创建对象，然后根据对象渲染。
-- `tree-shaking`
+  - 当静态内容大到一定量级时候，会用`_createStaticVNode`方法在客户端去生成一个`static node`， 这些静态`node`，会被直接`innerHtml`，就不需要创建对象，然后根据对象渲染。
+- `tree-shaking`(摇树优化)
+  - `tree-shaking`即在构建工具构建后消除程序中无用的代码，来减少包的体积。
+    > 相比Vue2导入整个Vue对象，Vue3支持按需导入，只打包需要的代码。`Tee-shaking`依赖 ES6 模块语法的静态结构(即`import`和`export`)，导入编译阶段的静态分析，找到没有引入的模块并打上标记。像我们在项目中如果没有引入`Transition`、`Keep-alive`等不常用的组件，那么对应的代码就不会打包进去。
 - `diff`算法优化
   - Vue2中的虚拟`dom`是进行全量的对比
   - Vue3新增了静态标记（`PatchFlag`），只比对带有 PF 的节点，并且通过 Flag 的信息得知 当前节点要比对的具体内容。
@@ -2091,50 +2093,264 @@ defineEmits(['update:title', 'update:modelValue'])
 ```
 
 
-## 58、==watch 和 watchEffect 的区别？==
+## 58、watch 和 watchEffect 的区别？
+**watch**
+- `watch`显示指定依赖数据，依赖数据更新时执行回调函数
+- 具有一定的惰性`lazy`第一次页面展示的时候不会执行，只有数据变化的时候才会执行(设置`immediate: true`时可以变为非惰性，页面首次加载就会执行)
+- 监视`ref`定义的响应式数据时可以获取到原值
+- 既要指明监视的属性，也要指明监视的回调
+```html
+<template>
+  <div style="padding: 10px;">
+    <div>
+      <p>count: {{ count }}</p>
+      <button @click="count++">自增</button>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { ref, watch } from 'vue';
+
+const count = ref(0)
+// 方式一
+// watch(() => count.value, (val, old) => {
+//   console.log('watch', val)
+// })
+// 方式二
+watch(count, (val, old) => {
+  console.log('watch', val)
+})
+</script>
+```
+
+**watchEffect**
+- `watchEffect`自动收集依赖数据，依赖数据更新时重新执行自身
+- 立即执行，没有惰性，页面的首次加载就会执行
+- 无法获取到原值，只能得到变化后的值
+- 不用指明监视哪个属性，监视的回调中用到哪个属性就监视哪个属性
+```html
+<template>
+  <div style="padding: 10px;">
+    <div>
+      <p>count1: {{ count1 }}</p>
+      <button @click="count1++">自增</button>
+    </div>
+
+    <div>
+      <p>count2: {{ count2 }}</p>
+      <button @click="count2++">自增</button>
+    </div>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { ref, watch, watchEffect } from 'vue';
+
+const count1 = ref(0)
+const count2 = ref(0)
+watchEffect(() => {
+  console.log('watch effect', count1.value, count2.value)
+})
+</script>
+```
+上面代码无论点击`count1自增`按钮还是`count2自增按钮`，控制台都会输出结果，并且初次时会立即执行。
 
 
 ## 59、setup 中如何获取组件实例？
+由于`setup`是`Composition API`没有`this`，所以我们需要使用`getCurrentInstance`方法来获取当前组件实例。
+```ts
+import { onMounted, getCurrentInstance } from 'vue'
+const ctx = getCurrentInstance().proxy
+```
 
 
 ## 60、如何理解ref、toRef和toRefs？
-参考：https://wenku.baidu.com/aggs/0f64aceb19e8b8f67c1cb9e7.html?_wkts_=1676625074702&bdQuery=vue3%E9%9D%A2%E8%AF%95%E9%A2%98
+三个方法都可以将某个对象中的属性变成响应式数据。
+- `ref`是对原数据的拷贝，修改响应式数据时不会影响之前的数据，视图会更新
+  ```js
+  const count = ref(0)
+  console.log(count.value) // 0
+
+  count.value++
+  console.log(count.value) // 1
+  ```
+- `ref`可用于获取`Dom`
+  ```html
+  <template>
+    <div ref="eleDom">ref-dom-test</div>
+  </template>
+  <script setup>
+    import { ref, onMounted } from 'vue'
+    const eleDom = ref(null)
+    onMounted(() => {
+			console.log(eleDom.value.innerHTML) // ref-dom-test
+		})
+  </script>
+  ```
+- `toRef`、`toRefs`是对原数据的引用，修改响应式数据，会影响到原始数据，但是视图不会更新
+  - `toRef`修改的是对象的某个属性
+  - `toRefs`修改的是整个对象
+- `toRef`一次仅能设置一个数据，接收两个参数，第一个参数是哪个对象，第二个参数是对象的哪个属性
+  ```js
+  const state = reactive({
+    foo: 1,
+    bar: 2
+  })
+  const fooRef = toRef(state, 'foo')
+  // 更改该 ref 会更新源属性
+  fooRef.value++
+  console.log(state.foo) // 2
+
+  // 更改源属性也会更新该 ref
+  state.foo++
+  console.log(fooRef.value) // 3
+  ```
+- `toRefs`接收一个对象作为参数，它会遍历对象身上的所有属性，然后挨个调用`toRef`执行
+  ```js
+  const state = reactive({
+    foo: 1,
+    bar: 2
+  })
+  const stateAsRefs = toRefs(state)
+  /*
+  stateAsRefs 的类型：{
+    foo: Ref<number>,
+    bar: Ref<number>
+  }
+  */
+  // 这个 ref 和源属性已经“链接上了”
+  state.foo++
+  console.log(stateAsRefs.foo.value) // 2
+
+  stateAsRefs.foo.value++
+  console.log(state.foo) // 3
+  ```
+  当从组合式函数中返回响应式对象时，`toRefs`相当有用。使用它，消费者组件可以解构/展开返回的对象而不会失去响应性：
+  ```js
+  function useFeatureX() {
+    const state = reactive({
+      foo: 1,
+      bar: 2
+    })
+    // ...基于状态的操作逻辑
+    // 在返回时都转为 ref
+    return toRefs(state)
+  }
+
+  // 可以解构而不会失去响应性
+  const { foo, bar } = useFeatureX()
+  ```
+  `toRefs`在调用时只会为源对象上可以枚举的属性创建 ref。如果要为可能还不存在的属性创建`ref`，请改用`toRef`。
+  - `setup`中返回`toRefs(state)`, 或者`toRef(state, ‘xxx’)`—(这样就能够在`template`中不使用`state.xxx`)
 
 
 ## 61、Proxy 相比于 defineProperty 的优势
-Object.defineProperty() 的问题主要有三个：
+`Object.defineProperty()`的问题主要有三个：
 - 不能监听数组的变化
 - 必须深层遍历嵌套的对象
 - 必须遍历对象的每个属性
 
-Proxy 在 ES2015 规范中被正式加入，它有以下几个特点：
-- 针对对象：针对整个对象，而不是对象的某个属性，所以也就不需要对 keys 进行遍历。这解决了上述 Object.defineProperty() 第二个问题
-- 支持数组：Proxy 不需要对数组的方法进行重载，省去了众多 hack，减少代码量等于减少了维护成本，而且标准的就是最好的。
+Proxy 还拥有以下优势：
+- `proxy`有多达13种拦截方法，不限于`apply`、`ownKeys`、`deleteProperty`、`has`等是`object.defineProperty`不具备的。
+- `proxy`可以直接监听数组的变化，`proxy`可以直接监听对象而非属性。
+- `proxy`返回的是一个新对象，我们可以只操作新对象达到目的，不需要深度遍历监听，性能高于`Object.defineProperty`而`Object.defineProperty`只能遍历对象属性直接修改。
+- `Proxy`作为新标准受到浏览器厂商的重点关注和性能优化，相比之下`Object.defineProperty()`是一个已有的老方法。
 
-除了上述两点之外，Proxy 还拥有以下优势：
-- Proxy 的第二个参数可以有 13 种拦截方法，这比起 Object.defineProperty() 要更加丰富
-- Proxy 作为新标准受到浏览器厂商的重点关注和性能优化，相比之下 Object.defineProperty() 是一个已有的老方法。
+`Object.defineProperty`的优势如下:
+- 兼容性好，支持IE9
 
 
 ## 62、vue2为什么不使用proxy？
-兼容性
+主要`Proxy`是 es6 提供的新特性，兼容性不好，最主要的是这个属性无法用`polyfill`来兼容
+> Polyfill 指的是用于实现浏览器并不支持的原生 API 的代码。
 
 
 ## 63、vue3性能比vue2好的原因？
-1. diff算法优化
-2. 静态提升hoistStatic
-3. 事件侦听器缓存 cacheHandles
+1. `diff`算法优化
+  - Vue2中的虚拟dom是进行全量对比的
+    ![2023031014045010.png](http://img.itchenliang.club/img/2023031014045010.png)
+  - Vue3新增了静态标记(`PatchFlag`)，在与上次数据虚拟节点对比的时候只对比有`patchFlag`的节点，并且可以通过静态标记得到本次要对比的内容
+    ![202303101405001.png](http://img.itchenliang.club/img/202303101405001.png)
+    可以在[Vue3 Template Explorer](https://vue-next-template-explorer.netlify.app/)中得到验证
+    ```js
+    export function render(_ctx, _cache, $props, $setup, $data, $options) {
+      return (_openBlock(), _createBlock("div", null, [
+        _createVNode("p", null, "这是一个段落"),
+        _createVNode("p", null, _toDisplayString(_ctx.msg), 1 /* TEXT */)
+      ]))
+    }
+    ```
+    很明显我们可以看见生成的`render`函数中有一个标记1
+2. 静态提升`hoistStatic`
+  - 在Vue2中无论元素是否参与更新，每次都会重新创建，然后再渲染。每次都会`createVNode`。
+    ![202303101400417.png](http://img.itchenliang.club/img/202303101400417.png)
+  - 但是在Vue3中使用了静态提升后，对于不参与更新的元素，只会被创建一次，在渲染时直接复用即可
+    ![202303101400563.png](http://img.itchenliang.club/img/202303101400563.png)
+3. 事件侦听器缓存`cacheHandles`
+  - 默认情况下`onClick`会被视为动态绑定，所以每次都会去追踪它的变化，但是因为是同一个函数，所以没必要去追踪它的变化，想办法将它直接缓存起来复用就会提升性能。
+  ![2023031014011510.png](http://img.itchenliang.club/img/2023031014011510.png)
+  ![202303101401309.png](http://img.itchenliang.club/img/202303101401309.png)
+  从上图就可以看到，`onClick`果然会被视为动态绑定，它有静态标记，查看刚才提到的目录中发现，8是动态属性。开启`cacheHandlers`后，静态标记就不存在了，那么这部分内容也就不会进行比较了。
+  ![202303101401557.png](http://img.itchenliang.club/img/202303101401557.png)
 
 
 ## 64、Proxy响应式绑定
-参考：https://wenku.baidu.com/view/af7334842b4ac850ad02de80d4d8d15abe230088.html?_wkts_=1676625340205&bdQuery=vue3%E9%9D%A2%E8%AF%95%E9%A2%98
+Vue2内部是通过`Object.defineProperty`这个API去劫持数据的`getter`和`setter`来实现响应式的。因为这个API必须预先知道要拦截的`key`是什么，所以它并不能检测到对象属性的添加和删除。直接造成了数组元素的直接修改不会触发响应式机制。
+
+例如：对象`obj`的`text`属性进行劫持
+```js
+const obj = {}
+Object.defineProperty(obj, 'text', {
+  get: () => {
+    console.log('get val')
+  },
+  set: (val) => {
+    console.log('setValue', val)
+    // 更新视图
+    renderView()
+  }
+})
+const input = document.querySelector('#input')
+input.addEventListener('keyup', (e) => {
+  obj.text = e.target.value
+})
+```
+Vue3使用了`Proxy`API做数据劫持，它劫持的是整个对象，自然对于对象的属性的增加和删除都能检测到，自然也不会再存在上述的问题。改写上面的例子：
+```html
+<input type="text" id="input">
+<p id="p"></p>
+<script>
+  const input = document.querySelector('#input')
+  const p = document.querySelector('#p')
+  const obj = {}
+  const objProxy = new Proxy(obj, {
+    get: (target, key, receiver) => {
+      console.log('get ' + key)
+      return Reflect.get(target, key, receiver)
+    },
+    set: (target, key, value, receiver) => {
+      console.log('set', key)
+      if (key === 'text') {
+        input.value = value
+        p.innerHTML = value
+      }
+      return Reflect.set(target, key, value, receiver)
+    }
+  })
+  input.addEventListener('keyup', (e) => {
+    objProxy.text = e.target.value
+  })
+</script>
+```
+通过`Proxy`实现双向响应式绑定，相比`Object.defineProperty`的遍历属性的方式效率更高，性能更好，另外`Virtual DOM`只更新`diff`动态部分、时间缓存等，也带来了性能上的提升。
 
 
-## 65、ref响应式是怎样设计的？
+## 65、❓ref响应式是怎样设计的？
 监听了value 的改变 劫持value属性的setter gatter, 因此ref一般用在基本数据，或者引用数据的嵌套层级不深得数据上
 
 
-## 66、relative也是响应式的设计 怎么设计的？
+## 66、❓relative也是响应式的设计 怎么设计的？
 跟ref一样 但是底层采用的是ES6的Proxy代理了整个引用数据
 
 
@@ -2143,150 +2359,771 @@ Proxy 在 ES2015 规范中被正式加入，它有以下几个特点：
 - 响应式 API：例如`ref()`和`reactive()`，使我们可以直接创建响应式状态、计算属性和侦听器。
 - 生命周期钩子：例如`onMounted()`和`onUnmounted()`，使我们可以在组件各个生命周期阶段添加逻辑。
 - 依赖注入：例如`provide()`和`inject()`，使我们可以在使用响应式 API 时，利用 Vue 的依赖注入系统。
-
 组合式 API 是 Vue 3 及 Vue 2.7 的内置功能。
 
 
 ## 68、hook代码写在哪里？
-写在vue3.0的setup函数内部
+`hooks`代码一般存放于`src/hooks`目录下，并使用`useXxxx`命名方式命名
+```js
+import {ref} from 'vue'
+export default function(){
+  const cout = ref(0);
+  const increment = () => {
+    cout.value++;
+  }
+  const decrement = () => {
+    cout.value--;   
+  }
+  return{
+    cout,
+    increment,
+    decrement
+  }
+}
+```
+然后在对应需要使用的组件引入hook，需要在Vue的`setup`函数内部
+```js
+import useCout from '@/hooks/useCout'
+```
 
 
-## 69、vue3中的setup函数的理解？
-- 1、setup语法返回的对象的成员可以在模板中使用，也可以在组件的api中使用，但是这个函数中不能使用组件api中的东西
-- 2、setup函数中可以声明一些变量、函数 然后return出去给组件使用
-- 3、setup函数内部的变量可以屈设计为响应式的变量 那么可以使用官方的hook
-- 4、setup函数可以设计成scipt标签中写这个同名单词的属性，然后使整个标签环境都为setup标签环境
+## 69、Vue3中的setup函数的理解？
+- `setup`是组合式api的入口；
+- `setup`函数中定义的变量和方法都是需要return出去的，不然没有办法在模板中使用；
+- 可以在`script`标签上使用`setup`语法糖，使整个标签环境都为`setup`环境
+- `setup`是处于`beforecreate`和`created`生命周期间的函数；
+- `setup()`自身并不含对组件实例的访问权，即在`setup()`中访问`this`会是`undefined`。你可以在`选项式API`中访问`组合式API`暴露的值，但反过来则不行；
+- `setup()`应该同步地返回一个对象。唯一可以使用`async setup()`的情况是，该组件是`Suspense`组件的后裔。
 
 
-## 70、vue全家桶包含哪些？
+## 70、Vue全家桶包含哪些？
+Vue框架本身、路由管理器vue-router、状态管理工具vuex|pinia、构建工具vue-cli|vite、vue调试工具vue-devtools、网络请求库axios、UI组件库(element-ui、iview、vant等)、CSS预处理器(less、sass、stylus等)。
 
 
 ## 71、v-model是什么？怎么使用？vue中标签怎么绑定事件？
+`v-model`用于表单数据的双向绑定的指令，其实它就是一个语法糖。
+```html
+<input type="text" v-model="value">
+<!-- 等价于 -->
+<input
+  :value="value"
+  @input="event => value = event.target.value">
+```
+Vue中标签绑定事件：
+> 使用`v-on`指令(简写为`@`)来监听 DOM 事件，并在事件触发时执行对应的JavaScript。用法：`v-on:click="methodName"`或`@click="handler"`。
+```html
+<button @click="count2++">自增</button>
+<button @click="handleClick">自增</button>
+```
 
 
-## 72、v-model的实现原理？
+
+## 72、❓v-model的实现原理？
+1. `v-bind`绑定响应式数据；
+2. 通过`oninput`触发事件获取当前`$event.target.value`，然后赋值给当前变量。
+```html
+<input
+  :value="value"
+  @input="event => value = event.target.value">
+```
 
 
 ## 73、请说出至少4种vue当中的指令和它的用法？
+- `v-text`: 更新元素的文本内容。
+  > 通过设置元素的`textContent`属性来工作，因此它将覆盖元素中所有现有的内容。
+  ```html
+  <span v-text="msg"></span>
+  <!-- 等同于 -->
+  <span>{{msg}}</span>
+  ```
+- `v-html`: 更新元素的`innerHTML`。
+  ```html
+  <div v-html="html"></div>
+  ```
+- `v-show`: 改变元素的可见性，通过设置内联样式的`display`css属性。
+  ```html
+  <h1 v-show="ok">Hello!</h1>
+  ```
+- `v-if`: 条件性地渲染元素或者模板片段，控制元素是否销毁或创建。
+  ```html
+  <h1 v-if="awesome">Vue is awesome!</h1>
+  ```
+- `v-else`: 表示`v-if`或`v-if / v-else-if`链式调用的`“else 块”`。
+  > 上一个兄弟元素必须有`v-if`或`v-else-if。
+  ```html
+  <div v-if="Math.random() > 0.5">
+    Now you see me
+  </div>
+  <div v-else>
+    Now you don't
+  </div>
+  ```
+- `v-else-if`: 表示`v-if`的`“else if 块”`。可以进行链式调用。
+  > 上一个兄弟元素必须有`v-if`或`v-else-if`。
+  ```html
+  <div v-if="type === 'A'">
+    A
+  </div>
+  <div v-else-if="type === 'B'">
+    B
+  </div>
+  <div v-else-if="type === 'C'">
+    C
+  </div>
+  <div v-else>
+    Not A/B/C
+  </div>
+  ```
+- `v-for`: 基于原始数据循环渲染元素或模板块。
+  > 指令值必须使用特殊语法`alias in expression为正在迭代的元素提供一个别名
+  ```html
+  <div v-for="(item, index) in items"></div>
+  <div v-for="(value, key) in object"></div>
+  ```
+- `v-on`: 给元素绑定事件监听器。
+  > 缩写：`@`
+  ```html
+  <button v-on:click="doThis"></button>
+  <!-- 缩写 -->
+  <button @click="doThis"></button>
+  ```
+- `v-bind`: 动态的绑定一个或多个`attribute`，也可以是组件的`prop`。
+  > 缩写`:`或者`.`
+  ```html
+  <!-- 绑定 attribute -->
+  <img v-bind:src="imageSrc" />
+  <!-- 缩写 -->
+  <img :src="imageSrc" />
+  ```
+- `v-model`: 在表单输入元素或组件上创建双向绑定。
+  ```html
+  <input v-model="text">
+  ```
+- `v-slot`: 用于声明具名插槽或是期望接收`props`的作用域插槽。
+  ```html
+  <!-- 接收 prop 的默认插槽，并解构 -->
+  <Mouse v-slot="{ x, y }">
+    Mouse position: {{ x }}, {{ y }}
+  </Mouse>
+  ```
+- `v-pre`: 跳过该元素及其所有子元素的编译。
+  ```html
+  <span v-pre>{{ this will not be compiled }}</span>
+  ```
+- `v-once`: 仅渲染元素和组件一次，并跳过之后的更新。
+  ```html
+  <!-- 单个元素 -->
+  <span v-once>This will never change: {{msg}}</span>
+  ```
+- `v-memo`: 缓存一个模板的子树。
+  ```html
+  <div v-memo="[valueA, valueB]">
+    ...
+  </div>
+  ```
+- `v-cloak`: 用于隐藏尚未完成编译的 DOM 模板。
+  ```html
+  <template>
+    <div v-cloak>
+      {{ message }}
+    </div>
+  </template>
+  <style>
+    [v-cloak] {
+      display: none;
+    }
+  </style>
+  ```
+  直到编译完成前，`<div>`将不可见。
+
 
 
 ## 74、active-class是哪个组件的属性？
-vue-router模块的router-link组件。
+`active-class`是`vue-router`模块中`router-link`组件中的属性，主要作用是用来实现选中样式的切换。
+
+**active-class的使用方式**
+1. 在`router-link`中写入`active-class`
+  > `active-class`选择样式时根据路由中的路径（`to=“/home”`）去匹配，然后显示
+  ```html
+  <router-link to="/home" class="menu-home" active-class="active">首页</router-link>
+  ```
+2. 直接在路由 js 文件中配置`linkActiveClass`
+  ```js
+  export default new Router({
+    linkActiveClass: 'active',
+  })
+  ```
+  ```html
+  <div class="menu-btn">
+    <router-link to="/" class="menu-home" active-class="active">首页</router-link>
+  </div>
+  <div class="menu-btn">
+    <router-link to="/my" class="menu-my" active-class="active">我的</router-link>
+  </div>
+  ```
+
+存在问题：
+> 因为`to="/"`引起的，`active-class`选择样式时根据路由中的路径去匹配，然后显示。
+> - 例如在`my`页面中，路由为`localhost:8081/#/my`，那么`to="/”`和`to="/my"`都可以匹配到，所以都会激活选中样式。
+
+对于上述问题的解决办法
+1. 在`router-link`中写入`exact`
+  ```html
+  <router-link to="/" class="menu-home" active-class="active" exact>首页</router-link>
+  ```
+2. 在路由中加入重定向
+  ```html
+  <router-link to="/" class="menu-home" active-class="active" exact>首页</router-link>
+  { path: '/', redirect: '/home' }
+  ```
 
 
 ## 75、自定义指令（v-check、v-focus）的方法有哪些？它有哪些钩子函数？还有哪些钩子函数参数？
-全局定义指令：在vue对象的directive方法里面有两个参数，一个是指令名称，另外一个是函数。组件内定义指令：directives<br>
-钩子函数：bind（绑定事件触发）、inserted(节点插入的时候触发)、update（组件内相关更新）<br>
-钩子函数参数：el、binding
+**自定义指令定义方式**
+- Vue2
+  - 全局定义指令：在`vue`对象的`directive`方法。
+    ```js
+    // 注册一个全局自定义指令 `v-perms`
+    Vue.directive('perms', {
+
+    })
+    ```
+  - 组件内定义指令：`directives`
+    ```js
+    export default {
+      directives: {
+        focus: {
+          ...
+        }
+      }
+    }
+    ```
+- Vue3
+  - 全局自定义指令: 在`createApp`创建的对象上使用`directive`方法
+    ```js
+    const app = createApp({})
+    // 使 v-focus 在所有组件中都可用
+    app.directive('focus', {
+      /* ... */
+    })
+    ```
+  - 局部自定义指令: 由一个包含类似组件生命周期钩子的对象来定义。钩子函数会接收到指令所绑定元素作为其参数。
+    ```html
+    <script setup>
+    // 在模板中启用 v-focus
+    const vFocus = {
+      mounted: (el) => el.focus()
+    }
+    </script>
+
+    <template>
+      <input v-focus />
+    </template>
+    ```
+
+**钩子函数**
+- Vue2
+  - `bind`: 只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置。
+  - `inserted`: 被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)。
+  - `update`: 所在组件的 VNode 更新时调用，但是可能发生在其子 VNode 更新之前。指令的值可能发生了改变，也可能没有。
+  - `componentUpdated`: 指令所在组件的 VNode 及其子 VNode 全部更新后调用。
+  - `unbind`: 只调用一次，指令与元素解绑时调用。
+- Vue3
+  - `created`: 在绑定元素的attribute前或事件监听器应用前调用
+  - `beforeMount`: 在元素被插入到 DOM 前调用
+  - `mounted`: 在绑定元素的父组件及他自己的所有子节点都挂载完成后调用
+  - `beforeUpdate`: 绑定元素的父组件更新前调用
+  - `updated`: 在绑定元素的父组件及他自己的所有子节点都更新后调用
+  - `beforeUnmount`: 绑定元素的父组件卸载前调用
+  - `unmounted`: 绑定元素的父组件卸载后调用
+
+**钩子函数参数**
+- Vue2
+  - `el`: 指令所绑定的元素，可以用来直接操作 DOM。
+  - `binding`: 一个对象，包含以下属性。
+    - `name`: 指令名，不包括`v-`前缀。
+    - `value`: 指令的绑定值，例如：`v-my-directive="1 + 1"`中，绑定值为 2。
+    - `oldValue`: 指令绑定的前一个值，仅在`update`和`componentUpdated`钩子中可用。无论值是否改变都可用。
+    - `expression`: 字符串形式的指令表达式。例如`v-my-directive="1 + 1"`中，表达式为`"1 + 1"`。
+    - `arg`: 传给指令的参数，可选。例如`v-my-directive:foo`中，参数为`"foo"`。
+    - `modifiers`: 一个包含修饰符的对象。例如：`v-my-directive.foo.bar`中，修饰符对象为`{ foo: true, bar: true }`。
+  - `vnode`: Vue 编译生成的虚拟节点。
+  - `oldVnode`: 上一个虚拟节点，仅在`update`和`componentUpdated`钩子中可用。
+- Vue3
+  - `el`: 指令所绑定的元素，可以用来直接操作 DOM。
+  - `binding`: 一个对象，包含以下属性。
+    - `value`: 传递给指令的值。例如在`v-my-directive="1 + 1"`中，值是 2。
+    - `oldValue`: 之前的值，仅在`beforeUpdate`和`updated`中可用。无论值是否更改，它都可用。
+    - `expression`: 字符串形式的指令表达式。例如`v-my-directive="1 + 1"`中，表达式为`"1 + 1"`。
+    - `arg`: 传递给指令的参数 (如果有的话)。例如在`v-my-directive:foo`中，参数是`"foo"`。
+    - `modifiers`: 一个包含修饰符的对象。例如：`v-my-directive.foo.bar`中，修饰符对象为`{ foo: true, bar: true }`。
+    - `instance`: 使用该指令的组件实例。
+    - `dir`: 指令的定义对象。
+  - `vnode`: 代表绑定元素的底层 VNode。
+  - `oldVnode`: 之前的渲染中代表指令所绑定元素的 VNode。仅在`beforeUpdate`和`updated`钩子中可用。
 
 
 ## 76、vue-loader是什么？使用它的用途有哪些？
-解析`.vue`文件的一个加载器，跟`template/js/style`转换成js模块。<br>
-用途：js可以写`es6`、`style`样式可以`scss`或`less`、`template`可以加jade等
+`vue-loader`是`webpack`的一个`loader`，用于处理`.vue`文件，将`template/js/style`提取出来，然后分别把他们交给对应的`loader`去处理。
+
+用途
+> 降级: js可以写`es6`、`style`样式可以`scss`或`less`、`template`可以加jade等
 
 
-## 77、请说出vue.cli项目中src目录每个文件夹和文件的用法？
-```
-assets文件夹是放静态资源；
-components是放组件；
-router是定义路由相关的配置;
-view视图；
-app.vue是一个应用主组件；
-main.js是入口文件
-```
+## 77、请说出vue-cli项目中src目录每个文件夹和文件的用法？
+- `assets`: 存放静态资源，如图片、图标文件;
+- `components`: 存放公共组件;
+- `router`: 路由相关的配置;
+- `store`: 状态管理器相关的配置;
+- `view`: 页面视图;
+- `app.vue`: 根组件;
+- `main.js`: 程序入口文件;
 
 
-## 78、聊聊你对Vue.js的template编译的理解？ 
-简而言之，就是先转化成AST树，再得到的render函数返回VNode（Vue的虚拟DOM节点）
+## 78、❓聊聊你对Vue.js的template编译的理解？ 
+> https://blog.csdn.net/qq_45670012/article/details/101625918
+
+简而言之，就是先转化成AST树，再得到的`render`函数返回`VNode`（Vue的虚拟DOM节点）
+> 首先，通过`compile`编译器把`template`编译成`AST`语法树(abstract syntax tree 即源代码的抽象语法结构的树状表现形式)，`compile`是`createCompiler`的返回值，`createCompiler`是用以创建编译器的。另外`compile`还负责合并`option`。
+
+然后，AST会经过`generate`(将AST语法树转化成render funtion字符串的过程)得到`render`函数，`render`的返回值是`VNode`,`VNode`是Vue的虚拟DOM节点,里面有(标签名、子节点、文本等等)。
 
 
 ## 79、dom是在哪一个生命周期完成渲染的？
-在 mounted 中就已经完成了
+在`mounted`中就已经完成了。
 
 
 ## 80、第一次页面加载会触发哪几个生命周期？
-第一次页面加载时会触发 beforeCreate, created, beforeMount, mounted 这几个生命周期。
+第一次页面加载时会触发`beforeCreate`, `created`, `beforeMount`, `mounted`这几个生命周期。
 
 
 ## 81、vue生命周期的作用是什么？
-它的生命周期中有多个事件钩子，让我们在控制整个Vue实例的过程时更容易形成好的逻辑。
+**什么是生命周期**
+- Vue生命周期是指vue实例对象从创建之初到销毁的过程，vue所有功能的实现都是围绕其生命周期进行的，在生命周期的不同阶段调用对应的钩子函数可以实现组件数据管理和DOM渲染两大重要功能。
+- Vue实例有一个完整的生命周期，也就是从`开始创建、初始化数据、编译模板、挂载Dom、渲染→更新→渲染、卸载`等一系列过程，我们称这是Vue的生命周期。通俗说就是Vue实例从创建到销毁的过程，就是生命周期。
+
+**生命周期的作用**
+>   在Vue的整个生命周期中，它提供了一系列的事件，可以让我们在事件触发时注册js方法，可以让我们用自己注册的js方法控制整个大局，在这些事件响应方法中的this直接指向的是vue的实例。
 
 
 ## 82、如何解决vue修改数据不刷新页面这个问题？
-第一种：this.set
-第二种：给数组、对象赋新值 第三种：使用this.forceupdate强制刷新
+1. `this.$forceUpdate()`
+  > 数据改变后使用，强制刷新视图，但是性能损耗，不推荐使用。
+2. `vm.$set`
+  > vue无法检测对象property的添加或移除
+  ```js
+  <div>
+    <p>{{ obj }}</p>
+    <p>{{ arr }}</p>
+  </div>
+  export default {
+    data () {
+      return {
+        obj: {
+          name: '张三'
+        },
+        arr: [1, 2, 3]
+      }
+    },
+    methods: {
+      updateData () {
+        this.obj.age = 23 // 视图不会更新
+        this.arr[1] = 3 // 视图不会更新
+        // 使用 vm.$set 替换上面代码
+        this.$set(this.obj, 'age', 23)
+        this.$set(this.arr, 1, 3) // 或者使用编译方法 this.arr.splice(1, 1, 3)
+      }
+    }
+  }
+  ```
+3. `key`
+  > 声明一个全局`key`，每次操作数据后使`key`自增
+  ```js
+  <div :key="key">
+    <p>{{ obj }}</p>
+    <p>{{ arr }}</p>
+  </div>
+  export default {
+    data () {
+      return {
+        obj: {
+          name: '张三'
+        },
+        arr: [1, 2, 3],
+        key: 0
+      }
+    },
+    methods: {
+      updateData () {
+        this.obj.age = 23 // 视图不会更新
+        this.arr[1] = 3 // 视图不会更新
+        this.key++
+      }
+    }
+  }
+  ```
 
 
 ## 83、为什么会出现vue修改数据后页面没有刷新这个问题？
-受 ES5 的限制，Vue.js 不能检测到对象属性的添加或删除。因为 Vue.js 在初始化实例时将属性转为 getter/setter，所以属性必须在 data 对象上才能让 Vue.js 转换它，才能让它是响应的。
-
+受ES5`Object.defineProperty`的限制，每次需要事先知道`property`名称，才能劫持其`getter/setter`。
+> Vue.js不能检测到对象属性的添加或删除。因为 Vue.js 在初始化实例时将属性转为 getter/setter，所以属性必须在 data 对象上才能让 Vue.js 转换它，才能让它是响应的。
 
 
 ## 84、v-if 与 v-for 一起使用
-- 当 v-if 与 v-for 一起使用时，v-for 具有比 v-if 更高的优先级。（注意这里是 2.x 的版本，3.x 反之）
-- 不推荐同时使用 v-if 和 v-for。
+- 当`v-if`与`v-for`一起使用时，`v-for`具有比`v-if`更高的优先级。（注意这里是 2.x 的版本，3.x 反之）
+- 不推荐同时使用`v-if`和`v-for`。
+
+**Vue2**
+```html
+<template>
+  <div>
+    <div v-for="(item, index) in students" :key="item.id" v-if="flags[index]">
+      {{ item.name }} - {{ item.age }}
+    </div>
+  </div>
+</template>
+<script lang="ts">
+export default {
+  data () {
+    return {
+      students: [
+        { id: 1, name: '张三', age: 23 },
+        { id: 2, name: '李四', age: 24 },
+        { id: 3, name: '王五', age: 25 }
+      ],
+      flags: [false, true, false]
+    }
+  }
+}
+</script>
+```
+效果如下图所示，可以看出`v-for`的优先级高于`v-if`
+![202303101623326.png](http://img.itchenliang.club/img/202303101623326.png)
+
+**Vue3**
+```html
+<template>
+  <div style="padding: 10px;">
+    <div v-for="(item, index) in students" :key="item.id" v-if="flags[index]">
+      {{ item.name }} - {{ item.age }}
+    </div>
+  </div>
+</template>
+<script lang="ts" setup>
+import { ref } from 'vue';
+const flags = ref([
+  false, true, false
+])
+const students = ref([
+  { id: 1, name: '张三', age: 23 },
+  { id: 2, name: '李四', age: 24 },
+  { id: 3, name: '王五', age: 25 }
+])
+</script>
+```
+可以看到无论是编辑器还是浏览器控制台都在报错，提示`Property "index" was accessed during render but is not defined on instance. `意思就是`index`没有定义，即`v-if`在`v-for`之前执行了。
 
 
-## 85、vue.js 的两个核心是什么？
+## 85、Vue的两个核心是什么？
 数据驱动、组件系统
 
 
-## 86、Vue.js 双向绑定的原理
+## 86、❓Vue.js双向绑定的原理
+**Vue2**
+> 
+
+**Vue3**
+> 
 
 
 ## 87、MVC和MVVM的区别
 - MVC表示“模型-视图-控制器”，MVVM表示“模型-视图-视图模型”；
-- MVVM是由MVC衍生出来的。MVC中，View会直接从Model中读取数据；
+- MVVM是由MVC衍生出来的。.
+  - MVC中，`View`会直接从`Model`中读取数据；
+  - MVVM实现了`View`和`Model`的自动同步，也就是当`Model`的属性改变时，我们不用再自己手动操作Dom元素，来改变`View`的显示，而是改变属性后该属性对应`View`层显示会自动改变。
 - MVVM各部分的通信是双向的，而MVC各部分通信是单向的；
 - MVVM是真正将页面与数据逻辑分离放到js里去实现，而MVC里面未分离。
 
 
 ## 88、params和query的区别？
+`query`和`params`是vue-router中两个传参的方式，整体上很像，在一些细节上有一定的区别
+1. 参数传递方式不同: `query`参数可以通过`name`和`path`方式传递，而`params`只能通过`name`传递，如果这里写成了`path`，接收参数页面会是`undefined`
+  ```js
+  // query
+  router.push({ name: 'Demo', query: { id: 1 } })
+  router.push({ path: '/demo', query: { id: 1 } })
+
+  // params
+  router.push({ name: 'Demo', params: { id: 1 } })
+  ```
+2. `query`方式是在`?`后面添加参数`/demo?id=1`，而`params`则是在路由上拼接`/demo/1`
 
 
-## 89、v-bind和v-model的区别， v-model原理知道吗？
+## 89、v-bind和v-model的区别？
+1. `v-bind`是单向绑定，用来绑定数据和属性以及表达式，数据只能从`data`流向页面。
+2. `v-model`是双向绑定，数据能从`data`流向页面，也能从页面流向`data`。
+3. `v-bind`可以给任何属性赋值，`v-model`只能给表单类，也就是具有`value`属性的元素进行数据双向绑定，如`text、radio、checkbox、selected`。
 
 
 ## 90、Vue和React的区别是什么？
+Vue 和 React 都是用于构建 UI 界面的流行框架。
+1. 监听数据变化的实现原理不同
+  - Vue: Vue通过`getter/setter`以及一些函数的劫持，能精确知道数据变化 ，不需要特别的优化就能达到很好的性能
+  - React: React默认是通过`比较引用`的方式进行的，如果不优化( pureComponent/shouldComponentUpdate )可能导致大量不必要的VDOM得重新渲染
+2. 数据流向的不同
+  - Vue: 双向数据绑定
+  - React: 单向数据流
+3. 渲染模版的不同
+  - Vue: 采用了template
+  - React: 采用了jsx 
+4. 虚拟DOM更新模式不同
+  - Vue: 采用diff算法计算Virtual DOM的差异，只需要重新渲染更新的部分，而不是重新渲染整个组件数。
+  - React: 每当应用的状态被改变时，全部子组件都会重新渲染。
+5. 事件机制不同
+  - Vue: Vue原生事件使用 标准Web事件
+  - React: React原生事件被包装，所有事件都冒泡到顶层document监听，然后在这里合成事件下发 。
 
 
 ## 91、说说你对 SPA 单页面的理解，它的优缺点分别是什么？
+SPA(单页面程序)的英文是`single-page application`，整个项目中只有一个页面。
+
+单页面的实现思路：就是在Web页面初始化时加载所有的HTML、JavaScript和 CSS，页面的内容的变化，靠动态创建dom。
+> 也就是一旦页面加载完成，SPA 不会因为用户的操作而进行页面的重新请求(加载)或跳转;取而代之的是利用路由机制实现 HTML 内容的动态变换，UI 与用户的交互，避免页面的重新加载。
+
+**优点**
+- 用户体验好、快，内容的改变不需要重新加载整个页面，避免了不必要的跳转和重复渲染;
+- 基于上面一点，SPA 对服务器的压力小;
+- 前后端职责分离，架构清晰，前端进行交互逻辑，后端负责数据处理;
+
+**缺点**
+- 首次加载耗时长: 初次加载耗时多，为实现单页 Web 应用功能及显示效果，需要在加载页面的时候将 JavaScript、CSS 统一加载，部分页面按需加载;
+- 无法使用浏览器的前进和后退: 前进后退路由管理，由于单页应用在一个页面中显示所有的内容，所以不能使用浏览器的前进后退功能，所有的页面切换需要自己建立堆栈管理;
+- SEO难度较大: 由于所有的内容都在一个页面中动态替换显示，所以在 SEO 上其有着天然的弱势。
+
+
 
 
 ## 92、Class 与 Style 如何动态绑定？
+Class动态绑定
+```html
+const isActive = ref(true)
+const hasError = ref(false)
+<div class="static" :class="{ active: isActive, 'text-danger': hasError }"></div>
+渲染的结果会是：
+<div class="static active"></div>
+
+const activeClass = ref('active')
+const errorClass = ref('text-danger')
+<div :class="[activeClass, errorClass]"></div>
+渲染的结果是：
+<div class="active text-danger"></div>
+```
+
+Style动态绑定
+```html
+const activeColor = ref('red')
+const fontSize = ref(30)
+<div :style="{ color: activeColor, fontSize: fontSize + 'px' }"></div>
+<div :style="[baseStyles, overridingStyles]"></div>
+<!-- 样式多值 -->
+<div :style="{ display: ['-webkit-box', '-ms-flexbox', 'flex'] }"></div>
+在这个示例中，在支持不需要特别前缀的浏览器中都会渲染为 display: flex。
+```
 
 
 ## 93、直接给一个数组项赋值，Vue 能检测到变化吗？
+不能，用索引直接设置一个数组项时或者当你修改数组的长度时，Vue不能检测到数组的变动。
+```js
+vm.items[indexOfItem] = newValue
+vm.items.length = newLength
+```
+这是由于JavaScript的限制，Vue则是重写了`pop`、`push`、`splice`等变异方法，如果需要更新数据则使用`变异方法`或者`vm.$set`。
 
 
-## 94、Vue 的父组件和子组件生命周期钩子函数执行顺序？
+## 94、Vue的父组件和子组件生命周期钩子函数执行顺序？
+**加载渲染过程**
+> `父 beforeCreate` -> `父 created` -> `父 beforeMount` -> `子 beforeCreate` -> `子 created` -> `子 beforeMount` -> `子 mounted` -> `父 mounted`
+
+**子组件更新过程**
+> `父 beforeUpdate` -> `子 beforeUpdate` -> `子 updated` -> `父 updated`
+
+**父组件更新过程**
+> `父 beforeUpdate` -> `父 updated`
+
+**销毁过程**
+> `父 beforeDestroy` -> `子 beforeDestroy` -> `子 destroyed` -> `父 destroyed`
+
+总结: **从创建到挂载，是从外到内，再从内到外，且mixins的钩子函数总是在当前组件之前执行**
 
 
 ## 95、父组件可以监听到子组件的生命周期吗？
+1. **方式一: `$emit`**
+  > 其实就是在父组件上封装了一个`v-on`的自定义事件用来监听子组件的事件，只不过事件名和钩子函数同名，当子组件发布时，即执行`this.$emit('钩子函数created/mounted',参数)`时，在父组件则可以监听到，然后执行回调
+  ```html
+  <!-- 父组件 -->
+  <template>
+    <div>
+      <child-component @mounted="handleMounted"></child-component>
+    </div>
+  </template>
+  <script>
+  export default  {
+    methods:{
+      handleMounted(data){
+        console.log('子组件mounted触发', data)
+      }
+    }
+  }
+  </script>
+
+  <!-- 子组件 -->
+  <script>
+  export default {
+    mounted(){
+      this.$emit('mounted','mounted触发了')
+    },
+  }
+  </script>
+  ```
+2. **方式二: `@hook`**
+  > `@hook`方法可以监听子组件的任何的生命周期。子组件不需要发布。直接在父组件中，插入子组件的地方，使用`@hook.声明周期函数名="函数名"`即可
+  ```html
+  <!-- 父组件 -->
+  <template>
+    <div>
+      <child-component @hook:mounted="handleMounted"></child-component>
+    </div>
+  </template>
+  <script>
+  export default {
+    methods:{
+      handleMounted(data){
+        console.log('子组件mounted触发', data)
+      }
+    }
+  }
+  </script>
+  ```
 
 
 ## 96、使用过 Vue SSR 吗？说说 SSR？
+`ssr`的全称是`server side render`，服务端渲染，vue ssr的意思就是在服务端进行 vue 的渲染，直接对前端返回带有数据，并且是渲染好的HTML页面；而不是返回一个空的HTML页面，再由vue 通过异步请求来获取数据，再重新补充到页面中。
+
+**为什么要用 SSR？**
+- 更快的首屏加载: 这一点在慢网速或者运行缓慢的设备上尤为重要。服务端渲染的 HTML 无需等到所有的 JavaScript 都下载并执行完成之后才显示，所以你的用户将会更快地看到完整渲染的页面。除此之外，数据获取过程在首次访问时在服务端完成，相比于从客户端获取，可能有更快的数据库连接。这通常可以带来更高的核心 Web 指标评分、更好的用户体验，而对于那些“首屏加载速度与转化率直接相关”的应用来说，这点可能至关重要。
+- 统一的心智模型: 你可以使用相同的语言以及相同的声明式、面向组件的心智模型来开发整个应用，而不需要在后端模板系统和前端框架之间来回切换。
+- 更好的SEO：搜索引擎优化，也就是SEO，搜索引擎爬虫可以直接看到完全渲染的页面。
 
 
 ## 97、Vue 怎么用 vm.$set() 解决对象新增属性不能响应的问题 ？
+```js
+export default {
+  data () {
+    return {
+      obj: { name: '张三' },
+      arr: [1, 2, 3]
+    }
+  },
+  methods: {
+    updateData () {
+      this.$set(this.obj, 'age', 23) // { name: '张三', age: 23 }
+      this.$set(this.arr, 1, 5) // [1, 5, 3 ]
+    }
+  }
+}
+```
+`vm.$set`的实现原理是：
+- 如果目标是数组，直接使用数组的`splice`方法触发相应式；
+- 如果目标是对象，会先判读属性是否存在、对象是否是响应式，最终如果要对属性进行响应式处理，则是通过调用`defineReactive`方法进行响应式处理（ defineReactive 方法就是 Vue 在初始化对象时，给对象属性采用`Object.defineProperty`动态添加`getter`和`setter`的功能所调用的方法）
 
 
 ## 98、虚拟 DOM 的优缺点？
+虚拟DOM是什么？
+> 由于在浏览器中操作 DOM 是很昂贵的。频繁的操作 DOM，会产生一定的性能问题。这就是虚拟 Dom 的产生原因。Vue2的Virtual DOM借鉴了开源库 `snabbdom`的实现。Virtual DOM本质就是用一个原生的 JS 对象去描述一个 DOM节点，是对真实 DOM 的一层抽象。
+
+**优点**
+- 保证性能下限: 框架的虚拟 DOM 需要适配任何上层 API 可能产生的操作，它的一些 DOM 操作的实现必须是普适的，所以它的性能并不是最优的；但是比起粗暴的 DOM 操作性能要好很多，因此框架的虚拟 DOM 至少可以保证在你不需要手动优化的情况下，依然可以提供还不错的性能，即保证性能的下限；
+- 无需手动操作DOM: 我们不再需要手动去操作DOM，只需要写好`View-Model`的代码逻辑，框架会根据虚拟 DOM 和 数据双向绑定，帮我们以可预期的方式更新视图，极大提高我们的开发效率；
+- 跨平台: 虚拟 DOM 本质上是 JavaScript 对象，而DOM与平台强相关，相比之下虚拟DOM可以进行更方便地跨平台操作，例如服务器渲染、weex 开发等等。
+
+**缺点**
+- 无法进行极致优化: 虽然虚拟 DOM + 合理的优化，足以应对绝大部分应用的性能需求，但在一些性能要求极高的应用中虚拟 DOM 无法进行针对性的极致优化。
+- 首次渲染大量DOM时，由于多了一层虚拟DOM的计算，会比innerHTML插入慢。
 
 
 ## 99、虚拟 DOM 实现原理？
+虚拟 DOM 的实现原理主要包括以下 3 部分：
+- 用 JavaScript 对象模拟真实 DOM 树，对真实 DOM 进行抽象；
+- diff算法: 比较两棵虚拟 DOM 树的差异；
+- pach算法: 将两个虚拟 DOM 对象的差异应用到真正的 DOM 树。
 
 
-## 100、vue 中的性能优化
+## 100、vue在组件中引入插件的方法有哪些？
+插件通常用来为 Vue 添加全局功能。插件的功能范围没有严格的限制——一般有下面几种：
+1. 添加全局方法或者`property`。如：`vue-custom-element`
+2. 添加全局资源：指令/过滤器/过渡等。如`vue-touch`
+3. 通过全局混入来添加一些组件选项。如 `vue-router`
+4. 添加Vue实例方法，通过把它们添加到`Vue.prototype`上实现。
+5. 一个库，提供自己的 API，同时提供上面提到的一个或多个功能。如`vue-router`
 
 
 ## 101、什么是 Proxy？
+`Proxy`对象用于创建一个对象的代理，从而实现基本操作的拦截和自定义（如属性查找、赋值、枚举、函数调用等）。
+
+语法如下:
+```js
+const p = new Proxy(target, handler)
+```
+参数说明：
+  - target: 要使用`Proxy`包装的目标对象（可以是任何类型的对象，包括原生数组，函数，甚至另一个代理）。
+  - handler: 一个通常以函数作为属性的对象，各属性中的函数分别定义了在执行各种操作时，代理 p 的行为。
+```js
+//声明一个名为obj的对象
+var obj = {
+  name: "张三",
+  age: 23
+}
+//示例化一个代理p，代理的对象是obj
+var p = new Proxy(obj, {
+  // get 属性读取时的操作
+  get(target, prop) {
+    //target 就是 obj 这个对象
+    //prop 是 obj 的属性名
+    if (prop in target) {
+      //如果该属性名存在与该对象中，则返回该属性值
+      return target[prop];
+    } else {
+      //否则返回字符串 "该对象没有该属性"
+      return "该对象没有该属性";
+    }
+  },
+  //set 属性设置时的操作
+  set(target, prop, value) {
+    //target 就是 obj 这个对象
+    //prop 是 obj 的属性名
+    //value 是 要设置的值
+    if (prop === "age") {
+      //如果该属性名是age，则返回修改后的值
+      target[prop] = value;
+    } else {
+      //否则弹出异常内容
+      throw "除年龄外，其它属性不可以更改";
+    }
+  }
+})
+console.log(p.name) // 张三
+console.log(p.age) // 23
+console.log(p.gender) // 该对象没有该属性
+p.age = 18 // 成功
+p.name = '李四' // Uncaught Error: 除年龄外，其它属性不可以更改
+console.log(p.name) // 张三
+```
+
+## 102、==vue实例挂载的过程是什么？==
 
 
-## 102、为什么避免 v-if 和 v-for 用在一起
-
-
-## 103、组件的设计原则
+## 103、Vue组件的设计原则
+> https://www.bbsmax.com/A/kjdwonvqdN/
 
 
 ## 104、vue slot是做什么的?
@@ -2420,7 +3257,7 @@ main.js是入口文件
 ## 144、vue-cli 生产环境使用全局常量
 
 
-## 145、vue-cli 中自定义指令的使用
+## 145、你有看过vue的源码吗？如果有那就说说看
 
 
 ## 146、vue 是如何对数组方法进行变异的？例如 push、pop、splice 等方法
@@ -2939,16 +3776,3 @@ export default{
 
 
 ## 252、说说你对选项el,template,render的理解
-
-
-## 253、vue实例挂载的过程是什么？
-
-
-## 254、vue在组件中引入插件的方法有哪些？
-
-
-## 255、你有看过vue的源码吗？如果有那就说说看
-
-
-## 256、你有写过自定义指令吗？自定义指令的生命周期（钩子函数）有哪些？
-
