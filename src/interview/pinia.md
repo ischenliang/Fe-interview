@@ -15,7 +15,7 @@
 - 支持服务端渲染
 
 
-## 3、pinna使用
+## 3、pinia使用
 1. 准备工作: 我们这里搭建一个最新的Vue3 + TS + Vite项目
   ```shell
   npm i pinia
@@ -151,10 +151,10 @@
 
 
 ## 4、pinia和vuex的区别？
-- 它没有mutation,他只有state，getters，action【同步、异步】使用他来修改state数据
-- 他默认也是存入内存中，如果需要使用本地存储，在配置上比vuex麻烦一点
-- 语法上比vuex更容易理解和使用，灵活。
-- pinia没有modules配置，每一个独立的仓库都是definStore生成出来的
-- state是一个对象返回一个对象和组件的data是一样的语法
+- 它没有`mutation`，他只有`state`，`getters`，`action`【同步、异步】使用他来修改`state`数据
+- 他默认也是存入内存中，如果需要使用本地存储，在配置上比`vuex`麻烦一点
+- 语法上比`vuex`更容易理解和使用，灵活。
+- `pinia`没有`modules`配置，每一个独立的仓库都是`definStore`生成出来的
+- `state`是一个对象返回一个对象和组件的`data`是一样的语法
 
 

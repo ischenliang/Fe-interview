@@ -51,12 +51,43 @@ vue用来写路由的一个插件。router-link、router-view
 
 
 ## 8、vue-router怎么重定向页面？
+在路由配置时添加`redirect`属性
+```js
+{
+  path: '/',
+  name: 'Root',
+  redirect: '/home'
+},
+```
 
 
 ## 9、vue-router怎么配置404页面？
+vue-router3中使用`*`通配符
+```js
+{ path: '*', component: () => import('@/notFound')}
+```
+vue-router4中则是使用
+```js
+{
+  path: '/:pathMatch(.*)*',
+  name: 'NotFound',
+  component: () => import('@/views/NotFound.vue'),
+}
+```
 
 
 ## 10、切换路由时，需要保存草稿的功能，怎么实现呢？
+`beforeRouteLeave`写逻辑
+```js
+beforeRouteLeave (to, from, next) {
+  const answer = window.confirm('Do you really want to leave? you have unsaved changes!')
+  if (answer) {
+    next()
+  } else {
+    next(false)
+  }
+}
+```
 
 
 ## 11、说说你对router-link的了解

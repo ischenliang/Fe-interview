@@ -2534,10 +2534,26 @@ Vue中标签绑定事件：
   <span v-pre>{{ this will not be compiled }}</span>
   ```
 - `v-once`: 仅渲染元素和组件一次，并跳过之后的更新。
+  > 只渲染元素和组件一次。随后的重新渲染，元素/组件及其所有的子节点将被视为静态内容并跳过。这可以用于优化更新性能。
   ```html
-  <!-- 单个元素 -->
-  <span v-once>This will never change: {{msg}}</span>
+  <template>
+    <div id="app">
+      <p v-once>once: {{ msg }}</p>
+      <p>{{ msg }}</p>
+      <button @click="msg = 'hey'">更新数据</button>
+    </div>
+  </template>
+  <script>
+  export default {
+    data () {
+      return {
+        msg: 'hello'
+      }
+    }
+  }
+  </script>
   ```
+  当我们点击`更新数据`时会发现`v-once`绑定的元素并没有更新。
 - `v-memo`: 缓存一个模板的子树。
   ```html
   <div v-memo="[valueA, valueB]">
@@ -6591,111 +6607,1296 @@ export default {
 
 
 ## 201、分析下vue项目本地开发完成后部署到服务器后报404是什么原因呢？
+我们在vue项目中，使用`history`模式时，部署后刷新会出现404问题，原因是，刷新时。浏览器会通过`url`去请求对应路径的资源文件，找不到时就会出现这种问题。那如何解决呢？
+> 通过修改服务器的配置文件，让其刷新时找不到对应文件时，都指向`index.html`,这时`index.html`就会根据对应路径显示对应路由（配置`nginx`）。
 
 
-## 202、v-once的使用场景有哪些？
+## 202、vue在开发过程中要同时跟N个不同的后端人员联调接口（请求的url不一样）时你该怎么办？
+`server.proxy`中把所有的服务人员的地址代理都写进去，然后动态更改接口的`baseUrl`，这样切换不同后端人员的时候不用重启。
 
 
 ## 203、写出多种定义组件模板的方法
+- **方法一**: 单文件组件
+  ```html
+  <template>
+    <div class="title">{{this.title}}</div>
+  </template>
+  <script>
+  export default { 
+    data() {
+      return {title: '单文件组件' }
+    }
+  }
+  </script>
+  ```
+- **方式二**: x-template
+  > 在一个`<script>`元素上，并为其带上`text/x-template`的类型，然后通过一个`id`将模板引用过去。
+  ```html
+  <script type="text/x-template" id="hello">
+    <div class="title">{{ title }}</div>
+  </script>
+  Vue.component('custom-component03',{
+    template: '#hello',
+    data () {
+      return {
+        title: 'x-template'
+      }
+    }
+  });
+  ```
+- **方式三**: 字符串
+  > 默认情况下，模板会被定义为一个字符串
+  ```js
+  Vue.component('custom-component01', {
+    template: `<div>{{title}}</div>`,
+    data() { return {title: 'Check me' } }
+  });
+  ```
+- **方式四**: 模板字面量
+  > ES6 模板字面量允许你使用多行定义模板，这在常规 JavaScript 字符串中是不被允许的。
+  ```js
+  Vue.component('custom-component02', {
+    template: `
+      <div>
+          <div class="title">{{this.title}}</div>
+        <div :class="{ checkbox: checkbox}"></div>
+      </div>`,
+    data() {
+      return {
+        title: '模板字面量' ,
+        checkbox: true
+      }
+    }
+  });
+  ```
+- **方式五**: 内联模板inline-template
+  > 当`inline-template`这个特殊的特性出现在一个子组件上时，这个组件将会使用其里面的内容作为模板，而不是将其作为被分发的内容
+  ```html
+  <script>
+    Vue.component('custom-component04', { 
+      data(){ return {title:'内联模板!'} } 
+    })
+  </script>
+  <custom-component04 inline-template>
+    <div class="title">{{title}}</div>
+  </custom-component04>
+  ```
+  不过，`inline-template`会让你模板的作用域变得更加难以理解
+- **方式六**: 渲染函数(Render)
+  > 渲染函数需要你把模板当作一个JavaScript对象来进行定义，它们是一些复杂并且抽象的模板选项。然而，它的优点是你定义的模板更接近编译器，你可以使用所有JavaScript方法，而不是指令提供的那些功能。
+  ```html
+  <script>
+  Vue.component('custom-component05', {
+    data(){
+      return { 'title':'渲染函数'}
+    },
+    render(createElement) {
+      return createElement( 'div', { attrs: { 'class': 'title' } }, [ this.title ] );
+    }
+  })
+  </script>
+  ```
+- **方式七**: JSX语法
+  ```html
+  <script>
+  Vue.component('custom-component05', {
+    data(){
+      return { title:'我是jsx模板'}
+    },
+    render() {
+      return <div>
+        {this.title}
+      </div>
+    }
+  })
+  </script>
+  ```
 
 
 ## 204、vue为什么要求组件模板只能有一个根元素？
+因为Vue组件的渲染是通过模板编译来实现的，模板编译器需要将模板编译成一个`render`函数，这个函数需要返回一个`虚拟DOM树`。而虚拟DOM树是通过一个根节点来包裹所有子元素的，如果一个组件有多个根元素，那么在编译模板时，Vue就无法确定哪个元素应该作为根节点，这会导致**编译错误**，
 
 
 ## 205、EventBus注册在全局上时，路由切换时会重复触发事件，如何解决呢？
+简单例子演示: 
+```html
+<!-- App.vue -->
+<template>
+  <div id="app">
+    <p><router-link to="/a">A</router-link> | <router-link to="/b">B</router-link></p>
+    <router-view></router-view>
+  </div>
+</template>
+
+<!-- A组件 -->
+<template>
+  <div>
+    <p>A组件</p>
+  </div>
+</template>
+<script>
+export default {
+  mounted () {
+    this.bus.$on('winformEvent', (msg) => {
+      console.log(msg)
+    })
+  },
+}
+</script>
+
+<!-- B组件 -->
+<template>
+  <div>
+    <p>B组件</p>
+  </div>
+</template>
+<script>
+export default {
+  mounted () {
+    this.bus.$emit("winformEvent", '哈哈哈');
+  }  
+}
+</script>
+```
+上面例子我们在`a`路由里监听`winformEvent`事件，在`b`路由里触发`winformEvent`，你会发现，当你在`a`和`b`路由来回切换时，会发现我们控制台重复输出`哈哈哈`。
+
+**解决办法**
+> 建议在`created`里注册，在`beforeDestory`移出
+```js
+beforeDestroy() {
+    //组件销毁前需要解绑事件。否则会出现重复触发事件的问题
+    this.bus.$off('winformEvent');
+},
+```
 
 
-## 206、为什么vue使用异步更新组件？
+## 206、为什么vue要使用异步更新组件？
+1. 异步组件可以减少打包的结果，会将异步组件分开打包，会采用异步的方式加载组件，可以有效的解决一个组件过大的问题。
+2. 异步组件的核心可以给组件定义变成一个函数，函数里面可以用`import`语法，实现文件的分割加载。`import`语法是`webpack`提供的，采用的就是`jsonp`。
+> 在系统功能比较多时，页面首次加载没有必要一次把所有功能代码都下载到客户端，需要把那些非首页的代码按功能拆分为一个个组件，按照用户操作异步下载和渲染。因此，异步组件主要解决的是按需加载的问题，保证系统首屏加载时间不超过3秒，减少用户等待时间，提高系统的用户留存率。
 
 
-## 207、你有使用做过vue与原生app交互吗？说说vue与ap交互的方法
+## 207、你有使用做过vue与原生app交互吗？说说vue与app交互的方法
+用`WebViewJavascriptBridge`
+```js
+export const connectWebViewJavascriptBridge = callback => {
+  if (window.WebViewJavascriptBridge) {
+    callback(WebViewJavascriptBridge)
+  } else {
+    document.addEventListener('WebViewJavascriptBridgeReady', function() {
+      callback(WebViewJavascriptBridge)
+    }, false )
+  }
+}
+```
 
 
 ## 208、使用vue渲染大量数据时应该怎么优化？说下你的思路！
+1. 数据量大的时候，可以做分页处理。翻页一次请求10-20条数据；
+2. 如果需要响应式，考虑使用虚拟列表（只渲染要显示的数据）；
+3. 如果不考虑响应式，变量在`beforeCreated`或`created`中声明（`Object.freeze`会导致列表无法增加数据）
 
 
-## 209、在vue中使用this应该注意哪些问题？
+## 209、webpack打包vue速度太慢怎么办？
+1. 使用`webpack-bundle-analyzer`对项目进行模块分析生成`report`，查看`report`后看看哪些模块体积过大，然后针对性优化，比如我项目中引用了常用的UI库`element-ui`和`v-charts`等
+2. 配置`webpack`的`externals`，官方文档的解释：防止将某些`import`的包(`package`)打包到`bundle`中，而是在运行时(`runtime`)再去从外部获取这些扩展依赖。 所以，可以将体积大的库分离出来：
+  ```js
+  // ...
+  externals: {
+      'element-ui': 'Element',
+      'v-charts': 'VCharts'
+  }
+  ```
+3. 然后在`main.js`中移除相关库的`import`
+4. 在`index.html`模板文件中，添加相关库的`cdn`引用，如：
+  ```html
+  <script src="https://unpkg.com/element-ui@2.10.0/lib/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/v-charts/lib/index.min.js"></script>
+  ```
 
 
 ## 210、你有使用过JSX吗？说说你对JSX的理解
+jsx不是一门新的语言，是一种新的语法糖。让我们在js中可以编写像html一样的代码。允许XML语法直接加入到JavaScript代码中，让你能够高效的通过代码而不是模板来定义界面
 
 
 ## 211、说说组件的命名规范
+1. kebab-case(短横线分隔命名)，引用时必须也采用`kebab-case`；
+2. PascalCase(首字母大写命名)，引用时既可以采用`PascalCase`也可以使用`kebab-case`；
+但在DOM中使用只有`kebab-case`是有效的
 
 
 ## 212、怎么配置使vue2.0+支持TypeScript写法？
+1. 配置`ts-loader`，`tsconfig`
+2. 增加类型扩展，让ts识别vue文件
+3. vue文件中script里面换成`ts`写法， 需要增加几个ts扩展的`package`， 比如`vue-property-decorator`
 
 
 ## 213、vue的is这个特性你有用过吗？主要用在哪些方面？
+1. **动态组件**
+  ```html
+  <component :is="componentName"></component>
+  ```
+  `componentName`可以是在本页面已经注册的局部组件名和全局组件名,也可以是一个组件的选项对象。当控制`componentName`改变时就可以动态切换选择组件。
+2. is的用法
+  > vue中is的属性引入是为了解决dom结构中对放入html的元素有限制的问题.。
+  - 有些 HTML 元素，诸如`<ul>、<ol>、<table>和<select>`，对于哪些元素可以出现在其内部是有严格限制的。
+    > 而有些 HTML 元素，诸如`<li>、<tr> 和 <option>`，只能出现在其它某些特定的元素内部。
+    ```html
+    <ul>
+      <my-component></my-component>
+    </ul>
+    ```
+    上面的`<my-component />`是自定义的已声明注册组件，由于ul内无法识别，所以上面`<my-component></my-component>`会被作为无效的内容提升到外部，并导致最终渲染结果出错。应该这么写：
+    ```html
+    <ul>
+      <li is="my-component"></li>
+    </ul>
+    ```
 
 
-## 214、vue的:class和:style有几种表示方式？
+## 214、如何解决vue打包vendor过大的问题？
+1. 路由懒加载【使用es6提案的`import()`方式】
+2. CDN引入
+  ```html
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <!-- 在引入 ElementUI 之前引入 Vue，会注入全局变量 Vue  -->
+  <script src="https://unpkg.com/vue@2.6.10/dist/vue.js"></script>
+  <!-- 引入 ElementUI 组件库，会注入全局变量 -->
+  <script src="https://unpkg.com/element-ui@2.15.6/lib/index.js"></script>
+  ```
+  在`vue.config.js`中配置
+  ```js
+  chainWebpack: config => {
+    config
+      .plugin('html')
+      .tap(args => {
+        args[0].title = '医联体标化绩效管理平台'
+        return args
+      }),
+      config.externals({
+        'echarts': 'echarts',
+        'element-ui': 'ElementUI',
+        'vue': 'Vue',
+      });
+  },
+  ```
+  去除之前的引用
+  ```js
+  // import Vue from 'vue'
+  // 引入echarts
+  // import * as echarts from "echarts";
+  // Vue.prototype.$echarts = echarts
+  // 引入element组件
+  // import ElementUI from 'element-ui'
+  // import 'element-ui/lib/theme-chalk/index.css'
+  ```
+3. 安装`compression-webpack-plugin`并配置`vue.config.js`的`plugin`选项
+
 
 
 ## 215、你了解什么是函数式组件吗？
+Vue 提供了一种称为函数式组件的组件类型，用来定义那些没有响应数据，也不需要有任何生命周期的场景，它只接受一些props来显示组件。
+> 函数组件(不要与 Vue 的 render 函数混淆)是一个不包含状态和实例的组件。简单的说，就是组件不支持响应式，并且不能通过`this`关键字引用自己。
+```html
+<template functional>
+  <div>{{ props.someProp }}</div>
+</template>
+<script>
+  export default {
+    props: {
+      someProp: String
+    }
+  }
+</script>
+```
+在`template`中访问组件的`context`
+```html
+<script>
+export default {
+  functional: true,
+  props: {
+    someProp: String
+  },
+  render (h, ctx) {
+    const someProp = ctx.props.someProp
+    // other code
+  }
+}
+</script>
+```
 
 
 ## 216、vue怎么改变插入模板的分隔符？
+本题的愿意就是如何修改在`<template></template>`中使用的插值表达式`{{  }}`的分割符，在[vue2-delimiters](https://v2.cn.vuejs.org/v2/api/#delimiters)文档中有说明如何修改纯文本插入分隔符。默认值是`["{{", "}}"]`
+> **注意**: 这个选项只在完整构建版本中的浏览器内编译时可用。
+```js
+new Vue({
+  delimiters: ['${', '}'] // 分隔符变成了 ES6 模板字符串的风格
+})
+```
 
 
 ## 217、说说你对provide和inject的理解
+这对选项需要一起使用，以允许一个祖先组件向其所有子孙后代注入一个依赖，不论组件层次有多深，并在其上下游关系成立的时间里始终生效。
+```js
+// 父级组件提供 'foo'
+var Provider = {
+  provide: {
+    foo: 'bar'
+  },
+  // ...
+}
+
+// 子组件注入 'foo'
+var Child = {
+  inject: ['foo'],
+  created () {
+    console.log(this.foo) // => "bar"
+  }
+  // ...
+}
+```
 
 
 ## 218、开发过程中有使用过devtools吗？
+有，`devtools`确实是个好东西，大力协助`vue`项目开发，传参，数据展示，用于调试`vue`应用，这可以极大地提高我们的调试效率。
 
 
 ## 219、vue要做权限管理该怎么做？如果控制到按钮级别的权限怎么做？
+权限管理一般需求是两个：页面权限和按钮权限
+
+**按钮权限的控制**: 通常会实现一个指令，例如`v-permission`，将按钮要求角色通过值传给`v-permission`指令，在指令的`moutned`钩子中可以判断当前用户角色和按钮是否存在交集，有则保留按钮，无则移除按钮（是DOM操作）。
 
 
 ## 220、你有使用过动态组件吗？说说你对它的理解
+`component`是vue的内置组件，通过给元素添加一个特殊的`is`特性来实现。
+
+例子: 三个按钮，每个按钮对应不同的组件，有如下两种方式实现
+- 分别使用三个组件，然后通过`v-if`来控制是否显示
+  ```html
+  <template>
+    <div>
+      <div class="btns">
+        <button @click="handleClick('1')">按钮一</button>
+        <button @click="handleClick('2')">按钮二</button>
+        <button @click="handleClick('3')">按钮三</button>
+      </div>
+      <div class="content">
+        <com-a v-if="active === '1'"></com-a>
+        <com-b v-if="active === '2'"></com-b>
+        <com-c v-if="active === '3'"></com-c>
+      </div>
+    </div>
+  </template>
+  <script>
+  export default {
+    data () {
+      return {
+        active: '1'
+      }
+    },
+    methods: {
+      handleClick (type) {
+        this.active = type
+      }
+    }
+  }
+  </script>
+  ```
+  很明显这种方式比较复杂
+- 使用动态组件的方式实现
+  ```html
+  <template>
+    <div>
+      <div class="btns">
+        <button @click="handleClick('1')">按钮一</button>
+        <button @click="handleClick('2')">按钮二</button>
+        <button @click="handleClick('3')">按钮三</button>
+      </div>
+      <div class="content">
+        <component :is="'com-' + active"></component>
+      </div>
+    </div>
+  </template>
+  <script>
+  export default {
+    data () {
+      return {
+        active: '1'
+      }
+    },
+    methods: {
+      handleClick (type) {
+        this.active = type
+      }
+    }
+  }
+  </script>
+  ```
 
 
 ## 221、prop验证的type类型有哪几种？
+八种: `String`、`Number`、`Boolean`、`Array`、`Object`、`Function`、`Symbol`、`Date`
+```js
+export default {
+  props:{
+    title: String,
+    likes: Number,
+    isPublished: Boolean,
+    commentIds: Array,
+    author: Object,
+    callback: Function,
+    // contactsPromise: Promise,
+    time: Date,
+    key: Symbol
+  } 
+}
+```
 
 
 ## 222、prop是怎么做验证的？可以设置默认值吗？
+```js
+Vue.component('my-component', {
+  props: {
+    // 基础的类型检查 (`null` 和 `undefined` 会通过任何类型验证)
+    propA: Number,
+    // 多个可能的类型
+    propB: [String, Number],
+    // 必填的字符串
+    propC: {
+      type: String,
+      required: true
+    },
+    // 带有默认值的数字
+    propD: {
+      type: Number,
+      default: 100
+    },
+    // 带有默认值的对象
+    propE: {
+      type: Object,
+      // 对象或数组默认值必须从一个工厂函数获取
+      default: function () {
+        return { message: 'hello' }
+      }
+    },
+    // 自定义验证函数
+    propF: {
+      validator: function (value) {
+        // 这个值必须匹配下列字符串中的一个
+        return ['success', 'warning', 'danger'].includes(value)
+      }
+    }
+  }
+})
+```
 
 
 ## 223、vue开发过程中你有使用什么辅助工具吗？
+> vue-devtools、
 
 
 ## 224、你了解什么是高阶组件吗？可否举个例子说明下？
+参考: https://blog.csdn.net/weixin_43392489/article/details/114180179
+
+Vue中是以`mixins`实现代码复用，并且官方文档中也缺少一些高阶组件的概念，因为在vue中实现高阶组很困难，并不像React简单，其实vue中`mixins`也同样和以代替。
+
+**高阶组件举例**
+```html
+<template>
+  <div>
+    <p @click="Click">props: {{test}}</p>
+  </div>
+</template>
+<script>
+export default {
+  name: 'Base',
+  props: {
+    test: Number
+  },
+  methods: {
+    Click () {
+      this.$emit('Base-click')
+    }
+  }
+}
+</script>
+```
+Vue组件主要就是三点：`props、event 以及 slots`。对于`Base组件`组件而言，它接收一个数字类型的`props`即`test`，并触发一个自定义事件，事件的名称是：`Base-click`，没有`slots`。我们会这样使用该组件。
+
+现在我们需要`base-component`组件每次挂载完成的时候都打印一句话：`haha`，同时这也许是很多组件的需求，所以按照`mixins`的方式，我们可以这样做，首先定义个`mixins`
+```js
+export default consoleMixin {
+  mounted () {
+    console.log('haha')
+  }
+}
+```
+然后在`Base组件`中将`consoleMixin`混入：
+```html
+<script>
+export default {
+  ...
+  mixins: [ consoleMixin ],
+  ...
+}
+</script>
+```
+这样使用`Base组件`的时候，每次挂载完成之后都会打印一句`haha`，不过现在我们要使用高阶组件的方式实现同样的功能。
+> **高阶组件的定义：接收一个组件作为参数，返回一个新的组件。**
+
+那么此时我们需要思考的是，在 Vue 中组件是什么？Vue 中组件是函数，不过那是最终结果，比如我们在单文件组件中的组件定义其实就是一个普通的选项对象，如下：
+```js
+export default {
+  name: 'Base',
+  props: {...},
+  mixins: [...]
+  methods: {...}
+}
+```
+这难道不是一个纯对象嘛
+```js
+import Base from './Base.vue'
+console.log(Base)
+```
+这里的`Base`是什么呢?
+> 对就是一个JSON对象，而当以把他加入到一个组件的`components`，Vue最终会以该参数即`option`来构造实例的构造函数，所以Vue中组件就是个函数，但是在引入之前仍只是一个`options`对象，所以这样就很好明白了，Vue中组件开始只是一个对象。
+
+即高阶组件就是**一个函数接受一个纯对象，并且返回一个新纯对象**
+```js
+export default function Console (BaseComponent) {
+  return {
+    template: '<wrapped v-on="$listeners" v-bind="$attrs"/>',
+    components: {
+      wrapped: BaseComponent
+    },
+    mounted () {
+      console.log('haha')
+    }
+  }
+}
+```
+这里`Console`就是一个高阶组件，它接受一个参数`BaseComponent`即传入的组件，返回一个新组件，将`BaseComponent`作为新组件的子组件并且在`mounted`里设置钩子函数`打印haha`，我们可以完成`mixins`同样做到的事，我们并没有修改`子组件Base`，这里的`$listeners $attrs`其实是在透传`props和事件`。
+
+那这样真的就完美解决问题了吗？
+> 不是的，首先`template`选项只有在完整版的`Vue`中可以使用，在运行时版本中是不能使用的，所以最起码我们应该使用渲染函数(render)替代模板(template)
+```js
+export default function Console (BaseComponent) {
+  return {
+    mounted () {
+      console.log('haha')
+    },
+    render (h) {
+      return h(BaseComponent, {
+        on: this.$listeners,
+        attrs: this.$attrs,
+      })
+    }
+  }
+}
+```
+我们将模板改写成了渲染函数，看上去没什么问题，实际还是有问题，上面的代码中`BaseComponent组件`依然收不到`props`，为什么呢，我们不是已经在 `h 函数`的第二个参数中将`attrs`传递过去了吗，怎么还收不到？当然收不到，`attrs`指的是那些没有被声明为`props`的属性，所以在渲染函数中还需要添加`props`参数：
+```js
+export default function Console (BaseComponent) {
+  return {
+    mounted () {
+      console.log('haha')
+    },
+    render (h) {
+      return h(BaseComponent, {
+        on: this.$listeners,
+        attrs: this.$attrs,
+        props: this.$props
+      })
+    }
+  }
+}
+```
+那这样呢 其实还是不行`props`始终是空对象，这里的`props`是高阶组件的对象，但是高阶组件并没有声明`props`所以如此故要再声明一个`props`
+```js
+export default function Console (BaseComponent) {
+  return {
+    mounted () {
+      console.log('haha')
+    },
+    props: BaseComponent.props,
+    render (h) {
+      return h(BaseComponent, {
+        on: this.$listeners,
+        attrs: this.$attrs,
+        props: this.$props
+      })
+    }
+  }
+}
+```
+ok，一个差不多的高阶组件就完成了，但是还没完，我们只实现了`透传props`，`透传事件`，`slot`还未透传，我们修改`Base组件`为其添加一个具名插槽和默认插槽`Base.vue`
+```html
+<template>
+  <div>
+    <span @click="handleClick">props: {{test}}</span>
+    <slot name="slot1"/> <!-- 具名插槽 --></slot>
+    <p>===========</p>
+    <slot><slot/> <!-- 默认插槽 -->
+  </div>
+</template>
+ 
+<script>
+export default {
+  ...
+}
+</script>
+
+<template>
+  <div>
+    <Base>
+      <h2 slot="slot1">BaseComponent slot</h2>
+      <p>default slot</p>
+    </Base>
+    <wrapBase>
+      <h2 slot="slot1">EnhancedComponent slot</h2>
+      <p>default slot</p>
+    </wrapBase>
+  </div>
+</template>
+<script>
+  import Base from './Base.vue'
+  import hoc from './Console.js'
+  const wrapBase = Console(Base)
+  export default {
+    components: {
+      Base,
+      wrapBase
+    }
+  }
+</script>
+```
+这里的执行结果就是`wrapBase`里的`slot`都没有了 所以就要改一下高阶组件了
+```js
+function Console (BaseComponent) {
+  return {
+    mounted () {
+      console.log('haha')
+    },
+    props: BaseComponent.props,
+    render (h) {
+      // 将 this.$slots 格式化为数组，因为 h 函数第三个参数是子节点，是一个数组
+      const slots = Object.keys(this.$slots).reduce((arr, key) => arr.concat(this.$slots[key]), [])
+ 
+      return h(BaseComponent, {
+        on: this.$listeners,
+        attrs: this.$attrs,
+        props: this.$props
+      }, slots) // 将 slots 作为 h 函数的第三个参数
+    }
+  }
+}
+```
+这时`slot`内容确实渲染出来了，但是顺序不太对，高阶组件的全部渲染到了末尾。其实Vue在处理具名插槽会考虑作用域的因素，首先 Vue 会把模板(`template`)编译成渲染函数(`render`)。
+
+解决办法也很简单，只需要手动设置slot中vnode的context值为高阶组件实例即可
+```js
+function Console (Base) {
+  return {
+    mounted () {
+      console.log('haha')
+    },
+    props: Base.props,
+    render (h) {
+      const slots = Object.keys(this.$slots)
+        .reduce((arr, key) => arr.concat(this.$slots[key]), [])
+        // 手动更正 context
+        .map(vnode => {
+          vnode.context = this._self //绑定到高阶组件上
+          return vnode
+        })
+ 
+      return h(WrappedComponent, {
+        on: this.$listeners,
+        props: this.$props,
+        attrs: this.$attrs
+      }, slots)
+    }
+  }
+}
+```
+说明白就是强制把slot的归属权给高阶组件 而不是`父组件`通过当前实例`_self`属性访问当实例本身，而不是直接使用`this`，因为`this`是一个代理对象。
 
 
 ## 225、为什么我们写组件的时候可以写在.vue里呢？可以是别的文件名后缀吗？
+配合相应的`loader`，也可以写为`js`,`jsx`,`ts`,`tsx`这种。
 
 
 ## 226、说说你对vue的extend（构造器）的理解，它主要是用来做什么的？
+`extend`的作用是继承当前的Vue类，传入一个`extendOption`生成一个新的构造函数。在`extend`的时候会进行`mergeOption`，融合Vue原型上的`baseOption`，所以`extend`出来的子类也能使用`v-model`、`keep-alive`等全局性的组件。
+> 作用是生成组件类。在挂载全局组件和设置了`components`属性的时候会使用到。在生成DOM的时候会`new 实例化挂载`。
+```html
+<div id="mount-point"></div>
+<script>
+  // 创建构造器
+  var Profile = Vue.extend({
+    template: '<p>{{firstName}} {{lastName}} aka {{alias}}</p>',
+    data: function () {
+      return {
+        firstName: 'Walter',
+        lastName: 'White',
+        alias: 'Heisenberg'
+      }
+    }
+  })
+  // 创建 Profile 实例，并挂载到一个元素上。
+  new Profile().$mount('#mount-point')
+</script>
+```
 
 
 ## 227、用vue怎么实现一个换肤的功能？
+1. **方式一**: 定义全局的CSS变量
+  ```html
+  <!-- App.vue -->
+  <style>
+  /* 定义全局的css变量 */
+  :root {
+    /* 背景色 */
+    --theme_bg_color: red;
+    /* 按钮颜色 */
+    --theme_button_color: yellowgreen;
+  }
+  </style>
+
+  <!-- demo.vue -->
+  <template>
+    <div>
+      <h3>换肤 / 切换样式主题 方式1：</h3>
+      <button @click="changeTheme('Moccasin')">换肤为Moccasin</button>
+      <button @click="changeTheme('#1E90FF')">换肤为#1E90FF</button>
+      <button @click="changeTheme('#00FF7F')">换肤为#00FF7F</button>
+      <button @click="changeTheme('DeepPink')">换肤为DeepPink</button>
+      <button class="myButton">我是一个可以换肤的按钮</button>
+      <div class="myDiv">我是一个可以换肤的div</div>
+    </div>
+  </template>
+  <script>
+  export default {
+    setup() {
+      // 切换主题方式1：修改全局CSS变量
+      let changeTheme = (color) => {
+        document.documentElement.style.setProperty("--theme_bg_color", color);
+        document.documentElement.style.setProperty("--theme_button_color", color);
+      };
+      return { changeTheme  };
+    },
+  };
+  </script>
+  <style scoped>
+  /* 使用全局的css变量设置颜色 */
+  .myButton {
+    background: var(--theme_bg_color);
+  }
+  .myDiv {
+    background: var(--theme_button_color);
+    width: 200px;
+    height: 200px;
+  }
+  </style>
+  ```
+2. **方式二**: 切换已定义好的css文件
+  ```css
+  // theme_1.css：
+  .myButton2{
+    background: red;
+  }
+  .myDiv2 {
+    background: red;
+  }
+
+  // theme_2.css
+  .myButton2{
+    background: blue;
+  }
+  .myDiv2 {
+    background: blue;
+  }
+  ```
+  使用
+  ```html
+  <!-- App.vue： -->
+  <script>
+  import { onMounted } from "vue";
+  export default {
+    name: "App",
+    components: {},
+    setup() {
+      onMounted(() => {
+        console.log("App.vue ---- onMounted");
+        // 方式2（创建link标签默认引入 ./css/theme_1.css 主题样式文件）
+        let link = document.createElement("link");
+        link.type = "text/css";
+        link.id = "theme";
+        link.rel = "stylesheet";
+        link.href = "./css/theme_1.css";
+        document.getElementsByTagName("head")[0].appendChild(link);
+      });
+      return {};
+    },
+  };
+  </script>
+
+  <!-- demo.vue -->
+  <template>
+    <div>
+      <h3>换肤 / 切换样式主题 方式2：</h3>
+      <button @click="changeTheme2(1)">换肤为red</button>
+      <button @click="changeTheme2(2)">换肤为blue</button>
+      <button class="myButton2">我是一个可以换肤的按钮</button>
+      <div class="myDiv2">我是一个可以换肤的div</div>
+    </div>
+  </template>
+  <script>
+  export default {
+    setup() {
+      // 切换主题方式2：切换已定义好的css文件
+      let changeTheme2 = (type) => {
+        document.getElementById("theme").href = `./css/theme_${type}.css`;
+      };
+      return { changeTheme2  };
+    },
+  };
+  </script>
+  ```
+3. **方式三**: 切换顶级CSS类名 (需使用css处理器,如sass、less等)
+  ```css
+  // theme.less
+  /* 预设四种主题 */
+  .theme_1 {
+    .myButton3 {
+      background: #00ff7f;
+    }
+    .myDiv3 {
+      background: #00ff7f;
+    }
+  }
+
+  .theme_2 {
+    .myButton3 {
+      background: #00ff7f;
+    }
+    .myDiv3 {
+      background: #00ff7f;
+    }
+  }
+
+  .theme_3 {
+    .myButton3 {
+      background: #00ff7f;
+    }
+    .myDiv3 {
+      background: #00ff7f;
+    }
+  }
+
+  .theme_4 {
+    .myButton3 {
+      background: #00ff7f;
+    }
+    .myDiv3 {
+      background: #00ff7f;
+    }
+  }
+  ```
+  main.js：
+  ```js
+  // 方式3：需要先引入全局主题样式文件 
+  import "./assets/css/theme.less";
+  ```
+  ```html
+  <!-- App.vue -->
+  <script>
+  import { onMounted } from "vue";
+  export default {
+    name: "App",
+    components: {},
+    setup() {
+      onMounted(() => {
+        console.log("App.vue ---- onMounted");
+        // 方式3（设置顶层div的class类名）
+        document.getElementById("app").setAttribute("class", "theme_1");
+      });
+      return {};
+    },
+  };
+  </script>
+
+  <!-- demo.vue -->
+  <template>
+    <div>
+      <h3>换肤 / 切换样式主题 方式3：</h3>
+      <button @click="changeTheme3(1)">换肤为Moccasin</button>
+      <button @click="changeTheme3(2)">换肤为#1E90FF</button>
+      <button @click="changeTheme3(3)">换肤为#00FF7F</button>
+      <button @click="changeTheme3(4)">换肤为DeepPink</button>
+      <button class="myButton3">我是一个可以换肤的按钮</button>
+      <div class="myDiv3">我是一个可以换肤的div</div>
+    </div>
+  </template>
+  <script>
+  export default {
+    setup() {
+    // 切换主题方式3：切换顶级CSS类名 (需使用处理器)
+      let changeTheme3 = (type) => {
+        document.getElementById("app").setAttribute("class", `theme_${type}`);
+      };
+
+      return { changeTheme3  };
+    },
+  };
+  </script>
+  ```
+4. **方式四**: 动态换肤
+  > 这也是element-ui的一种换肤方式
+  ```html
+  <template>
+    <div>
+      <div>
+        <el-tag effec="dark" type="primary">标签颜色</el-tag>
+      </div>
+      <el-color-picker
+        v-model="theme"
+        :predefine="['#409EFF', '#1890ff', '#304156','#212121','#11a983', '#13c2c2', '#6959CD', '#f5222d', ]"
+      />
+    </div>
+  </template>
+
+  <script>
+  let version = ''
+  import('element-ui/package.json').then(res => {
+    version = res.version
+  })
+  const ORIGINAL_THEME = '#409EFF' // 默认主题色
+
+  export default {
+    data() {
+      return {
+        chalk: '', // content of theme-chalk css
+        theme: ''
+      }
+    },
+    
+    mounted() {
+      if(localStorage.getItem('colorPicker')){
+        this.theme = localStorage.getItem('colorPicker')
+      }
+    },
+    
+    watch: {
+    //  监听主题变更并编译主题
+      async theme(val) {
+        const oldVal = this.chalk ? this.theme : ORIGINAL_THEME
+
+        if (typeof val !== 'string') return
+        
+        localStorage.setItem('colorPicker',val)
+        //  获取新老主题色的色值集合
+        const themeCluster = this.getThemeCluster(val.replace('#', ''))
+        const originalCluster = this.getThemeCluster(oldVal.replace('#', ''))
+        
+        const $message = this.$message({
+          message: '正在编译主题',
+          type: 'success',
+          duration: 0,
+          iconClass: 'el-icon-loading'
+        })
+        // 将style渲染到DOM中
+        const getHandler = (variable, id) => {
+          return () => {
+            const originalCluster = this.getThemeCluster(ORIGINAL_THEME.replace('#', ''))
+            const newStyle = this.updateStyle(this[variable], originalCluster, themeCluster)
+            let styleTag = document.getElementById(id)
+            if (!styleTag) {
+              styleTag = document.createElement('style')
+              styleTag.setAttribute('id', id)
+              document.head.appendChild(styleTag)
+            }
+            styleTag.innerText = newStyle
+          }
+        }
+        //  初次进入或刷新时动态加载CSS文件
+        if (!this.chalk) {
+          const url = `https://unpkg.com/element-ui@${version}/lib/theme-chalk/index.css`
+          await this.getCSSString(url, 'chalk')
+        }
+        const chalkHandler = getHandler('chalk', 'chalk-style')
+        chalkHandler()
+        
+        const styles = [].slice.call(document.querySelectorAll('style')).filter(style => {
+            const text = style.innerText
+            return new RegExp(oldVal, 'i').test(text) && !/Chalk Variables/.test(text)
+        })
+        styles.forEach(style => {
+          const { innerText } = style
+          if (typeof innerText !== 'string') return
+          style.innerText = this.updateStyle(innerText, originalCluster, themeCluster)
+        })
+        
+        $message.close()
+      }
+    },
+  
+    methods: {
+    //  更新主题色
+      updateStyle(style, oldCluster, newCluster) {
+        let newStyle = style
+        oldCluster.forEach((color, index) => {
+          newStyle = newStyle.replace(new RegExp(color, 'ig'), newCluster[index])
+        })
+        return newStyle
+      },
+      // 获取样式文件内容
+      getCSSString(url, variable) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest()
+          xhr.onreadystatechange = () => {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              this[variable] = xhr.responseText.replace(/@font-face{[^}]+}/, '')
+              resolve()
+            }
+          }
+          xhr.open('GET', url)
+          xhr.send()
+        })
+      },
+      // 获取主题同类色的集合
+      getThemeCluster(theme) {
+        const tintColor = (color, tint) => {
+          let red = parseInt(color.slice(0, 2), 16)
+          let green = parseInt(color.slice(2, 4), 16)
+          let blue = parseInt(color.slice(4, 6), 16)
+          if (tint === 0) { // when primary color is in its rgb space
+            return [red, green, blue].join(',')
+          } else {
+            red += Math.round(tint * (255 - red))
+            green += Math.round(tint * (255 - green))
+            blue += Math.round(tint * (255 - blue))
+            red = red.toString(16)
+            green = green.toString(16)
+            blue = blue.toString(16)
+            return `#${red}${green}${blue}`
+          }
+        }
+        const shadeColor = (color, shade) => {
+          let red = parseInt(color.slice(0, 2), 16)
+          let green = parseInt(color.slice(2, 4), 16)
+          let blue = parseInt(color.slice(4, 6), 16)
+          red = Math.round((1 - shade) * red)
+          green = Math.round((1 - shade) * green)
+          blue = Math.round((1 - shade) * blue)
+          red = red.toString(16)
+          green = green.toString(16)
+          blue = blue.toString(16)
+          return `#${red}${green}${blue}`
+        }
+        const clusters = [theme]
+        for (let i = 0; i <= 9; i++) {
+          console.log(Number((i / 10).toFixed(2)))
+          clusters.push(tintColor(theme, Number((i / 10).toFixed(2))))
+        }
+        clusters.push(shadeColor(theme, 0.1))
+        return clusters
+      }
+    }
+  }
+  </script>
+
+  <style lang="scss">
+
+  </style>
+  ```
 
 
 ## 228、有在vue中使用过echarts吗？踩过哪些坑？如何解决的？
+1. 数据为空时图表不清空和屏幕大小发生变化不重绘
+  - 数据为空之后需要清空数据使用`echartDom.clear()`
+    ```js
+    if (dataY.length) {
+      this.chartsDom.setOption(option);
+    } else {
+      this.chartsDom.clear();
+    }
+    ```
+  - `mounted`中添加浏览器宽高变化`resize`事件监听
+    ```js
+    mounted() {
+      // 不建议使用普通事件 因为普通事件有且只能生效一个 所以会被改写覆盖 请使用事件监听
+      // window.onresize = () => this.chartsDom ? this.chartsDom.resize() : '';
+      // 使用事件监听
+      window.addEventListener('resize', () =>
+        this.chartsDom ? this.chartsDom.resize() : ''
+      );
+    }
+    ```
+2. `echarts`不能通过`Vue.use()`全局调用，使用有两种方法
+  - 在需要使用图标的`.vue`文件中直接引入
+    ```js
+    import echarts from 'echarts'
+    let myChart = echarts.init(document.getElementById('myChart'))
+    ```
+  - 全局引入: 在main.js文件引入并挂载
+    ```js
+    import echarts from 'echarts'
+    Vue.prototype.$echarts = echarts 
+    ```
+    组件中使用
+    ```js
+    let myChart = this.$echarts.init(document.getElementById('myChart'))
+    ```
+3. echarts出现100x100的大小尺寸
+  > 我们在vue中使用echarts图表的时候，在一个页面使用多个图标会发现其中一个的图标大小总是100x100，常见于element的 tab，tab刚开始的时候是display: none,所以导致宽高100x100
+  ```js
+  // 解决办法
+  this.myChart.resize()
+  ```
 
 
 ## 229、vue部署上线前需要做哪些准备工作？
+1. 修改后台接口地址
+2. 服务器相关配置: 开放端口或者Nginx配置等
+3. 执行打包命令`npm run build`
+4. 将dist目录下的文件复制到服务器上
 
 
 ## 230、vue过渡动画实现的方式有哪些？
+1. 使用vue的`transition`标签结合css样式完成动画
+-   隐藏：加入类名:
+    - v-leave：定义离开过渡的开始状态。
+    - v-leave-active：定义离开过渡生效时的状态。
+    - v-leave-to：定义离开过渡的结束状态。
+  - 显示：加入类名:
+    - v-enter：准备进行运动的状态(起始状态)
+    - v-enter-active：整个运动状态
+    - v-enter-to：整个运动状态(强调运动的结果，结束状态)
+  ```html
+  <style>
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity .5s;
+      }
+    .fade-enter, .fade-leave-to{
+        opacity: 0;
+      }
+  </style>
+  <div id="demo">
+      <button v-on:click="show = !show">
+        Toggle
+      </button>
+      <transition name="fade">
+        <p v-if="show">hello</p>
+      </transition>
+  </div>
+  <script>
+      new Vue({
+          el: '#demo',
+          data: {
+              show: true
+          }
+      })
+  </script>
+  ```
+  ![202303141639183.png](http://img.itchenliang.club/img/202303141639183.png)
+2. 利用`animate.css`结合`transition`实现动画
+  可以通过以下`attribute`来自定义过渡类名：
+  - enter-class
+  - enter-active-class
+  - enter-to-class (2.1.8+)
+  - leave-class
+  - leave-active-class
+  - leave-to-class (2.1.8+)
+  它们的优先级高于普通的类名，这对于 Vue 的过渡系统和其他第三方 CSS 动画库，如 Animate.css 结合使用十分有用。
+  ```html
+  <link href="https://cdn.jsdelivr.net/npm/animate.css@3.5.1" rel="stylesheet" type="text/css">
+  <div id="example-3">
+    <button @click="show = !show">
+      Toggle render
+    </button>
+    <transition
+      name="custom-classes-transition"
+      enter-active-class="animated tada"
+      leave-active-class="animated bounceOutRight">
+        <p v-if="show">
+        明月几时有,把酒问青天。
+        </p>
+    </transition>
+  </div>
+  <script>
+      new Vue({
+          el: '#example-3',
+          data: {
+              show: true
+          }
+      })
+  </script>
+  ```
+3. 利用`vue`中的钩子函数实现动画
+  ```html
+  <style>
+  .show {
+    transition: all 0.5s;
+  }
+  </style>
+  <div id="app">
+    <button @click="toggle">显示/隐藏</button><br>
+    <transition @before-enter="beforeEnter" @enter="enter" @after-enter="afterEnter">
+      <div class="show"  v-show="isshow">
+        明月几时有?把酒问青天
+      </div>
+    </transition>
+  </div>
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        isshow: false
+      },
+      methods: {
+        toggle: function () {
+          this.isshow = !this.isshow;
+        },
+        beforeEnter: function (el) {
+          console.log("beforeEnter");
+          // 当入场之前会执行 v-enter
+          el.style = "padding-left:100px";
+        },
+        enter: function (el, done) {
+          // 当进行的过程中每执行 v-enter-active
+          console.log("enter");
+          // 为了能让代码正常进行，在设置了结束状态后必须调用一下这个元素的
+          // offsetHeight / offsetWeight  只是为了让动画执行
+          el.offsetHeight;
+          // 结束的状态最后写在enter中
+          el.style = "padding-left:0px";
+          // 执行done继续向下执行
+          done();
+        },
+        afterEnter: function (el) {
+        // 当执行完毕以后会执行
+        console.log("afterEnter");
+          //this.isshow = false;
+        }
+      }
+    }) 
+  </script>
+  ```
 
 
 ## 231、vue在created和mounted这两个生命周期中请求数据有什么区别呢？
+- 若涉及页面加载，在`created`的时候，视图中的html并没有渲染出来，所以这个时候如果直接去操作dom节点，一定找不到相关元素。
+- 而在`mounted`中，由于此时html已经渲染出来了，所以可以直接操作dom节点。
 
 
 ## 232、vue父子组件双向绑定的方法有哪些？
+- `props`和`$emit`
+- 组件`v-model`
+- `.sync`修饰符
 
 
-## 233、vue怎么获取DOM节点？
-
-
-## 234、vue项目有使用过npm run build --report吗？
-
-
-## 235、如何解决vue打包vendor过大的问题？
-
-
-## 236、webpack打包vue速度太慢怎么办？
-
-
-## 237、vue在开发过程中要同时跟N个不同的后端人员联调接口（请求的url不一样）时你该怎么办？
+## 233、vue项目有使用过npm run build --report吗？
+给`process.env`对象添加了一个属性`npm_config_report: "true"`，表示开启编译完成后的报告。
