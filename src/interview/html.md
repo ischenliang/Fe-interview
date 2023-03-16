@@ -290,9 +290,8 @@ sizes就是指默认显示128px，如果宽度大于360px，则显示340px。
 
 ```html
 <picture>
-    <source srcset="/media/examples/surfer-240-200.jpg"
-            media="(min-width: 800px)">
-    <img src="/media/examples/painted-hand-298-332.jpg" />
+  <source srcset="/media/examples/surfer-240-200.jpg" media="(min-width: 800px)">
+  <img src="/media/examples/painted-hand-298-332.jpg" />
 </picture>
 ```
 
@@ -451,7 +450,7 @@ Canvas 是画布，通过 Javascript 来绘制2D 图形，是逐像素进行渲�
 - 怪异模式(quirks mode)模式： 会模拟更旧的浏览器的行为
 - 近乎标准(almost standards)模式： 会实施了一种表单元格尺寸的怪异行为（与IE7之前的单元格布局方式一致），除此之外符合标准定义
 
-**区分**：网页中的`DTD`，直接影响到使用的是严格模式还是浏览模式，可以说`DTD`的使用与这两种方式的区别息息相关。
+**区分**：网页中的`DTD`(Document Type Defination即文档类型定义)，直接影响到使用的是严格模式还是浏览模式，可以说`DTD`的使用与这两种方式的区别息息相关。
 - 如果文档包含严格的`DOCTYPE` ，那么它一般以严格模式呈现（**严格 DTD ——严格模式**）；
 - 包含过渡`DTD`和`URI`的`DOCTYPE`，也以严格模式呈现，但有过渡`DTD`而没有`URI`（统一资源标识符，就是声明最后的地址）会导致页面已混杂模式呈现（**有URI的过渡DTD——严格模式；没有URI的过渡DTD——混杂模式**）；
 - `DOCTYPE`不存在或形式不正确会导致文档以混杂模式呈现(**DTD不存在或者格式不正确——混杂模式**)；

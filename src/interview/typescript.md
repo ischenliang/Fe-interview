@@ -37,12 +37,12 @@ TypeScript 是由 Microsoft 开发和维护的免费开源编程语言。它是 
 
 ## 3、TypeScript 的内置数据类型有哪些？
 内置数据类型在 Typescript 中也称为原始数据类型。这些内置类型如下：
-- 数字类型： 用于表示数字类型值。TypeScript 中的所有数字都存储为浮点值。语法：let identifier: number = value;
-- 字符串类型：它表示存储为 Unicode UTF-16 代码的字符序列。在脚本中包含字符串文字，方法是用单引号或双引号将它们括起来。语法：let identifier: string = " ";
-- 布尔类型： 用于表示一个逻辑值。当使用布尔类型时，只能得到false或true的输出。布尔值是指定条件是否为true的真值。语法：bool = Boolean value;
-- Null 类型： Null 表示一个值未定义的变量。不能直接引用 null 类型值本身。Null 类型没有用，因为我们只能为它分配一个空值。语法：let num: number = null;
-- 未定义类型： 它是未定义文字的类型。Undefined 类型表示所有未初始化的变量。它没有用，因为只能为其分配一个未定义的值。这种内置类型是所有类型的子类型。语法：let num: number = undefined;
-- void类型： void 是不返回任何类型值的函数的返回类型。它用于没有可用数据类型的地方。语法：let unusable: void = undefined;
+- Number类型：用于表示数字类型值。TypeScript 中的所有数字都存储为浮点值。语法：`let identifier: number = value`;
+- String类型：它表示存储为 Unicode UTF-16 代码的字符序列。在脚本中包含字符串文字，方法是用单引号或双引号将它们括起来。语法：`let identifier: string = " "`;
+- Boolean类型： 用于表示一个逻辑值。当使用布尔类型时，只能得到false或true的输出。布尔值是指定条件是否为true的真值。语法：`let bool = Boolean value`;
+- Null类型： Null 表示一个值未定义的变量。不能直接引用 null 类型值本身。Null 类型没有用，因为我们只能为它分配一个空值。语法：`let num: number = null`;
+- Undefined类型：它是未定义文字的类型。Undefined 类型表示所有未初始化的变量。它没有用，因为只能为其分配一个未定义的值。这种内置类型是所有类型的子类型。语法：`let num: number = undefined`;
+- void类型：void是不返回任何类型值的函数的返回类型。它用于没有可用数据类型的地方。语法：`let unusable: void = undefined`;
 
 除此之外，TypeScript 还支持以下复合类型：
 - array：表示一个元素类型为 T 的数组。例如，number[] 表示一个数字数组。
@@ -75,86 +75,166 @@ interface IEmployee {
 
 
 ## 6、TypeScript 中的模块是什么？
-模块是创建一组相关变量、函数、类和接口等的强大方法。它可以在自己的范围内执行，而不是在全局范围内执行。换句话说，模块中声明的变量、函数、类和接口不能在模块外部直接访问。
-```ts
-module module_name {
-  class xyz {
-    export sum(x, y){
-      return x+y;
+**模块是typescript组织代码的一种方法，可以在模块中创建一组相关变量、函数、类和接口等数据。**
+> 模块是在其自身的作用域里执行，并不是全局作用域，意味着定义在模块里的变量、函数和类等成员在模块外是不可见的，除非使用明确的`export`导出他们，然后在其他模块中使用`import`导入变量、函数和类等成员。
+
+- 使用方式一: 通过`module`关键字创建
+  ```ts
+  module IShape {
+    export interface IShapeInter {
+      draw()
     }
   }
-}
-```
+  export class Circle implements IShape.IShapeInter {
+    draw() {
+      console.log('Circle ....')
+    }
+  }
+  ```
+- 使用方式二：单独抽离一个`ts`文件
+  ```ts
+  // IShape.ts
+  export interface IShapeInter {
+    draw()
+  }
+  // Circle.ts
+  import { IShapeInter } from './Ishape'
+  export class Circle implements IShapeInter {
+    draw() {
+      console.log('Circle ....')
+    }
+  }
+  ```
+
+
+## 7、Typescript 中的命名空间是什么？ 如何在 Typescript 中声明命名空间？
+命名空间是一种用于对功能进行逻辑分组的方式。命名空间的目的就是解决重名问题。命名空间定义了标识符的可见范围，一个标识符可在多个名字空间中定义，它在不同名字空间中的含义是互不相干的。这样，在一个新的名字空间中可定义任何标识符，它们不会与任何已有的标识符发生冲突，因为已有的定义都处于其他名字空间中。
+> 命名空间也称为内部模块。
+
+- 1、使用命名空间演示重名问题
+  - 创建`speak.ts`: 当需要在外部调用命名空间中的类和接口，则需要在类和接口添加`export`关键字
+    ```ts
+    namespace Speak {
+      export interface peopleSpeak {
+        speakFun(): any;
+      }
+    }
+    ```
+  - 创建`speak1.ts`文件
+    > 命名空间在一个单独的 TypeScript 文件中，可使用三斜杠`///`引用它
+    ```ts
+    /// <reference path = "speak.ts" />
+    namespace Speak {
+      export class SpeakTs implements peopleSpeak {
+        speakFun() {
+          console.log("ts")
+        }
+      }
+    }
+    ```
+  - 创建`speak2.ts`文件
+    ```ts
+    /// <reference path = "speak.ts" />
+    namespace Speak {
+      export class SpeakHello implements peopleSpeak {
+        speakFun() {
+          console.log("hello")
+        }
+      }
+    }
+    ```
+  - 创建`oneSpeak.ts`文件
+    ```ts
+    /// <reference path = "speak.ts" />   
+    /// <reference path = "speak1.ts" /> 
+    /// <reference path = "speak2.ts" /> 
+    function speakStr (speak: Speak.peopleSpeak) {
+      console.log(speak)
+    }
+    speakStr(new Speak.SpeakHello) // hello
+    speakStr(new Speak.SpeakTs) // ts
+    ```
+- 2、嵌套命名空间的简单使用
+  > 命名空间支持嵌套，可以将命名空间定义在另外一个命名空间里面，使用`export`导出命名空间
+  - 创建`oneNest.ts`文件
+    ```ts
+    namespace XiaoGuai {
+      export namespace Sam {
+        export class Speak {
+          public speakTs(oneStr: string) {
+            return oneStr;
+          }
+        }
+      }
+    }
+    ```
+  - 创建`oneSpeak.ts`文件: 成员的访问使用点号`.`来实现
+    ```ts
+    /// <reference path = "oneNest.ts" />
+    let oneStr = new XiaoGuai.Sam.Speak(); 
+    console.log(oneStr.speakTs("hello ts")); //hello ts
+    ```
+
+
+## 8、TypeScript 中的类是什么？你如何定义它们？
+**类描述了所创建的对象共同的属性和方法**。可以认为是为描述某种抽象而自定义的一种类型。
+> 该类型通常会包含三种成员: 通过关键字`class`定义类
+- 字段: 字段是类里面声明的变量。字段表示对象的有关数据。
+- 构造函数: 类实例化时调用，可以为类的对象分配内存。
+- 方法: 方法为对象要执行的操作。
 ```ts
-// 02.ts
-namespace Drawing { 
-  export interface IShape { 
-    draw(): void
+class Student {
+  // 字段
+  studCode: number;    
+  studName: string;
+  // 构造函数
+  constructor(code: number, name: string) {    
+    this.studName = name;    
+    this.studCode = code;    
   }
-  export class Animal {}
-}
-// 01.ts
-/// <reference path = "02.ts" />
-Drawing.Animal
-namespace Drawing {
-  export class Circle implements IShape { 
-    public draw() { 
-      console.log("Circle is drawn"); 
-    }  
-  }
+  // 方法
+  getGrade() {    
+    return "A+";    
+  }    
 }
 ```
-
-
-## 7、👍可以在后端使用 TypeScript 吗？ 如果是可以，那么应该如何使用？
-> 拓展说明：如何在koa中使用ts。
-
-是的，可以在后端使用 TypeScript。可以通过下面的例子来理解它。在这里，选择 Node.js 并具有一些额外的类型安全性和该语言带来的其他抽象。
-1. 第1步：安装 Typescript 编译器：
-  ```shell
-  npm i -g typescript
-  ```
-2. 第2步：TypeScript 编译器采用 tsconfig.json 文件中的选项。此文件确定将构建文件放在何处。
-  ```json
-  {  
-    "compilerOptions": {  
-      "target": "es5",  
-      "module": "commonjs",  
-      "declaration": true,  
-      "outDir": "build"  
-    }  
-  }
-  ```
-3. 第3步：编译ts文件
-  ```shell
-  tsc
-  ```
-4. 第4步：运行
-  ```shell
-  node build/index.js
-  ```
-
-
-## 8、TypeScript 中的类型断言是什么？
-类型断言的工作方式类似于其他语言中的类型转换，但它不像其他语言(如 C# 和 Java)那样执行类型检查或数据重组。类型转换带有运行时支持，而类型断言对运行时没有影响。但是，类型断言纯粹由编译器使用，并为编译器提供有关我们希望如何分析代码的提示。
-```js
-let empCode: any = 111;     
-let employeeCode = <number> code;     
-console.log(typeof(employeeCode)); //Output: number
+使用`new`关键字来实例化类的对象
+```ts
+var student = new Student(1, '张三')
 ```
+类中的字段属性和方法可以使用`.`号来访问
+```ts
+// 访问属性
+student.studName
+
+// 访问方法
+student.getGrade()
+```
+类的特点是:
+- 继承
+- 封装
+- 多态性
+- 抽象
 
 
-## 9、Typescript 中的变量是什么？ ❓如何在 Typescript 中创建变量？
-变量是存储位置，用于存储程序要引用和使用的值/信息。它充当程序中价值的容器。可以使用`var`关键字声明它，应在使用前声明。在 Typescript 中声明变量时，应遵循某些规则
-- 变量名称必须是字母或数字。
-- 变量名不能以数字开头。
-- 变量名不能包含空格和特殊字符，下划线 (`_`) 和美元 (`$`) 符号除外。
-
-可以通过以下四种方式之一声明变量：
-- 在单个语句中声明类型和值。语法：`var [identifier] : [type-annotation] = value;`。
-- 声明没有值的类型。语法：`var [identifier] : [type-annotation]`;
-- 不带类型声明其值。语法：`var [identifier] = value`;
-- 不带值和类型的声明。语法：`var [identifier]`;
+## 9、如何在TypeScript中实现继承？
+继承是一种从另一个类获取一个类的属性和行为的机制。它是 OOP 语言的一个重要方面，具有从现有类创建新类的能力。其成员被继承的类称为基类，继承这些成员的类称为派生类。
+> 可以使用 `extend` 关键字来实现继承。
+```ts
+class Shape {     
+  Area:number     
+  constructor(area:number) {     
+    this.Area = area    
+  }     
+}     
+class Circle extends Shape {     
+  display():void {     
+    console.log("Area of the circle: "+this.Area)     
+  }     
+}    
+var obj = new Circle(320);     
+obj.display()  //Output: Area of the circle: 320
+```
 
 
 ## 10、在TypeScript中如何从子类调用基类构造函数？
@@ -181,14 +261,55 @@ class Snake extends Animal {
 ```
 
 
-## 11、Mixin是什么？解释如何使用 TypeScript mixin。
+## 11、TypeScript 中的类型断言是什么？
+TypeScript允许你覆盖它的推断，并且能以你任何你想要的方式分析它，这种机制被称为**类型断言**。
+> 类型断言用来告诉编译器你比它更了解这个类型，并且它不应该再发出错误。
+
+类型断言的一个常见用例是当你从 JavaScript 迁移到 TypeScript 时：
+```js
+const foo = {};
+foo.bar = 123; // Error: 'bar' 属性不存在于 ‘{}’
+foo.bas = 'hello'; // Error: 'bas' 属性不存在于 '{}'
+```
+这里的代码发出了错误警告，因为`foo`的类型推断为`{}`，即没有属性的对象。因此，你不能在它的属性上添加`bar`或`bas`，你可以通过类型断言来避免此问题：
+```ts
+interface Foo {
+  bar: number;
+  bas: string;
+}
+const foo = {} as Foo;
+foo.bar = 123;
+foo.bas = 'hello';
+```
+除了上面的`as`写法以外还有一种`尖括号`写法
+```ts
+const foo = <Foo>{};
+foo.bar = 123;
+foo.bas = 'hello';
+```
+
+
+## 12、Typescript中的变量是什么？如何在 Typescript 中创建变量？
+变量是存储位置，用于存储程序要引用和使用的值/信息。它充当程序中价值的容器。可以使用`var`关键字声明它，应在使用前声明。在 Typescript 中声明变量时，应遵循某些规则
+- 变量名称必须是字母或数字。
+- 变量名不能以数字开头。
+- 变量名不能包含空格和特殊字符，下划线 (`_`) 和美元 (`$`) 符号除外。
+
+可以通过以下四种方式之一声明变量：
+- 在单个语句中声明类型和值。语法：`var [identifier] : [type-annotation] = value;`。
+- 声明没有值的类型。语法：`var [identifier] : [type-annotation]`;
+- 不带类型声明其值。语法：`var [identifier] = value`;
+- 不带值和类型的声明。语法：`var [identifier]`;
+
+
+## 13、Mixin是什么？解释如何使用 TypeScript mixin。
 在 Javascript 中，Mixins 是一种从可重用组件构建类的方法，它是通过组合称为 mixins 的更简单的部分类来构建它们。这个想法很简单，而不是类 A 扩展类 B 以获取其功能，函数 B 获取类 A 并返回一个具有此附加功能的新类。函数 B 是一个 mixin。
 
 Mixin 本质上是在相反方向上工作的继承。Mixins 允许你通过组合以前类中更简单的部分类设置来构建新类。<br>
 相反，类A继承类B来获得它的功能，类B从类A需要返回一个新类的附加功能。
 
 
-## 12、TypeScript 中如何检查 null 和 undefined？
+## 14、TypeScript 中如何检查 null 和 undefined？
 通过使用杂耍检查(juggling-check)，我们可以检查 null 和 undefined：
 ```js
 if (x == null) {  
@@ -221,8 +342,7 @@ check(b, 'b');
 ```
 
 
-
-## 13、TypeScript 中的 getter/setter 是什么？你如何使用它们？
+## 15、TypeScript 中的 getter/setter 是什么？你如何使用它们？
 Getter 和 setter 是特殊类型的方法，可帮助你根据程序的需要委派对私有变量的不同级别的访问。
 
 Getters 允许你引用一个值但不能编辑它。Setter 允许你更改变量的值，但不能查看其当前值。这些对于实现封装是必不可少的。
@@ -250,8 +370,8 @@ if (employee.fullName) {
 ```
 
 
-## 14、如何允许模块外定义的类可以访问？
-你可以使用export关键字打开模块以供在模块外使用。
+## 16、如何允许模块外定义的类可以访问？
+你可以使用`export`关键字打开模块以供在模块外使用。
 ```ts
 module Admin {
   // use the export keyword in TypeScript to access the class outside
@@ -265,40 +385,12 @@ let nick = new Admin.Employee('nick', 'nick@yahoo.com');
 ```
 
 
-## 15、如何使用 Typescript 将字符串转换为数字？
+## 17、如何使用 Typescript 将字符串转换为数字？
 与 JavaScript 类似，你可以使用parseInt或parseFloat函数分别将字符串转换为整数或浮点数。你还可以使用一元运算符+将字符串转换为最合适的数字类型，“3”成为整数，3而“3.14”成为浮点数3.14。
 ```ts
 var x = "32";
 var y: number = +x;
 ```
-
-
-## 16、什么是 .map 文件，为什么/如何使用它？
-TypeScript Map 文件是一个源映射文件，其中包含有关原始文件的信息。`.map`文件是源映射文件，它允许工具在发出的 JavaScript 代码和创建它的 TypeScript 源文件之间进行映射。许多调试器可以使用这些文件，因此可以调试 TypeScript 文件而不是 JavaScript 文件。
-
-
-## 17、TypeScript 中的类是什么？你如何定义它们？
-> 类描述了所创建的对象共同的属性和方法。**可以认为是为描述某种抽象而自定义的一种类型。该类型通常会包含三种成员，即：用以生产类实例构造函数，用于描述特征的属性，以及用于完成某种行为的方法。**
-
-我们知道，TypeScript 是一种面向对象的 JavaScript 语言，支持类、接口等 OOP 编程特性。与 Java 一样，类是用于创建可重用组件的基本实体。它是一组具有共同属性的对象。类是用于创建对象的模板或蓝图。它是一个逻辑实体。class关键字用于在 Typescript 中声明一个类。
-```ts
-class Student {    
-  studCode: number;    
-  studName: string;    
-  constructor(code: number, name: string) {    
-    this.studName = name;    
-    this.studCode = code;    
-  }    
-  getGrade() : string {    
-    return "A+" ;    
-  }    
-}
-```
-类的特点是:
-- 继承
-- 封装
-- 多态性
-- 抽象
 
 
 ## 18、TypeScript 和 JavaScript 有什么区别？
@@ -969,17 +1061,33 @@ export class Addition{
 ```
 
 
-## 54、Typescript 中的命名空间是什么？ 如何在 Typescript 中声明命名空间？
-命名空间是一种用于对功能进行逻辑分组的方式。命名空间用于在内部维护 typescript 的遗留代码。它封装了共享某些关系的特征和对象。命名空间也称为内部模块。命名空间还可以包括接口、类、函数和变量，以支持一组相关功能。
-> 注意：一个命名空间可以在多个文件中定义，并允许保留每个文件，因为它们都在一个地方定义。它使代码更易于维护。
+## 53、👍可以在后端使用 TypeScript 吗？ 如果是可以，那么应该如何使用？
+> 拓展说明：如何在koa中使用ts。
 
-创建命名空间的语法：
-```ts
-namespace <namespace_name> {    
-  export interface I1 { }    
-  export class c1{ }    
-}
-```
+是的，可以在后端使用 TypeScript。可以通过下面的例子来理解它。在这里，选择 Node.js 并具有一些额外的类型安全性和该语言带来的其他抽象。
+1. 第1步：安装 Typescript 编译器：
+  ```shell
+  npm i -g typescript
+  ```
+2. 第2步：TypeScript 编译器采用 tsconfig.json 文件中的选项。此文件确定将构建文件放在何处。
+  ```json
+  {  
+    "compilerOptions": {  
+      "target": "es5",  
+      "module": "commonjs",  
+      "declaration": true,  
+      "outDir": "build"  
+    }  
+  }
+  ```
+3. 第3步：编译ts文件
+  ```shell
+  tsc
+  ```
+4. 第4步：运行
+  ```shell
+  node build/index.js
+  ```
 
 
 
@@ -1124,24 +1232,8 @@ printer.doInkJetPrint();
 `public` 是 TypeScript 类中属性/方法的默认可见性。
 
 
-## 65、如何在 TypeScript 中实现继承？
-继承是一种从另一个类获取一个类的属性和行为的机制。它是 OOP 语言的一个重要方面，具有从现有类创建新类的能力。其成员被继承的类称为基类，继承这些成员的类称为派生类。<br>
-可以使用 `extend` 关键字来实现继承。可以通过下面的例子来理解。
-```ts
-class Shape {     
-  Area:number     
-  constructor(area:number) {     
-    this.Area = area    
-  }     
-}     
-class Circle extends Shape {     
-  display():void {     
-    console.log("Area of the circle: "+this.Area)     
-  }     
-}    
-var obj = new Circle(320);     
-obj.display()  //Output: Area of the circle: 320
-```
+## 65、什么是 .map 文件，为什么/如何使用它？
+TypeScript Map 文件是一个源映射文件，其中包含有关原始文件的信息。`.map`文件是源映射文件，它允许工具在发出的 JavaScript 代码和创建它的 TypeScript 源文件之间进行映射。许多调试器可以使用这些文件，因此可以调试 TypeScript 文件而不是 JavaScript 文件。
 
 
 ## 66、原生 Javascript 是否支持模块？

@@ -48,7 +48,7 @@ export default {
         text: "❤️学习总结",
         items: [
           { text: 'HTML/CSS', link: "/note/html-css" },
-          { text: 'JavaScript', link: "/note/javascript" },
+          { text: 'JavaScript', link: "/note/javascript/" },
           { text: 'HTTP/浏览器', link: "/note/http-browser" },
           { text: "Vue框架篇", link: "/note/vue" },
           { text: "玩转Vue3", link: "/note/vue3" },
@@ -88,7 +88,8 @@ export default {
           ],
         },
       ],
-      "/note/": [...noteSide]
+      "/note/javascript": [...noteSide.jsSidebar],
+      "/note/vue": [...noteSide.vueSiderBar]
     },
 
     // 右上角社交账号

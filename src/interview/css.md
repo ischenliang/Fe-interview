@@ -21,34 +21,66 @@ comment: true
 `vw`和`vh`是 CSS3 新单位，即 view width 可视窗口宽度 和 view height 可视窗口高度。1vw 就等于可视窗口宽度的百分之一，1vh 就等于可视窗口高度的百分之一。
 
 ## 3、🔥介绍下BFC及其应用
-所谓 BFC，指的是一个独立的布局环境，BFC 内部的元素布局与外部互不影响。
+所谓`BFC`，指的是一个独立的布局环境，`BFC`内部的元素布局与外部互不影响。
 
-触发 BFC 的方式有很多，常见的有：
-- 设置浮动，float 除 none 以外的值
-- overflow 除了 visible 以外的值（hidden，auto，scroll）
-- 定位元素，position（absolute，fixed）
-- display 为以下其中之一的值 inline-block，table-cell，table-caption
+触发BFC的条件: 满足下面任意一个条件，这个元素都会被当做一个`BFC`
+- body根元素
+- 设置浮动`float`，不包括`none`
+- 设置定位，`absoulte`或者`fixed`
+- 行内块显示模式，`inline-block`
+- 设置`overflow`，即`hidden，auto，scroll`
+- 表格单元格，`table-cell`
+- 弹性布局，`flex`
 
-BFC特性：
-- 内部的 Box 会在垂直方向上一个接一个的放置。
-- 垂直方向上的距离由 margin 决定
-- bfc 的区域不会与 float 的元素区域重叠。
-- 计算 bfc 的高度时，浮动元素也参与计算
-- bfc 就是页面上的一个独立容器，容器里面的子元素不会影响外面元素。
+**注意**
+- 并不是所有的元素都是BFC, 只有满足了上面的任意1个条件之后，这个元素才成为1个BFC。
+- 一个BFC区域，只包含其所有子元素，不包含子元素的子元素.
 
-常见的 BFC 应用有：
-- 解决浮动元素令父元素高度坍塌的问题
-- 解决非浮动元素被浮动元素覆盖问题
-- 解决外边距垂直方向重合的问题
+**利用BFC解决问题**
+> BFC有一个特点: **每一个BFC区域都是相互独立，互不影响的。**
+- 1、解决外边距的塌陷问题(垂直塌陷)
+  > 开发中，前端的布局手段，离不开外边距margin，那么，也会遇到一些问题，例如外边距的垂直塌陷问题。
+  ![202303161021217.png](http://img.itchenliang.club/img/202303161021217.png)
+  通过上面的例子，我们会发现，我们分别为两个`HM`都设置了四个方向的`margin`，按照正常情况来看，本应该两个`HM`垂直方向的间距是`100px + 100px = 200px`，但是现在确是`100px`，出现了`margin`的塌陷即，两段`margin`重叠了。
+  > 利用BFC解决塌陷问题：可以将这两个盒子，放到两个BFC区域中，即可解决这个问题。
+  ![202303161024381.png](http://img.itchenliang.club/img/202303161024381.png)
+- 2、解决包含塌陷
+  > 当父子关系的盒子，给子元素添加`margin-top`，有可能会把父元素一起带跑
+  ![202303161025495.png](http://img.itchenliang.club/img/202303161025495.png)
+  理想状态下，应该是`son`元素在`father`元素的顶部间距是`50px`，而此时是`fater`距离`body`的顶部间距是`50px`。
+  > 利用BFC解决塌陷问题: 将父盒子变成一个独立的区域
+  ![202303161029416.png](http://img.itchenliang.club/img/202303161029416.png)
+- 3、当浮动产生影响的时候，可以利用BFC来清除浮动的影响
+  ![202303161032186.png](http://img.itchenliang.club/img/202303161032186.png)
+  上面例子中，一个没有设置高度的父盒子，包含了几个子元素，此时父元素的高度会被子元素撑开。如果为子元素都设置浮动的话效果会怎样呢
+  ![2023031610341810.png](http://img.itchenliang.club/img/2023031610341810.png)
+  从上面效果就能看出，当为子元素设置了浮动后，父盒子失去了原有的高度了。
+  > 利用BFC解决高度丢失问题: 将父盒子变成一个独立的区域
+  ![202303161036308.png](http://img.itchenliang.club/img/202303161036308.png)
+- 4、BFC可以阻止标准流元素被浮动元素覆盖
+  ![202303161038348.png](http://img.itchenliang.club/img/202303161038348.png)
+  上面例子中，红色盒子设置了浮动，灰色盒子是标准流，默认情况下，浮动盒子覆盖了标准流盒子。
+  > 利用BFC解决覆盖问题: 将灰色盒子的BFC触发
+  ![202303161041181.png](http://img.itchenliang.club/img/202303161041181.png)
+  
+
 
 ## 4、🔥介绍下 BFC、IFC、GFC 和 FFC
-- BFC：块级格式上下文，指的是一个独立的布局环境，BFC 内部的元素布局与外部互不影响。
-- IFC：行内格式化上下文，将一块区域以行内元素的形式来格式化。
-- GFC：网格布局格式化上下文，将一块区域以 grid 网格的形式来格式化
-- FFC：弹性格式化上下文，将一块区域以弹性盒的形式来格式化
+- BFC：块级格式上下文(Block Formatting Context)，指的是一个独立的布局环境，BFC 内部的元素布局与外部互不影响。
+- IFC：行内格式化上下文(Inline Formatting Context)，值得是一个块级元素中仅包含内联级别元素。
+  - 布局规则
+    - 子元素水平方向横向排列，并且垂直方向起点为元素顶部。
+    - 子元素设置`padding、border、margin`只会计算横向样式空间，垂直方向样式空间不会被计算。
+    - 在垂直方向上，子元素会以不同形式来对齐(`vertical-align`)
+    - 能把在一行上的框都完全包含进去的一个矩形区域，被称为该行的行框`line box`。行框的宽度是由包含块`containing box`和与其中的浮动来决定。
+    - IFC 中的`line box`一般左右边贴紧其包含块，但`float`元素会优先排列。
+    - IFC 中的`line box`高度由 CSS 行高计算规则来确定，同个 IFC 下的多个`line box`高度可能会不同。
+    - 当一个`inline box`超过父元素的宽度时，它会被分割成多个`boxes`，这些`boxes`分布在多个`line box`中。如果子元素未设置强制换行的情况下，`inline box`将不可被分割，将会溢出父元素。
+- GFC：网格布局格式化上下文，将一块区域以`grid`网格的形式来格式化
+- FFC：弹性格式化上下文，将一块区域以`flex`弹性盒的形式来格式化
 
 ## 5、🔥flex布局如何使用？
-flex 是 Flexible Box 的缩写，意为"弹性布局"。指定容器`display: flex`即可。
+`flex`是`Flexible Box`的缩写，意为"弹性布局"。指定容器`display: flex`即可。
 
 容器有以下属性：`flex-direction`，`flex-wrap`，`flex-flow`，`justify-content`，`align-items`，`align-content`。
 - `flex-direction`属性决定主轴的方向；
@@ -134,14 +166,50 @@ JS 实现方式:
 
 ## 10、🔥介绍下粘性布局（sticky）
 `position`中的`sticky`值是 CSS3 新增的，设置了 `sticky` 值后，在屏幕范围（viewport）时该元素的位置并不受到定位影响（设置使`top`、`left`等属性无效），当该元素的位置将要移出偏移范围时，定位又会变成`fixed`，根据设置的`left`、`top`等属性成固定位置的效果。
-
+::: tip 注意
+`position: sticky`必须结合`top`、`left`、`right`、`bottom`使用，否则无效
+- 当同时设置`top`和`bottom`时，`top`优先级高；
+- 当同时设置`left`和`right`时，`left`优先级高；
+```html
+<style>
+  .tips {
+    height: 100px;
+    background: #ccc;
+  }
+  header {
+    height: 60px;
+    background: blue;
+    position: sticky; /* 必须结合top，left，right，bottom四个属性使用 */
+    top: 0;
+  }
+  main {
+    height: 1000px;
+    background: #eee;
+  }
+</style>
+<body>
+  <div class="tips">tips</div>
+  <header>header</header>
+  <main>content</main>
+</body>
+```
+演示效果
+![2023031610081310.gif](http://img.itchenliang.club/img/2023031610081310.gif)
+:::
 sticky 属性值有以下几个特点：
 - 该元素并不脱离文档流，仍然保留元素原本在文档流中的位置。
 - 当元素在容器中被滚动超过指定的偏移值时，元素在容器内固定在指定位置。亦即如果你设置了top: 50px，那么在sticky元素到达距离相对定位的元素顶部50px的位置时固定，不再向上移动。
 - 元素固定的相对偏移是相对于离它最近的具有滚动框的祖先元素，如果祖先元素都不可以滚动，那么是相对于viewport来计算元素的偏移量
 
+
 ## 11、⭐说出 space-between 和 space-around 的区别？
-这个是`flex`布局的内容，其实就是一个边距的区别，按水平布局来说，`space-between`是两端对齐，在左右两侧没有边距，而`space-around`是每个子项目左右方向的`margin`相等，所以两个item中间的间距会比较大。
+这个是`flex`布局的内容，其实就是一个边距的区别，按水平布局来说:
+- `space-between`是两端对齐，在左右两侧没有边距，元素中间间距相等；
+  ![202303160953243.png](http://img.itchenliang.club/img/202303160953243.png)
+- `space-around`是每个子项目左右方向的`margin`相等，所以子项目之间的间隔比项目与边缘的间隔大一倍；
+  ![202303160953469.png](http://img.itchenliang.club/img/202303160953469.png)
+- `space-evenly`是每个子项目和两端间距相等；
+  ![202303160954084.png](http://img.itchenliang.club/img/202303160954084.png)
 
 
 ## 12、⭐CSS3 中transition和animation的区别，属性分别有哪些

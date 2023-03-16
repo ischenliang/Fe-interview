@@ -146,10 +146,37 @@ export default class Dep {
 
 
 
-## 5、❓如何理解Vue中的模板编译原理?
+## 5、如何理解Vue中的模板编译原理?
+所谓模板编译过程就是把用户写的模板经过一系列的处理最终生成`render`函数的过程。
+
+**模板编译原理**
+- 将html模板转换化成AST
+  - 将html模板转化为AST
+- 将AST中的静态节点打上标签
+  - 在AST中找出静态节点并打上标记，即`static`属性设为`true`
+  - 在AST中找出静态根节点并打上标记，即`staticRoot`属性设为`true`
+- 用AST生成`render`函数代码字符串。
+  - 递归AST生成可执行的代码字符串，当代码字符串拼接好后，会放在`with`中返回给调用者，即`render`函数接收的参数。
 
 
-## 6、❓Vue生命周期钩子是如何实现的?
+## 6、Vue生命周期钩子是如何实现的?
+生命周期钩子在内部会被vue维护成一个数组(vue内部有一个方法`mergeOption`)和全局的生命周期合并最终转换成数组，当执行到具体流程时会执行钩子(发布订阅模式)，`callHook`来实现调用。源码位置：`src/core/instance/lifecycle.js`
+```js
+export function callHook (vm: Component, hook: string) {
+  pushTarget()
+  const handlers = vm.$options[hook]
+  const info = `${hook} hook`
+  if (handlers) {
+    for (let i = 0, j = handlers.length; i < j; i++) {
+      invokeWithErrorHandling(handlers[i], vm, null, vm, info)
+    }
+  }
+  if (vm._hasHookEvent) {
+    vm.$emit('hook:' + hook)
+  }
+  popTarget()
+}
+```
 
 
 ## 7、Vue组件生命周期有哪些？vue2和vue3的生命周期对比？
@@ -262,14 +289,18 @@ Virtual DOM理解为一个简单的JS对象，包含`tag`(标签名)、`props | 
 具备跨平台优势，由于Virtual DOM 是以JavaScript对象为基础而不依赖真实平台环境，所以使它具有了跨平台的能力，比如说浏览器平台、Weex、Node等。
 
 
-## 14、❓Vue的diff算法原理是什么?如何实现？
+## 14、Vue的diff算法的作用？diff算法原理是什么？
 ::: tip 为什么要用Diff算法
 由于在浏览器中操作DOM是很昂贵的，频繁的操作DOM，会产生一定的性能问题，这就是虚拟DOM的产生原因。虚拟DOM本质上是JavaScript对象，是对真实DOM的抽象状态变更时，记录新树与旧树的差异，最后把差异更新到真正的DOM中。
 
 即使使用了Virtual DOM来进行真实DOM的渲染，在页面更新的时候，也不能全量地将整颗Virtual DOM进行渲染，而是去渲染改变的部分，这时候就需要一个计算Virtual DOM树改变部分的算法了，这个算法就是Diff算法。
-
-diff算法的作用：用来修改DOM的一小段，不会引起dom树的重绘
 :::
+
+**diff算法的作用**
+> 用来修改DOM的一小段，不会引起dom树的重绘
+
+**diff算法的实现原理**
+> diff算法将虚拟DOM的某个节点数据改变后生成新的的node节点与旧节点进行比较，并替换为新的节点，具体过程就是调用Patch方法，比较新旧节点，一边比较一边给真实DOM打补丁进行替换。
 
 
 ## 15、既然vue通过数据劫持可以精准的探测数据变化，为什么还要进行diff检测差异?
@@ -6059,7 +6090,7 @@ Vue 项目打包后静态文件图片失效的常见问题有以下几种可能:
   const server = prerender();
   server.start();
   ```
-3. 测试: http://localhost:3000/render?url=https://www.example.com/
+3. 测试: `http://localhost:3000/render?url=https://www.example.com/`
 
 经过上面三个步骤，你就已经启动一个预渲染服务，并且会返回"www.example.com/"的内容，整个过程还是比较简单的。
 
