@@ -738,7 +738,7 @@ CDN边缘节点缓存机制，一般都遵守http标准协议，通过http响应
 服务器缓存有助于优化性能和节省宽带，它将需要频繁访问的Web页面和对象保存在离用户更近的系统中，当再次访问这些对象的时候加快了速度。
 
 
-## 15、❓列举 3 种强制类型转换和 2 种隐式类型转换
+## 15、列举 3 种强制类型转换和 2 种隐式类型转换
 > http://c.biancheng.net/view/9378.html
 
 强制: `parseInt()`, `parseFloat()`, `Number()`, `Boolean()`, `String()`<br>
@@ -1358,7 +1358,7 @@ console.log(Object.getOwnPropertyNames(arr)) // ['0', '1', '2', 'length']
   ```
 
 
-## 23、❓H5 与 Native 如何交互
+## 23、H5 与 Native 如何交互
 jsBridge
 > https://zhuanlan.zhihu.com/p/438763800
 
@@ -1986,17 +1986,15 @@ JavaScript 中变量可能包含两种不同的数据类型的值：**基本类�
   ```
 
 
-## 30、❓JS 单线程还是多线程，如何显示异步操作
+## 30、JS 单线程还是多线程，如何显示异步操作
 JS 本身是单线程的，他是依靠浏览器完成的异步操作，而浏览器不是单线程的。
-
-**同步任务**指的是，在主线程上排队执行的任务，只有前一个任务执行完毕，才能执行后一个任务；
-**异步任务**指的是，不进入主线程、而进入”任务队列”（`task queue`）的任务，只有”任务队列”通知主线程，某个异步任务可以执行了，该任务才会进入主线程执行。
+- **同步任务**指的是，在主线程上排队执行的任务，只有前一个任务执行完毕，才能执行后一个任务；
+- **异步任务**指的是，不进入主线程、而进入”任务队列”（`task queue`）的任务，只有”任务队列”通知主线程，某个异步任务可以执行了，该任务才会进入主线程执行。
 
 具体步骤：
 1. 主线程 执行 js 中所有的代码
 2. 主线程 在执行过程中发现了需要异步的任务任务后扔给浏览器（浏览器创建多个线程执行），并在  callback queue  中创建对应的回调函数（回调函数是一个对象，包含该函数是否执行完毕等）
 3. 主线程 已经执行完毕所有同步代码。开始监听  callback queue 一旦 浏览器 中某个线程任务完成将会改变回调函数的状态。主线程查看到某个函数的状态为已完成，就会执行该函数
-
 ![202302141550108.png](http://img.itchenliang.club/img/202302141550108.png)
 
 
@@ -2635,8 +2633,8 @@ function addEvent(ele, eventName, fun) {
 ```
 
 
-## 38、❓this 和 bind、call、apply 的应用
-比如求数组的最大值 Math.max.apply(this, 数组)，更多可以参考: 43项
+## 38、this 和 bind、call、apply 的应用
+比如求数组的最大值`Math.max.apply(this, 数组)`，更多可以参考: 43项
 ```js
 var numbers = [5, 458, 120, -215];
 var maxInNumbers = Math.max.apply(this, numbers); //第一个参数也可以填Math或null
@@ -3005,14 +3003,12 @@ Function.prototype.myApply = function(context, arr) {
 
 
 
-## 44、❓sort 排序原理
-sort排序使用的是冒泡排序法，其原理如下：
+## 44、sort 排序原理
+`sort`排序使用的是冒泡排序法，其原理如下：
 - 比较相邻的元素。如果第一个比第二个大，就交换他们两个。
 - 对每一对相邻元素做同样的工作，从开始第一对到结尾的最后一对。在这一点，最后的元素应该会是最大的数。
 - 针对所有的元素重复以上的步骤，除了最后一个。
 - 持续每次对越来越少的元素重复上面的步骤，直到没有任何一对数字需要比较。
-
-**示例**：
 ```js
 var arr = [1, 5, 4, 2];
 // sort()方法的比较逻辑为：
@@ -3555,13 +3551,16 @@ function stopDefault(e) {
 
 ## 62、两种函数声明有什么区别？
 ```js
+// 创建函数方式一: 函数表达式
 var foo = function() {
   // Some code
 };
-
+// 创建函数方式二: 函数声明
 function bar() {
   // Some code
 };
+// 创建函数方式三: 构造函数
+const baz = new Function("console.log('aa')")
 ```
 foo的定义是在运行时。想系统说明这个问题，我们要引入变量提升的这一概念。我们可以运行下如下代码看看结果。
 ```js
@@ -3577,7 +3576,7 @@ function bar() {
 };
 ```
 输出结果为：
-```
+```js
 undefined
 function bar(){ 
   // Some code
@@ -3618,16 +3617,16 @@ getName()
 ## 63、require 与 import 的区别
 node编程中最重要的思想就是模块化，import 和 require 都是被模块化所使用。在 ES6 当中，用 export 导出接口，用 import 引入模块。但是在 node 模块中，使用module.exports导出接口，使用 require 引入模块。
 ### 遵循规范不同
-- require 是 CommonJS/AMD 规范；
-- import 是 ESMAScript6+ 规范；
+- <font color=red><code>require</code>是 CommonJS/AMD 规范；</font>
+- <font color=red><code>import</code>是 ESMAScript6+ 规范；</font>
 
 ### 遵循时间不同
-- require 是运行时加载，由于编译时加载，所以import会提升到整个模块的头部；
-- import 是编译时加载；
+- <font color=red><code>require</code>是运行时加载；</font>
+- <font color=red><code>import</code>是编译时加载，由于编译时加载，所以<code>import</code>会提升到整个模块的头部；</font>
 
 ### 本质不同
-- require 是赋值过程。module.exports后面的内容是什么，require的结果就是什么，比如对象、数字、字符串、函数等，然后再把require的结果赋值给某个变量，它相当于module.exports的传送门；
-- import 是解构过程，但是目前所有的引擎都还没有实现import，我们在node中使用babel支持ES6，也仅仅是将ES6转码为ES5再执行，import语法会被转码为require
+- <font color=red><code>require</code>是赋值过程</font>。module.exports后面的内容是什么，require的结果就是什么，比如对象、数字、字符串、函数等，然后再把require的结果赋值给某个变量，它相当于module.exports的传送门；
+- <font color=red><code>import</code>是解构过程</font>，但是目前所有的引擎都还没有实现import，我们在node中使用babel支持ES6，也仅仅是将ES6转码为ES5再执行，import语法会被转码为require
 
 
 
@@ -4258,80 +4257,123 @@ scroll系列
 
 
 ## 75、谈谈你对CommonJS、AMD、CMD和ES模块化的理解
-它们都是js模块定义规范。参考：https://blog.csdn.net/snsHL9db69ccu1aIKl9r/article/details/117718898
-![202303011734344.png](http://img.itchenliang.club/img/202303011734344.png)
-
-**AMD**(`require.js`和`curl.js`)
-> AMD(Asynchronous Module Definition异步模块定义)基于CommonJS实现浏览器端的模块化就是AMD，且能与服务器端兼容最好。采用异步方式加载模块，模块的加载不影响它后面语句的运行。所有依赖这个模块的语句，都定义在一个回调函数中，等到加载完成之后，这个回调函数才会运行。浏览器没有Node.js的四个环境变量`module`、`exports`、`requrie`、`global`;
-
-特点: 
-- AMD允许输出的模块兼容CommonJS
-- 异步并行加载，不阻塞 DOM 渲染
-- 推崇依赖前置，也就是提前执行（预执行），在模块使用之前就已经执行完毕
-
-**CMD**(sea.js)
-参考：https://www.cnblogs.com/yanggb/p/10796839.html
-> CMD(Common Module Definition，通用模块定义)是通用模块加载，要解决的问题与 AMD 一样，只不过是对依赖模块的执行时机不同 ，推崇就近依赖。
-
-**AMD和CMD的区别**:​ AMD 是 RequireJS 在推广过程中对模块定义提出的概念。​ CMD 是 SeaJS 在推广过程中对模块定义提出的概念。
-- 对于依赖的模块，AMD 是提前执行，CMD 是延迟执行
-- CMD 推崇依赖就近，AMD 推崇依赖前置
-
-**CommonJS**
-> CommonJS(同步模块定义)是服务器端模块的规范，Node.js采用了这个规范。CommonJS规范加载模块是同步的，也就是说，只有加载完成，才能执行后面的操作。
-- CommonJS的风格通过对`module.exports`或`exports`的属性赋值来达到暴露模块对象的目的
-
-**UMD**
-> UMD是AMD和CommonJS的糅合，UMD的实现很简单：
-1. 先判断是否支持Node.js模块（exports是否存在），存在则使用Node.js模块模式
-2. 再判断是否支持AMD（define是否存在），存在则使用AMD方式加载模块
-3. 前两个都不存在，则将模块公开到全局（window或global）
-
-**ES6模块化**
-> ES6 模块的设计思想，是尽量的静态化，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。
-
-ES6 中，`import`引用模块，使用`export`导出模块。默认情况下，Node.js默认是不支持`import`语法的，通过`babel`项目将`ES6模块`编译为ES5的 CommonJS。
+参考: https://dandelioncloud.cn/article/details/1592185365433888770
+### CommonJS
+Node应用由模块组成，采用`CommonJS`模块规范。每个文件就是一个模块，有自己的作用域。在一个文件里面定义的变量、函数、类，都是私有的，对其他文件不可见。
+- 在服务器端，模块的加载是运行时同步加载的；
+- 在浏览器端，模块需要提前编译打包处理。
 ```js
-// 导入
-import Vue from 'vue'
-import App from './App'
+// 暴露模块
+module.exports = value
+// 或者
+exports.xxx = value
 
-// 导出
-function v1() { ... }
-function v2() { ... }
-export {
-  v1 as streamV1,
-  v2 as streamV2,
-  v2 as streamLatestVersion
+// 引入模块：如果是第三方模块，xxx为模块名；如果是自定义模块，xxx为模块文件路径
+require(xxx)
+```
+每个模块内部，`module`对象代表当前模块，它的`exports`属性(即`module.exports`)是对外的接口(暴露出去)。
+
+### AMD
+> CommonJS规范加载模块是同步的，也就是说，只有加载完成，才能执行后面的操作。
+
+**AMD(Asynchronous Module Definition)规范则是非同步加载模块，允许指定回调函数**。**AMD依赖于`requirejs`，是异步加载的，是提前加载，立即加载**。
+> 由于Node.js主要用于服务器编程，模块文件一般都已经存在于本地硬盘，所以加载起来比较快，不用考虑非同步加载的方式，所以CommonJS规范比较适用。但是，如果是浏览器环境，要从服务器端加载模块，这时就必须采用非同步模式，因此浏览器端一般采用AMD规范。此外AMD规范比CommonJS规范在浏览器端实现要来着早。代表产物: `require.js`和`curl.js`
+```js
+/**
+ * 暴露模块
+ */
+//定义没有依赖的模块
+define(function(){
+   return 模块
+})
+//定义有依赖的模块
+define(['module1', 'module2'], function(m1, m2){
+   return 模块
+})
+
+/**
+ * 引入使用模块
+ */
+require(['module1', 'module2'], function(m1, m2){
+  // 使用m1/m2
+})
+```
+
+### CMD
+CMD规范专门用于浏览器端，**模块的加载是异步的，模块使用时才会加载执行**。**`CMD`依赖于`sea.js`，是异步加载，延后加载，就近加载，用时加载**
+> CMD规范整合了CommonJS和AMD规范的特点。代表产物`sea.js`
+```js
+/**
+ * 暴露模块
+ */
+//定义没有依赖的模块
+define(function(require, exports, module){
+  exports.xxx = value
+  module.exports = value
+})
+//定义有依赖的模块
+define(function(require, exports, module){
+  //引入依赖模块(同步)
+  var module2 = require('./module2')
+  //引入依赖模块(异步)
+    require.async('./module3', function (m3) {
+    })
+  //暴露模块
+  exports.xxx = value
+})
+
+/**
+ * 引入使用模块
+ */
+define(function (require) {
+  var m1 = require('./module1')
+  var m4 = require('./module4')
+  m1.show()
+  m4.show()
+})
+```
+
+### ES6模块化
+ES6模块的设计思想是尽量的静态化，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。CommonJS 和 AMD 模块，都只能在运行时确定这些东西。比如，CommonJS 模块就是对象，输入时必须查找对象属性。**模块支持异步加载，同一个模块如果加载多次，将只执行一次。**
+
+`export`命令用于规定模块的对外接口，`import`命令用于输入其他模块提供的功能。
+```js
+/**
+ * 定义模块 math.js
+ */
+var basicNum = 0;
+var add = function (a, b) {
+  return a + b;
 };
-export function multiply() {...};
-export var year = 2018;
-export default ...
-```
-因此Babel实际上是将`import/export`翻译成Node.js支持的`require/exports`，还需要使用另一个工具`browserify`
-```
-1、安装必要包：babel，及browserify
-npm install babel-cli -g
-npm install babel-preset-es2015 --save-dev
-npm install browserify -g
+export { basicNum, add };
 
-2、创建.babelrc文件，并设置编译格式为es2015
-3、自定义一个模块，导出数据，并在主模块中加载执行
-4、babel ./src -d ./build 命令将import编译为require
-5、browserify ./build/main.js -o ./dist/main.js 编译为浏览器识别语法，最终引入index.html文件中
-6、编译命令及浏览器运行
+/**
+ * 引用模块
+ */
+import { basicNum, add } from './math';
+function test(ele) {
+  ele.textContent = add(99 + basicNum);
+}
 ```
-
-ES6模块和CommonJS规范区别
-- CommonJS支持动态导入，ES6不支持，是静态编译。
-- CommonJS同步加载，用于服务端，文件放在本地磁盘，读取速度快。同步导入卡住主线程也并无影响。ES6是异步加载，用于浏览器端，不能同步加载，会导致页面渲染，用户体验差。
-- CommonJS模块输出的是值拷贝，内部的变化影响不到值的变化。ES6模块输出的是值引用，原始值变化，加载的值也会跟着变化，ES6模块是动态引用，并且不会缓存值。
-- CommonJS模块是运行时加载，ES6模块是编译时输出接口。CommonJS模块就是对象，输入时先加载整个模块，生成一个对象，然后从对象读取方法。ES6模块不是对象，export输出指定代码，import导入加载某个值，而不是整个模块。
-- 关于模块顶层的this指向问题，在CommonJS顶层，this指向当前模块；而在ES6模块中，this指向undefined。
-- ES6模块当中，是支持加载CommonJS模块的。但是反过来，CommonJS并不能requireES6模块，在NodeJS中，两种模块方案是分开处理的。
+使用`import`命令的时候，用户需要知道所要加载的变量名或函数名，否则无法加载。为了给用户提供方便，让他们不用阅读文档就能加载模块，就要用到`export default`命令，为模块指定默认输出。
+```js
+// export-default.js
+export default function () {
+  console.log('foo');
+}
+```
+模块默认输出, 其他模块加载该模块时，`import`命令可以为该匿名函数指定任意名字。
+```js
+// import-default.js
+import customName from './export-default';
+customName(); // 'foo'
+```
+**对于带有`type=”module”`的`script`，浏览器都是异步加载的，不会造成浏览器堵塞，即等到整个页面渲染完再执行模块脚本，等同于打开了`script`标签的`defer`属性。**
 
 
 ## 76、web 开发中会话跟踪的方法有哪些
+> 会话跟踪: 从用户进入一个网站浏览到退出这个网站或者关闭浏览器称为一次会话。会话跟踪是指在这个过程中浏览器与服务器的多次请求保持数据共享的状态的技术。
+
 **1、cookie**
 > Cookie是客户端技术，程序把每个用户的数据以cookie的形式写给用户各自的浏览器。当用户使用浏览器再去访问服务器中的web资源时，就会带着各自的数据去。
 
@@ -4342,11 +4384,10 @@ ES6模块和CommonJS规范区别
 > 客户程序在每个URL的尾部添加一些额外数据。这些数据标识当前的会话，服务器将这个标识符与它存储的用户相关数据关联起来。 URL重写是比较不错的会话跟踪解决方案，即使浏览器不支持 cookie 或在用户禁用 cookie 的情况下，这种方案也能够工作。 最大的缺点是每个页面都是动态的，如果用户离开了会话并通过书签或链接再次回来，会话的信息也会丢失，因为存储下来的链接含有错误的标识信息。
 
 **4、隐藏input**
+> 提交表单时，要将指定的名称和值自动包括在 GET 或 POST 数据中。这个隐藏域可以用来存储有关会话的信息。
 ```html
 <input type="hidden" name="content" value="haha">
 ```
-提交表单时，要将指定的名称和值自动包括在 GET 或 POST 数据中。这个隐藏域可以用来存储有关会话的信息。
-
 主要缺点是：仅当每个页面都是由表单提交而动态生成时，才能使用这种方法。
 
 
@@ -4395,8 +4436,9 @@ ES6模块和CommonJS规范区别
 函数式编程能够更大程度上复用代码，减少冗余，vue3.0重构运用了大量的函数式编程，react也是如此。
 
 
-## 82、❓UIWebView 和 JavaScript 之间是怎么交互的?
-参考：https://blog.csdn.net/weixin_30898109/article/details/97440493
+## 82、UIWebView 和 JavaScript 之间是怎么交互的?
+JSBridge
+> 参考：https://blog.csdn.net/weixin_30898109/article/details/97440493
 
 
 ## 83、在 js 中哪些会被隐式转换为 false
@@ -4404,15 +4446,20 @@ ES6模块和CommonJS规范区别
 
 
 ## 84、列举浏览器对象模型 BOM 里常用的至少 4 个对象，并列举 window 对象的常用方法至少 5 个？
-- 对象：`Window`，`Document`，`Location`，`Screen`，`History`，`Navigator`。
-  - `window`对象 ，是 JS 的最顶层对象，其他的 BOM 对象都是`window`对象的属性；
-  - `document`对象，文档对象；
-  - `location`对象，浏览器当前 URL 信息；
-  - `navigator`对象，浏览器本身信息；
-  - `screen`对象，客户端屏幕信息；
-  - `history`对象，浏览器访问历史信息；
+- 对象：`Window`，`Location`，`Screen`，`History`，`Navigator`。
+  - `window`: 是 JS 的最顶层对象，其他的 BOM 对象都是`window`对象的属性；
+  - `location`: 浏览器当前 URL 信息；
+  - `navigator`: 浏览器本身信息；
+  - `screen`: 客户端屏幕信息；
+  - `history`: 浏览器访问历史信息；
+  - `存储对象`: localStorage、sessionStorage、
 - 方法：`alert()`，`confirm()`，`prompt()`，`open()`，`close()`。
   > 参考：https://www.runoob.com/jsref/obj-window.html
+
+**DOM对象**
+- `Document`: 提供了访问和更新HTML页面内容的属性和方法。
+- `Node`: 提供了用于解析DOM节点树结构的属性和方法。
+- `Element`: 继承于Node的。
 
 
 ## 85、外部 JS 文件出现中文字符，会出现什么问题，怎么解决？

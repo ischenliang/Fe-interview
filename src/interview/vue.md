@@ -38,10 +38,28 @@ new Proxy(data,{
 :::
 
 ### ❓Vue3响应式数据实现
-
-### ❓Vue2响应式数据实现
 ```js
 
+```
+
+### Vue2响应式数据实现
+```js
+let car = {};
+let price = 3000
+Object.defineProperty(car, 'price', {
+  enumerable: true,
+  configurable: true,
+  get () {
+    console.log('price属性被读取')
+    return price
+  },
+  set (newVal) {
+    console.log('price属性被修改')
+    price = newVal
+  }
+})
+car.price // price属性被读取
+car.price = 200 // price属性被修改
 ```
 
 
@@ -151,7 +169,7 @@ export default class Dep {
 
 **模板编译原理**
 - 将html模板转换化成AST
-  - 将html模板转化为AST
+  - AST: 抽象语法树，一个用来表示`html`的js对象
 - 将AST中的静态节点打上标签
   - 在AST中找出静态节点并打上标记，即`static`属性设为`true`
   - 在AST中找出静态根节点并打上标记，即`staticRoot`属性设为`true`
@@ -618,11 +636,14 @@ method2 running:  c组件
 注意: **永远不要把`v-if`和`v-for`同时用在同一个元素上**。
 
 
-## 25、❓v-model是如何实现的?
-`v-model`本质上是用`value`属性，`input`事件实现的。
-> `v-model`实现双向绑定本质上就是一种语法糖，它即可以支持原生表单元素，也可以支持自定义组件。在组件的实现中，可以配置组件接收的`prop`名称，以及派发的事件名称。
-
-实现原理：`Object.defineProperty()`
+## 25、v-model是如何实现的?
+1. `v-bind`绑定响应式数据；
+2. 通过`oninput`触发事件获取当前`$event.target.value`，然后赋值给当前变量。
+```html
+<input
+  :value="value"
+  @input="event => value = event.target.value">
+```
 
 
 ## 26、Vue的普通Slot以及作用域Slot的区别
@@ -2471,8 +2492,7 @@ Vue中标签绑定事件：
 ```
 
 
-
-## 72、❓v-model的实现原理？
+## 72、v-model的实现原理？
 1. `v-bind`绑定响应式数据；
 2. 通过`oninput`触发事件获取当前`$event.target.value`，然后赋值给当前变量。
 ```html
