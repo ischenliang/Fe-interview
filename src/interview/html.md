@@ -669,30 +669,28 @@ href属性中的url可以是浏览器支持的任何协议，所以a标签可以
 ## 39、什么是data-属性？
 HTML的数据属性，用于将数据储存于标准的HTML元素中作为额外信息,我们可以通过js访问并操作它，来达到操作数据的目的。
 ```html
-<article
-  id="electriccars"
-  data-columns="3"
-  data-index-number="12314"
-  data-parent="cars">
-...
-</article>
+<div data-id="12" data-name="张三" id="user-info">hahhaha</div>
+<script>
+  const info = document.querySelector('#user-info')
+  console.log(info.dataset) // DOMStringMap {id: '12', name: '张三'}
+</script>
 ```
 
 ## 40、SGML、HTML、XHTML、XML有什么区别
-- SGML是标准通用标记语言，是一种定义电子文档结构和描述其内容的国际标准语言，是所有电子文档标记语言的起源。
-- HTML(超文本标记语言): 主要用于规定怎么显示网页，在html4.0之前HTML先有实现再有标准，导致HTML非常混乱和松散
-- XML(可扩展标记语言): 主要用于存储数据和结构，可扩展，大家熟悉的JSON也是相似的作用，但是更加轻量高效，所以XML现在市场越来越小了
-- XHTML(可扩展超文本标记语言): 基于上面两者而来，W3C为了解决HTML混乱问题而生，并基于此诞生了HTML5，开头加入`<!DOCTYPE html>`的做法因此而来，如果不加就是兼容混乱的HTML，加了就是标准模式。
+- SGML(标准通用标记语言): `Standard Generalized Markup language`是一种定义电子文档结构和描述其内容的国际标准语言，是所有电子文档标记语言的起源。
+- HTML(超文本标记语言): `Hyper Text Markup Language`主要用于规定怎么显示网页，在html4.0之前HTML先有实现再有标准，导致HTML非常混乱和松散
+- XML(可扩展标记语言): `Extensible Markup Language`主要用于存储数据和结构，可扩展，大家熟悉的JSON也是相似的作用，但是更加轻量高效，所以XML现在市场越来越小了
+- XHTML(可扩展超文本标记语言): `Extensible HyperText Markup Language`基于上面两者而来，W3C为了解决HTML混乱问题而生，并基于此诞生了HTML5，开头加入`<!DOCTYPE html>`的做法因此而来，如果不加就是兼容混乱的HTML，加了就是标准模式。
 
 ## 41、从浏览器输入 URL 到页面展示过程发生了什么？
-大致可以分为如下7步：
-- 输入网址；
-- 发送到DNS服务器，并获取域名对应的web服务器对应的ip地址；
-- 与web服务器建立TCP连接；
-- 浏览器向web服务器发送http请求；
-- web服务器响应请求，并返回指定url的数据（或错误信息，或重定向的新的url地址）；
-- 浏览器下载web服务器返回的数据及解析html源文件；
-- 生成DOM树，解析css和js，渲染页面，直至显示完成；
+大致可以分为如下6步：
+- **1、输入网址**；
+- **2、DNS解析**: 发送到DNS服务器，将域名解析成对应服务器的IP地址；
+- **3、建立TCP连接**: 与web服务器建立TCP连接；
+- **4、发送HTTP请求**: 浏览器向web服务器发送http请求；
+- **5、响应请求**: web服务器响应请求，并返回指定url的数据（或错误信息，或重定向的新的url地址）；
+- **6、浏览器解析渲染**: 浏览器拿到请求页面的代码，将其解析渲染出来。解析和渲染的过程主要由浏览器的渲染引擎实现；
+
 
 ## 42、浏览器是如何渲染页面的
 - 渲染引擎首先通过网络获得所请求文档的内容
@@ -703,9 +701,14 @@ HTML的数据属性，用于将数据储存于标准的HTML元素中作为额外
 - repaint(重绘)：根据计算好的信息绘制整个页面（Painting）
 
 ## 43、写一个选择器，完成从 DOM 中获取所有`<a>`中包含`163.com`的链接筛选出来
-其实考察的是如何自己实现`$`符号，
 ```js
-document.queryElementAll('a[href*=163.com]')
+<a href="www.163.com">163</a>
+<a href="http://163.com">163</a>
+<a href="www.baidu.com">baidu</a>
+<script>
+  const els = document.querySelectorAll('a[href*="163.com"]')
+  console.log(els)
+</script>
 ```
 
 ## 44、CDN 了解吗？

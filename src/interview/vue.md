@@ -2322,7 +2322,7 @@ const ctx = getCurrentInstance().proxy
 
 ## 61、Proxy 相比于 defineProperty 的优势
 `Object.defineProperty()`的问题主要有三个：
-- 不能监听数组的变化
+- 能监听数组的变化，但是设置值时会触发读取所有的数据，会非常影响性能的，再加上大部分时间数组长度我们并不确定，无法提请打上getter/setter，而且如果数组长度很大也会造成性能问题。
 - 必须深层遍历嵌套的对象
 - 必须遍历对象的每个属性
 

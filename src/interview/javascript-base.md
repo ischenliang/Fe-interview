@@ -3372,30 +3372,9 @@ for (var i = 0; i < 5; i++) {
 - 2、js代码的复杂度要改与css动画
 
 
-## 56、❓如何做到修改 url 参数页面不刷新
-HTML5 引入了 `history.pushState()` 和 `history.replaceState()` 方法，它们分别可以添加和修改历史记录条目。
-```js
-<button id="btn">按钮</button>
-<script>
-  document.querySelector('#btn').addEventListener('click', () => {
-    let stateObj = {
-      foo: "bar"
-    };
-    history.pushState(stateObj, "page 2", "bar.html");
-  })
-</script>
-```
-假设当前页面为`foo.html`，执行上述代码后会变为`bar.html`，点击浏览器后退，会变为`foo.html`，但浏览器并不会刷新。<br>
-`pushState()`需要三个参数: 
-- 一个状态对象
-- 一个标题 (目前被忽略)
-- 一个 URL
+## 56、如何做到修改 url 参数页面不刷新
+参考: <a href="#_180、实现一个页面操作不会整页刷新的网站-并且能在浏览器前进、后退时正确响应">180题-实现一个页面操作不会整页刷新的网站，并且能在浏览器前进、后退时正确响应</a>
 
-让我们来解释下这三个参数详细内容：
-- 状态对象 — 状态对象`state`是一个 JavaScript 对象，通过`pushState()`创建新的历史记录条目。无论什么时候用户导航到新的状态，`popstate`事件就会被触发，且该事件的`state`属性包含该历史记录条目状态对象的副本。<br>
-  状态对象可以是能被序列化的任何东西。原因在于 Firefox 将状态对象保存在用户的磁盘上，以便在用户重启浏览器时使用，我们规定了状态对象在序列化表示后有 640k 的大小限制。如果你给`pushState()`方法传了一个序列化后大于 640k 的状态对象，该方法会抛出异常。如果你需要更大的空间，建议使用 sessionStorage 以及 localStorage .
-- 标题 — Firefox 目前忽略这个参数，但未来可能会用到。传递一个空字符串在这里是安全的，而在将来这是不安全的。二选一的话，你可以为跳转的`state`传递一个短标题。
-- URL — 该参数定义了新的历史 URL 记录。注意，调用`pushState()`后浏览器并不会立即加载这个 URL，但可能会在稍后某些情况下加载这个 URL，比如在用户重新打开浏览器时。新 URL 不必须为绝对路径。如果新 URL 是相对路径，那么它将被作为相对于当前 URL 处理。新 URL 必须与当前 URL 同源，否则`pushState()`会抛出一个异常。该参数是可选的，缺省为当前 URL。
 
 
 ## 57、事件绑定与普通事件有什么区别
@@ -3630,8 +3609,7 @@ node编程中最重要的思想就是模块化，import 和 require 都是被模
 
 
 
-## 64、==JavaScript全局属性和全局函数有哪些?==
-> https://www.runoob.com/jsref/jsref-obj-global.html
+## 64、JavaScript全局属性和全局函数有哪些?
 ### 全局属性
 #### Infinity
 代表正的无穷大的数值。
@@ -4278,6 +4256,11 @@ require(xxx)
 
 **AMD(Asynchronous Module Definition)规范则是非同步加载模块，允许指定回调函数**。**AMD依赖于`requirejs`，是异步加载的，是提前加载，立即加载**。
 > 由于Node.js主要用于服务器编程，模块文件一般都已经存在于本地硬盘，所以加载起来比较快，不用考虑非同步加载的方式，所以CommonJS规范比较适用。但是，如果是浏览器环境，要从服务器端加载模块，这时就必须采用非同步模式，因此浏览器端一般采用AMD规范。此外AMD规范比CommonJS规范在浏览器端实现要来着早。代表产物: `require.js`和`curl.js`
+
+> `require.js`核心原理：核心是`js`的加载模(通过动态创建`script`脚本来异步引入模块，然后对每个脚本的`load`事件进行监听，如果每个脚本都加载完成了，再调用回调函数)，通过正则匹配模块以及模块的依赖关系，保证文件加载的先后顺序，根据文件的路径对加载过的文件做了缓存。
+- （1）实现 js 文件的异步加载，避免网页失去响应；
+- （2）管理模块之间的依赖性，便于代码的编写和维护;
+
 ```js
 /**
  * 暴露模块
@@ -4476,10 +4459,13 @@ response.setContentType("text/html;charset=UTF-8");
 function fn1 () {
   console.log(1)
 }
+function fn2 () {
+  console.log(2)
+}
 setInterval(fn1, 500) // 每隔 500ms 执行一次
-setInterval(fn1(), 500) // 只执行一次
+setInterval(fn2(), 500) // 只执行一次，并且是立即执行
 ```
-第一个是重复执行每 500 毫秒执行一次，后面一个只执行一次。原因:
+第一个是重复执行每 500 毫秒执行一次，后面一个只执行一次。
 
 
 ## 87、自动分号
@@ -4494,10 +4480,12 @@ var a = 1
 会报错: `Uncaught TypeError: 1 is not a function`
 
 
-## 88、你用过 require.js吗？它有什么特性？
-> `require.js`核心原理：核心是 js 的加载模块，通过正则匹配模块以及模块的依赖关系，保证文件加载的先后顺序，根据文件的路径对加载过的文件做了缓存。
-- （1）实现 js 文件的异步加载，避免网页失去响应；
-- （2）管理模块之间的依赖性，便于代码的编写和维护;
+## 88、ES6 引入Symbol的原因
+ES5 的对象属性名都是字符串，这容易造成属性名的冲突。
+
+比如，你使用了一个他人提供的对象，但又想为这个对象添加新的方法（mixin 模式），新方法的名字就有可能与现有方法产生冲突。如果有一种机制，保证每个属性的名字都是独一无二的就好了，这样就从根本上防止属性名的冲突。
+
+ES6 引入了一种新的原始数据类型Symbol，表示独一无二的值。它是 JavaScript 语言的第七种数据类型，前六种是：undefined、null、布尔值（Boolean）、字符串（String）、数值（Number）、对象（Object）。
 
 
 ## 89、内置函数(原生函数)
@@ -4525,8 +4513,8 @@ Object.prototype.toString.call(str)  // '[object String]'
 ```
 通过构造函数（如`new String("hello world")`）创建出来的是封装了基本类型值（如`"hello world"`）的封装对象。注意的是
 ```js
-!!Boolean(false) // false ==> Boolean(false)=false ==> !!false ==> false
-!!new Boolean(false) // true ==> new Boolean(false)={false} ==> !!{false} ==> true
+!!Boolean(false) // 结果: false;  第一步: Boolean(false) = false; 第二步: !!false = false
+!!new Boolean(false) // 结果: true; 第一步: new Boolean(false)={false}; 第二步: !!{false} = true
 ```
 
 
@@ -4557,11 +4545,20 @@ Object.prototype.toString.call(str)  // '[object String]'
 
 
 ## 92、documen.write 和 innerHTML 的区别?
-1. `document.write`是一个方法，是重写整个`document`, 写入内容是字符串的`html`
-2. `innerHTML`是一个属性，是`HTMLElement`的属性，是一个元素的内部`html`内容
+1. `document.write`是一个方法，是重写整个`document`, 写入内容是字符串的`html`。
+  ```html
+  <button id="btn">点击</button>
+  <script>
+    const btn = document.querySelector('#btn')
+    btn.addEventListener('click', () => {
+      document.write('<div style="color: red;">哈哈哈哈</div>')
+    })
+  </script>
+  ```
+2. `innerHTML`是一个属性，是`HTMLElement`的属性，是一个元素的内部`html`内容。
 
 
-## 93、❓让你自己设计实现一个 requireJS，你会怎么做？
+## 93、让你自己设计实现一个requireJS，你会怎么做？
 首先看看`require.js`的使用
 ```js
 require.config({
@@ -4825,13 +4822,24 @@ function completeLoad(){
 简化版的requireJs源码分析完了.
 
 
-## 94、❓requireJS 的核心原理是什么？（如何动态加载的？如何避免多次加载的？如何缓存的？）
-核心是 js 的加载模块，通过正则匹配模块以及模块的依赖关系，保证文件加载的先后顺序，根据文件的路径对加载过的文件做了缓存。
+## 94、什么是Generator 函数
+如果某个方法之前加上星号（`*`），就表示该方法是一个`Generator`函数。`Generator`函数是ES6提供的一种异步编程解决方案，语法行为与传统函数完全不同。
+> `Generator`函数有多种理解角度。语法上，首先可以把它理解成，`Generator`函数是一个状态机，封装了多个内部状态。执行`Generator`函数会返回一个遍历器对象，也就是说，`Generator`函数除了状态机，还是一个遍历器对象生成函数。返回的遍历器对象，可以依次遍历`Generator`函数内部的每一个状态。形式上，`Generator`函数是一个普通函数，但是有两个特征：
+- `function`关键字与函数名之间有一个星号；
+- 函数体内部使用`yield`表达式，定义不同的内部状态（`yield`在英语里的意思就是“产出”）。
+
+ES6 没有规定，`function`关键字与函数名之间的星号，写在哪个位置。这导致下面的写法都能通过。
+```js
+function * foo(x, y) { ··· }
+function *foo(x, y) { ··· }
+function* foo(x, y) { ··· }
+function*foo(x, y) { ··· }
+```
+由于`Generator`函数仍然是普通函数，所以一般的写法是上面的第三种，即星号紧跟在`function`关键字后面。本书也采用这种写法。
 
 
-## 95、Javascript中，执行时对象查找时，永远不会去查找原型的函数?
+## 95、Javascript中，有一个函数，执行时对象查找时，永远不会去查找原型的函数?
 `Object.hasOwnProperty(proName)`：是用来判断一个对象是否有你给出名称的属性。
-注意:
 > 此方法无法检查该对象的原型链中是否具有该属性，该属性必须是对象本身的一个成员。
 
 
@@ -4858,24 +4866,76 @@ var sum3 = new Function("num1","num2","return num1+num2");
 ```
 
 
-## 98、`window.location.search`返回的是什么？
+## 98、window.location.search和window.location.hash返回的是什么？
+### window.location.search
 查询(参数)部分。除了给动态语言赋值以外，我们同样可以给静态页面, 并使用 javascript 来获得相信应的参数值 返回值：`?ver=1.0&id=timlq`也就是问号后面的
 ```js
 // 比如当前url是 http://www.baidu.com?ver=1.0&id=timlq
 window.location.search // ?ver=1.0&id=timlq
 ```
-
-
-## 99、window.location.hash返回的是什么？
-锚点，返回值：#love ；
+### window.location.hash
+锚点，返回值：`#love`；
 ```js
 // 比如当前url是 http://dev.app.puliedu.com/#/backstage/sampleLabs
 window.location.hash // #/backstage/sampleLabs
 ```
 
 
-## 100、window.location.reload()作用？
+## 99、window.location.reload()作用？
 刷新当前页面
+
+
+## 100、谈谈你对函数柯里化的理解？
+柯里化(`Currying`)是一种函数转化方法，它将一个接收多参数的函数转化为接收部分参数的函数。柯里化后的函数只传递部分参数来调用，并返回一个新的函数，去处理剩余的参数，是逐步传参的过程。
+> 是高阶函数的一种: 接收函数作为参数的函数
+```js
+function add (x, y) {
+  return x + y
+}
+add(2, 3) // 5
+```
+将上面例子使用`函数柯里化`方式改写
+```js
+function add (x) {
+  return function (y) {
+    return x + y
+  }
+}
+add(2)(3) // 5
+```
+常见的面试题: 用函数柯里化的方式实现一个函数，使`add(1, 2, 3);`、`add(1)(2, 3);`、`add(1)(2)(3);`返回的结果与
+```js
+function add (x,y,z) {
+  return x + y + z
+}
+```
+的返回结果一致。
+```js
+function add (x, y, z) {
+  return x + y + z
+}
+function curry (fn, ...args) {
+  // 形参数量大于等于实参数量
+  const argsLen = args.length // 实参
+  const fnLen = fn.length // 形参
+  if (argsLen >= fnLen) {
+    // 如果大于返回执行结果
+    return fn(...args)
+  } else {
+    // 反之继续柯里化，递归，并将上一次的参数以及下次的参数继续传递下去
+    return (...b) => {
+      return curry(fn, ...args, ...b)
+    }
+  }
+}
+
+// 将add加工成柯里化函数
+const addCurry = curry(add);
+console.log(addCurry(1, 2, 3)); // 6
+console.log(addCurry(1)(2)(3)); // 6
+console.log(addCurry(1, 2)(3)); // 6
+console.log(addCurry(1)(2, 3)); // 6
+```
 
 
 ## 101、BOM对象有哪些，列举window对象？
@@ -6501,8 +6561,8 @@ cookie 是服务器提供的一种用于维护会话状态信息的数据，通�
 使用`import`和`export`的形式来导入导出模块。这种方案和上面三种方案都不同。
 
 
-## 175、requireJS的核心原理是什么？（如何动态加载的？如何避免多次加载的？如何 缓存的？）
-require.js 的核心原理是通过动态创建 script 脚本来异步引入模块，然后对每个脚本的 load 事件进行监听，如果每个脚本都加载完成了，再调用回调函数。
+## 175、什么是yield 表达式
+由于`Generator`函数返回的遍历器对象，只有调用`next`方法才会遍历下一个内部状态，所以其实提供了一种可以暂停执行的函数。`yield`表达式就是暂停标志。
 
 
 ## 176、❓JS 模块加载器的轮子怎么造，也就是如何实现一个模块加载器？
@@ -6631,7 +6691,7 @@ js中类数组对象很多，概念简单的讲就是看上去像数组，又不
   ```
 
 
-## 180、实现一个页面操作不会整页刷新的网站，并且能在浏览器前进、后退时正确响应。
+## 180、实现一个页面操作不会整页刷新的网站，并且能在浏览器前进、后退时正确响应
 如果要实现页面操作不刷新网站，并且可以在浏览器中进行前进和后退操作，此时我们存在两个方法: 
 - 一个是通过`url的hash值`操作
 - 另一个是通过`HTML5的history`方法。
@@ -8653,36 +8713,6 @@ function spawn(genF) {
   })
   ```
   await的含义为等待，也就是 async 函数需要等待await后的函数执行完成并且有了返回结果（Promise对象）之后，才能继续执行下面的代码。await通过返回一个Promise对象来实现同步的效果。
-
-
-## 273、什么是Generator 函数
-如果某个方法之前加上星号（`*`），就表示该方法是一个 Generator 函数。Generator 函数是 ES6 提供的一种异步编程解决方案，语法行为与传统函数完全不同。
-
-Generator 函数有多种理解角度。语法上，首先可以把它理解成，Generator 函数是一个状态机，封装了多个内部状态。执行 Generator 函数会返回一个遍历器对象，也就是说，Generator 函数除了状态机，还是一个遍历器对象生成函数。返回的遍历器对象，可以依次遍历 Generator 函数内部的每一个状态。形式上，Generator 函数是一个普通函数，但是有两个特征：
-- function关键字与函数名之间有一个星号；
-- 函数体内部使用yield表达式，定义不同的内部状态（yield在英语里的意思就是“产出”）。
-
-ES6 没有规定，function关键字与函数名之间的星号，写在哪个位置。这导致下面的写法都能通过。
-```js
-function * foo(x, y) { ··· }
-function *foo(x, y) { ··· }
-function* foo(x, y) { ··· }
-function*foo(x, y) { ··· }
-```
-由于 Generator 函数仍然是普通函数，所以一般的写法是上面的第三种，即星号紧跟在function关键字后面。本书也采用这种写法。
-
-
-## 274、什么是yield 表达式
-由于 Generator 函数返回的遍历器对象，只有调用next方法才会遍历下一个内部状态，所以其实提供了一种可以暂停执行的函数。yield表达式就是暂停标志。
-
-
-## 275、ES6 引入Symbol的原因
-ES5 的对象属性名都是字符串，这容易造成属性名的冲突。
-
-比如，你使用了一个他人提供的对象，但又想为这个对象添加新的方法（mixin 模式），新方法的名字就有可能与现有方法产生冲突。如果有一种机制，保证每个属性的名字都是独一无二的就好了，这样就从根本上防止属性名的冲突。
-
-ES6 引入了一种新的原始数据类型Symbol，表示独一无二的值。它是 JavaScript 语言的第七种数据类型，前六种是：undefined、null、布尔值（Boolean）、字符串（String）、数值（Number）、对象（Object）。
-
 
 
 ## 手写EventEmitter 实现

@@ -562,31 +562,29 @@ div#app.child[name="appName"] = 标签选择器 + id选择器 + 类选择器 + �
 - 光标属性：cursor(光标显示状态)
 
 ## 26、display的属性值及其作用
-<!-- ![202302091453214.png](http://img.itchenliang.club/img/202302091453214.png) -->
-```yml
-none： 隐藏对象。与visibility属性的hidden值不同，其不为被隐藏的对象保留其物理空间
-inline： 指定对象为内联元素。
-block： 指定对象为块元素。
-list-item： 指定对象为列表项目。
-inline-block： 指定对象为内联块元素。（CSS2）
-table： 指定对象作为块元素级的表格。类同于html标签<table>（CSS2）
-inline-table： 指定对象作为内联元素级的表格。类同于html标签<table>（CSS2）
-table-caption： 指定对象作为表格标题。类同于html标签<caption>（CSS2）
-table-cell： 指定对象作为表格单元格。类同于html标签<td>（CSS2）
-table-row： 指定对象作为表格行。类同于html标签<tr>（CSS2）
-table-row-group： 指定对象作为表格行组。类同于html标签<tbody>（CSS2）
-table-column： 指定对象作为表格列。类同于html标签<col>（CSS2）
-table-column-group： 指定对象作为表格列组显示。类同于html标签<colgroup>（CSS2）
-table-header-group： 指定对象作为表格标题组。类同于html标签<thead>（CSS2）
-table-footer-group： 指定对象作为表格脚注组。类同于html标签<tfoot>（CSS2）
-run-in： 根据上下文决定对象是内联对象还是块级对象。（CSS3）
-box： 将对象作为弹性伸缩盒显示。（伸缩盒最老版本）（CSS3）
-inline-box： 将对象作为内联块级弹性伸缩盒显示。（伸缩盒最老版本）（CSS3）
-flexbox： 将对象作为弹性伸缩盒显示。（伸缩盒过渡版本）（CSS3）
-inline-flexbox： 将对象作为内联块级弹性伸缩盒显示。（伸缩盒过渡版本）（CSS3）
-flex： 将对象作为弹性伸缩盒显示。（伸缩盒最新版本）（CSS3）
-inline-flex： 将对象作为内联块级弹性伸缩盒显示。（伸缩盒最新版本）（CSS3）
-```
+- none：隐藏对象。与`visibility`属性的`hidden`值不同，其不为被隐藏的对象保留其物理空间
+- inline：指定对象为内联元素。
+- block：指定对象为块元素。
+- list-item：指定对象为列表项目。
+- inline-block：指定对象为内联块元素。(CSS2)
+- table：指定对象作为块元素级的表格。类同于html标签`<table>`(CSS2)
+- inline-table：指定对象作为内联元素级的表格。类同于html标签`<table>`(CSS2)
+- table-caption：指定对象作为表格标题。类同于html标签`<caption>`(CSS2)
+- table-cell：指定对象作为表格单元格。类同于html标签`<td>`(CSS2)
+- table-row：指定对象作为表格行。类同于html标签`<tr>`(CSS2)
+- table-row-group：指定对象作为表格行组。类同于html标签`<tbody>`(CSS2)
+- table-column：指定对象作为表格列。类同于html标签`<col>`(CSS2)
+- table-column-group：指定对象作为表格列组显示。类同于html标签`<colgroup>`(CSS2)
+- table-header-group：指定对象作为表格标题组。类同于html标签`<thead>`(CSS2)
+- table-footer-group：指定对象作为表格脚注组。类同于html标签`<tfoot>`(CSS2)
+- run-in：根据上下文决定对象是内联对象还是块级对象。(CSS3)
+- box：将对象作为弹性伸缩盒显示。（伸缩盒最老版本）(CSS3)
+- inline-box：将对象作为内联块级弹性伸缩盒显示。（伸缩盒最老版本）(CSS3)
+- flexbox：将对象作为弹性伸缩盒显示。（伸缩盒过渡版本）(CSS3)
+- inline-flexbox：将对象作为内联块级弹性伸缩盒显示。（伸缩盒过渡版本）(CSS3)
+- flex：将对象作为弹性伸缩盒显示。（伸缩盒最新版本）(CSS3)
+- inline-flex：将对象作为内联块级弹性伸缩盒显示。（伸缩盒最新版本）(CSS3)
+
 
 ## 27、display的block、inline和inline-block的区别
 - **block**：元素会独占一行，多个元素会令其一行，可以设置width、height、margin和padding属性；
@@ -889,22 +887,22 @@ https://blog.csdn.net/qq_48085286/article/details/126534588
 ```html
 <style>
 p{
-color: yellow;
+color: green;
 }
 </style>
+<!-- 参考：https://blog.csdn.net/weixin_33704234/article/details/92419637 -->
+<!--[if lte IE6]>
+<style>
+p{
+color: black;
+}
+</style>
+<![endif] -->
 
 <!--[if IE 7]>
 <style>
 p{
-color:red;
-}
-</style>
-<![endif]-->
-
-<!--[if IE 8]>
-<style>
-p{
-color:blue;
+color: red;
 }
 </style>
 <![endif]-->
@@ -913,7 +911,7 @@ color:blue;
 ```css
 p {
   color: green;
-  *color: blue;
+  *color: red;
   _color: black;
 }
 ```
@@ -1051,47 +1049,63 @@ Opera: -o-
 
 
 ## 47、如何理解z-index？
-CSS 中的z-index属性控制重叠元素的垂直叠加顺序，默认元素的z-index为0，我们可以修改z-index来控制元素的图层位置，而且z-index只能影响设置了position值的元素。
-
-CSS 中的z-index属性控制重叠元素的垂直叠加顺序，默认元素的z-index为0，我们可以修改z-index来控制元素的图层位置，而且z-index只能影响设置了position值的元素。
+CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序，默认元素的`z-index`为`0`，我们可以修改`z-index`来控制元素的图层位置，而且`z-index`只能影响设置了`position`值的元素。
 
 
 ## 48、如何理解层叠上下文？
-层叠上下文是HTML元素的三维概念，这些HTML元素在一条假想的相对于面向（电脑屏幕的）视窗或者网页的用户的z轴上延伸，HTML元素依据其自身属性按照优先级顺序占用层叠上下文的空间。
+在CSS2.1规范中，每个盒模型的位置是三维的，分别是平面画布上的x轴，y轴以及表示层叠的z轴。**层叠上下文即元素在某个层级上z轴方向的排列关系**。
+> 可以想象一张桌子，上面有一堆物品，这张桌子就代表着一个层叠上下文。如果在第一张桌子旁还有第二张桌子，那第二张桌子就代表着另一个层叠上下文。
 
 **产生条件**
 - 根元素 (HTML),
-- z-index 值不为 "auto"的 绝对/相对定位，
-- 一个 z-index 值不为 "auto"的 flex 项目 (flex item)，即：父元素 display: flex|inline-flex，
-- opacity 属性值小于 1 的元素（参考 the specification for opacity），
-- transform 属性值不为 "none"的元素，
-- mix-blend-mode 属性值不为 "normal"的元素，
-- filter值不为“none”的元素，
-- perspective值不为“none”的元素，
-- isolation 属性被设置为 "isolate"的元素，
-- position: fixed
-- 在 will-change 中指定了任意 CSS 属性，即便你没有直接指定这些属性的值（参考 这篇文章）
-- -webkit-overflow-scrolling 属性被设置 "touch"的元素
+- `position`值为`absolute|relative`，且`z-index`值不为`auto`
+- `position值为`fixed|sticky`
+- `z-index`值不为`auto`的`flex`元素，即：父元素`display:flex|inline-flex`
+- `opacity`属性值小于`1`的元素
+- `transform`属性值不为`none`的元素
+- `mix-blend-mode`属性值不为`normal`的元素
+- `filter`、`perspective`、`clip-path`、`mask`、`mask-image`、`mask-border`、`motion-path`值不为`none`的元素
+- `isolation`属性被设置为`isolate`的元素
+- `will-change`中指定了任意 CSS 属性，即便你没有直接指定这些属性的值
+- `-webkit-overflow-scrolling`属性被设置`touch`的元素
+
 
 ## 49、你对媒体查询的理解？
-媒体查询由一个可选的媒体类型和零个或多个使用媒体功能的限制了样式表范围的表达式组成，例如宽度、高度和颜色。媒体查询，添加自CSS3，允许内容的呈现针对一个特定范围的输出设备而进行裁剪，而不必改变内容本身,非常适合web网页应对不同型号的设备而做出对应的响应适配。
+媒体查询是自 CSS3 开始加入的一个功能。它可以进行响应式适配展示。
+- 使用`@media`查询，可以针对不同的媒体类型定义不同的样式
+- `@media`可以针对不同的屏幕尺寸设置不同的样式
+- 当你重置浏览器大小的过程中，页面也会根据浏览器的宽度和高度重新渲染页面
+- 目前针对很多苹果手机、Android手机，平板等设备都用得到媒体查询
 
-**如何使用？**
-媒体查询包含一个可选的媒体类型和，满足CSS3规范的条件下，包含零个或多个表达式，这些表达式描述了媒体特征，最终会被解析为true或false。如果媒体查询中指定的媒体类型匹配展示文档所使用的设备类型，并且所有的表达式的值都是true，那么该媒体查询的结果为true.那么媒体查询内的样式将会生效。
+**语法规范**
+```css
+@media mediatype and|not|only (media feature){
+  css-code;
+}
+```
+- mediatype: 媒体类型，`all`(所有设备)、`print`(打印机和打印预览)、`screen`(电脑屏幕、平板电脑、智能手机等)
+- 关键字: 关键字将媒体类型或多个特性连接到一起做为媒体查询的条件
+  - and: 可以将多个媒体特性连接到一起，相当"且"于的意思
+  - not: 排除某个媒体类型，相当于"非"的意思，可以省略
+  - only: 指定某个特定的媒体类型，可省略
+- media feature: 媒体特性，他们要加小括号包含
+  - width: 定义输出设备中页面可见区域的宽度
+  - min-width: 定义输出设备中最小页面可见区域的宽度
+  - max-width: 定义输出设备中最大页面可见区域的宽度
+
+**如何使用**
 ```html
 <!-- link元素中的CSS媒体查询 -->
 <link rel="stylesheet" media="(max-width: 800px)" href="example.css" />
-
 <!-- 样式表中的CSS媒体查询 -->
 <style>
-@media (max-width: 600px) {
+@media screen and (max-width: 600px) {
   .facet_sidebar {
     display: none;
   }
 }
 </style>
 ```
-[扩展阅读](https://www.cnblogs.com/xiaohuochai/p/5848612.html)
 
 
 ## 50、实现不使用 border 画出 1px 高的线，在不同浏览器的标准模式与怪异模式下都能保持一致的效果。
@@ -1116,98 +1130,184 @@ CSS 中的z-index属性控制重叠元素的垂直叠加顺序，默认元素的
 
 
 ## 53、css 中可以让文字在垂直和水平方向上重叠的两个属性是什么？
-- 垂直方向：line-height
-- 水平方向：letter-spacing
+- 垂直方向：`line-height`
+- 水平方向：`letter-spacing`
 
-那么问题来了，关于 letter-spacing 的妙用知道有哪些么？
-> 可以用于消除 inline-block 元素间的换行符空格间隙问题。
+那么问题来了，关于`letter-spacing`的妙用知道有哪些么？
+> 可以用于消除`inline-block`元素间的换行符空格间隙问题。
 
 
-## 54、❓如何垂直居中一个元素？
-**方法一：绝对定位居中（原始版之已知元素的高宽）**
-```css
-.content {
-    width: 200px;
-    height: 200px;
-    background-color: #6699ff;
-    position: absolute;
-    /*父元素需要相对定位*/
-    top: 50%;
-    left: 50%;
-    margin-top: -100px;
-    /*设为高度的1/2*/
-    margin-left: -100px;
-    /*设为宽度的1/2*/
-}
+## 54、如何水平垂直居中一个元素？
+```html
+<!-- 基础布局代码 -->
+<div class="box">
+  <div class="center"></div>
+</div>
 ```
-**方法二：绝对定位居中（改进版之一未知元素的高宽）**
-```css
-.content {
+- 1、**margin:auto**
+  ```css
+  .box {
     width: 200px;
     height: 200px;
-    background-color: #6699ff;
-    position: absolute;
-    /*父元素需要相对定位*/
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    /*在水平和垂直方向上各偏移-50%*/
-}
-```
-**方法三：绝对定位居中（改进版之二未知元素的高宽）**
-```css
-.content {
-    width: 200px;
-    height: 200px;
-    background-color: #6699ff;
+    background-color: #eee;
+    position: relative;
+    margin-top: 20px;
+  }
+  .center {
+    width: 50px;
+    height: 50px;
+    background-color: #00ACED;
     margin: auto;
-    /*很关键的一步*/
     position: absolute;
-    /*父元素需要相对定位*/
-    left: 0;
     top: 0;
+    left: 0;
     right: 0;
     bottom: 0;
-    /*让四个定位属性都为0*/
-}
-```
-**方法四：flex 布局居中**
-```css
-body {
-  display: flex;
-  /*设置外层盒子display为flex*/
-  align-items: center;
-  /*设置内层盒子的垂直居中*/
-  justify-content: center;
-
-  /*设置内层盒子的水平居中*/
-  .content {
+  }
+  ```
+- 2、**position:absolute**
+  ```css
+  .box {
+    width: 200px;
+    height: 200px;
+    background-color: #eee;
+    position: relative;
+    margin-top: 20px;
+  }
+  /** 结合margin */
+  .center {
+    width: 50px;
+    height: 50px;
+    background-color: #00ACED;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-top: -25px;
+    margin-left: -25px;
+  }
+  /** 使用calc */
+  .center {
+    width: 50px;
+    height: 50px;
+    background-color: #00ACED;
+    position: absolute;
+    left: calc(50% - 25px);
+    top: calc(50% - 25px);
+  }
+  /** 结合 transform */
+  .center {
+    width: 50px;
+    height: 50px;
+    background-color: #00ACED;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  ```
+- 3、**line-height = height**
+  ```html
+  <style>
+    .box {
       width: 200px;
       height: 200px;
-      background-color: #6699ff;
+      background-color: #eee;
+      position: relative;
+      margin-top: 20px;
+    }
+    .center {
+      line-height: 200px;
+      text-align: center;
+    }
+  </style>
+  <div class="box">
+    <div class="center">文字居中</div>
+  </div>
+  ```
+- 4、**弹性布局**
+  ```css
+  .box {
+    width: 200px;
+    height: 200px;
+    background-color: #eee;
+    position: relative;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-}
-```
-**方式五：line-height = height**
-```css
-.box{
-  height: 100px;
-  border: 1px solid blueviolet;  
-}
-.box span {     
-  line-height: 100px;
-  text-align: center;
-}
-```
-那么问题来了，如何垂直居中一个 img（用更简便的方法。）
-```css
-.content {
-  // img的容器设置如下
-  display: table-cell;
-  text-align: center;
-  vertical-align: middle;
-}
-```
+  .center {
+    width: 50px;
+    height: 50px;
+    background-color: #00ACED;
+  }
+  ```
+- 5、**网格布局**
+  ```css
+  /** 第一种: 对元素本身属性进行设置 */
+  .box {
+    width: 200px;
+    height: 200px;
+    background-color: #eee;
+    position: relative;
+    margin-top: 20px;
+    display: grid;
+  }
+  .center {
+    width: 50px;
+    height: 50px;
+    background: #00ACED;
+    align-self: center;
+    justify-content: center;
+    margin: auto;
+  }
+
+  /** 第二种: 在元素的父级元素中设置 */
+  .box {
+    width: 200px;
+    height: 200px;
+    background-color: #eee;
+    position: relative;
+    margin-top: 20px;
+    display: grid;
+    display: grid;
+    align-items: center;
+    justify-content: center;
+  }
+  .center {
+    width: 50px;
+    height: 50px;
+    background: #00ACED;
+  }
+  ```
+- 6、**table-cell布局**
+  ```css
+  .box {
+    width: 200px;
+    height: 200px;
+    background-color: #eee;
+    position: relative;
+    margin-top: 20px;
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .center {
+    width: 50px;
+    height: 50px;
+    background: #00ACED;
+    display: inline-block;
+  }
+  ```
+  > 那么问题来了，如何垂直居中一个`img`(用更简便的方法)
+  ```css
+  .content {
+    /** img的容器设置如下 */
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+  }
+  ```
 
 
 ## 55、Sass、Less、Stylus 是什么？大家为什么要使用他们？

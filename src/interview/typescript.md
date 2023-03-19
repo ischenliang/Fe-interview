@@ -108,9 +108,8 @@ interface IEmployee {
 
 
 ## 7、Typescript 中的命名空间是什么？ 如何在 Typescript 中声明命名空间？
-命名空间是一种用于对功能进行逻辑分组的方式。命名空间的目的就是解决重名问题。命名空间定义了标识符的可见范围，一个标识符可在多个名字空间中定义，它在不同名字空间中的含义是互不相干的。这样，在一个新的名字空间中可定义任何标识符，它们不会与任何已有的标识符发生冲突，因为已有的定义都处于其他名字空间中。
-> 命名空间也称为内部模块。
-
+命名空间**是一种用于组织和分类代码的特定方式，使你能够将相关代码组合在一起**。命名空间允许将与业务规则相关的变量、函数、接口或类分组到一个命名空间，将安全性分组到另一个命名空间。命名空间早期也称为内部模块。
+> 命名空间的目的就是解决重名问题。
 - 1、使用命名空间演示重名问题
   - 创建`speak.ts`: 当需要在外部调用命名空间中的类和接口，则需要在类和接口添加`export`关键字
     ```ts
@@ -263,7 +262,7 @@ class Snake extends Animal {
 
 ## 11、TypeScript 中的类型断言是什么？
 TypeScript允许你覆盖它的推断，并且能以你任何你想要的方式分析它，这种机制被称为**类型断言**。
-> 类型断言用来告诉编译器你比它更了解这个类型，并且它不应该再发出错误。
+> **类型断言用来告诉编译器你比它更了解这个类型，并且它不应该再发出错误**。**类型断言的常用两种方式: `as`和`尖括号`**。
 
 类型断言的一个常见用例是当你从 JavaScript 迁移到 TypeScript 时：
 ```js
@@ -303,94 +302,161 @@ foo.bas = 'hello';
 
 
 ## 13、Mixin是什么？解释如何使用 TypeScript mixin。
-在 Javascript 中，Mixins 是一种从可重用组件构建类的方法，它是通过组合称为 mixins 的更简单的部分类来构建它们。这个想法很简单，而不是类 A 扩展类 B 以获取其功能，函数 B 获取类 A 并返回一个具有此附加功能的新类。函数 B 是一个 mixin。
-
-Mixin 本质上是在相反方向上工作的继承。Mixins 允许你通过组合以前类中更简单的部分类设置来构建新类。<br>
-相反，类A继承类B来获得它的功能，类B从类A需要返回一个新类的附加功能。
+所谓Mixin模式，就是对象继承的一种替代方案，中文译为`"混入(mix in)"`，意为在一个对象之中混入另外一个对象的方法。
+::: tip Typescript mixin
+1. 对象混入
+  > 可以使用es6的`Object.assign`合并多个对象；
+  ```ts
+  interface Name {
+    name: string
+  }
+  interface Age {
+    age: number
+  }
+  interface Sex {
+    sex: number
+  }
+  let people1: Name = { name: "小剑" }
+  let people2: Age = { age: 20 }
+  let people3: Sex = { sex: 1 }
+  const people = Object.assign(people1,people2,people3)
+  ```
+2. 类的混入
+  ```ts
+  class A {
+    type: boolean = false;
+    changeType() {
+      this.type = !this.type
+    }
+  }
+  class B {
+    name: string = '张三';
+    getName(): string {
+      return this.name;
+    }
+  }
+  ```
+  下面创建一个类，结合了这两个`mixins`
+  > 注意: 没使用`extends`而是使用`implements`。把类当成了接口
+  ```ts
+  class C implements A,B{
+    type: boolean
+    changeType: () => void;
+    name: string;
+    getName: () => string
+  }
+  ```
+  最后，创建这个帮助函数，帮我们做混入操作。它会遍历`mixins`上的所有属性，并复制到目标上去，把之前的占位属性替换成真正的实现代码`Object.getOwnPropertyNames()`可以获取对象自身的属性，除去他继承来的属性，对它所有的属性遍历，它是一个数组，遍历一下它所有的属性名。
+  ```ts
+  Mixins(C, [A, B])
+  function Mixins(curCls: any, itemCls: any[]) {
+    itemCls.forEach(item => {
+      Object.getOwnPropertyNames(item.prototype).forEach(name => {
+        curCls.prototype[name] = item.prototype[name]
+      })
+    })
+  }
+  ```
+:::
 
 
 ## 14、TypeScript 中如何检查 null 和 undefined？
-通过使用杂耍检查(juggling-check)，我们可以检查 null 和 undefined：
-```js
-if (x == null) {  
-}
-```
-如果使用严格检查，则对于设置为 null 的值将始终为 true，并且对于未定义的变量不会评估为 true。例如：
-```js
-var a: number;  
-var b: number = null;  
-function check(x, name) {  
-  if (x == null) {  
-    console.log(name + ' == null');  
+- 1、使用Nullish Coalescing检查`null`和`undefined`
+  > Nullish Coalescing(`??`)是另一种识别`null`和`undefined`值的方法。当与`null`和`undefined`相对时，它将返回默认值。在某些情况下，零或空字符串是应该使用的实际值，但是当`||`被使用，它不会返回那些值。因此，使用 Nullish Coalescing (`??`) 运算符，可以返回这些值。因此`||`可以换成`??`当使用默认值时。
+  ```ts
+  null ?? "Value"; // "Value"
+  undefined ?? "Value"; // "Value"
+  false ?? true; // false
+  0 ?? 100; // 0
+  "" ?? "n/a"; // ""
+  NaN ?? 0; // NaN
+  ```
+- 2、使用`==`和`===`运算符检查`null`和`undefined`
+  ```js
+  var a: number;  
+  var b: number = null;  
+  function check(x, name) {  
+    if (x == null) {  
+      console.log(name + ' == null');  
+    }  
+    if (x === null) {  
+      console.log(name + ' === null');  
+    }  
+    if (typeof x === 'undefined') {  
+      console.log(name + ' is undefined');  
+    }  
   }  
-  if (x === null) {  
-    console.log(name + ' === null');  
-  }  
-  if (typeof x === 'undefined') {  
-    console.log(name + ' is undefined');  
-  }  
-}  
-check(a, 'a');  
-check(b, 'b');
-```
-输出结果如下：
-```js
-"a == null"
-"a is undefined"
-"b == null"
-"b === null"
-```
+  check(a, 'a');  
+  check(b, 'b');
+  ```
+  输出结果如下：
+  ```js
+  "a == null"
+  "a is undefined"
+  "b == null"
+  "b === null"
+  ```
 
 
 ## 15、TypeScript 中的 getter/setter 是什么？你如何使用它们？
-Getter 和 setter 是特殊类型的方法，可帮助你根据程序的需要委派对私有变量的不同级别的访问。
-
-Getters 允许你引用一个值但不能编辑它。Setter 允许你更改变量的值，但不能查看其当前值。这些对于实现封装是必不可少的。
-
-例如，新雇主可能能够了解get公司的员工人数，但无权set了解员工人数。
+`Getter`和`setter`是特殊类型的方法，存取器可以让我们可以有效的控制对"对象"中的中的成员的访问。
+> 在获取值的时候会执行`get`，在修改或者说重新设置值的时候会执行`set`
 ```ts
-const fullNameMaxLength = 10;
-class Employee {
-  private _fullName: string = "";
-  get fullName(): string {
-    return this._fullName;
+class Person{
+  firstName: string //姓氏
+  lastName: string  //名字
+  constructor(firstName: string, lastName: string) {
+    console.log('在实例化对象的时候, 构造器被执行')
+    this.firstName = firstName
+    this.lastName = lastName
   }
-  set fullName(newName: string) {
-    if (newName && newName.length > fullNameMaxLength) {
-      throw new Error("fullName has a max length of " + fullNameMaxLength);
-    }
-    this._fullName = newName;
+  // 对数据进行读取
+  get fullName() {
+    console.log('get方法被执行了')
+    return this.firstName+"-"+this.lastName
+  }
+  // 对数据进行修改
+  set fullName(str: string) {
+    console.log('set方法被执行了')
+    this.firstName = str.split('-')[0]
+    this.lastName = str.split('-')[1]
   }
 }
-let employee = new Employee();
-employee.fullName = "Bob Smith";
-if (employee.fullName) {
-  console.log(employee.fullName);
-}
+
+const per = new Person('张', '无忌');
+// 会去执行get方法,因为获取值吗
+console.log(per.fullName)
+// 会去执行set方法；因为你修改了值
+per.fullName = '李-四'
 ```
 
 
-## 16、如何允许模块外定义的类可以访问？
+## 16、如何允许模块外能够访问模块内定义的类？
 你可以使用`export`关键字打开模块以供在模块外使用。
 ```ts
 module Admin {
-  // use the export keyword in TypeScript to access the class outside
   export class Employee {
     constructor(name: string, email: string) { }
   }
   let alex = new Employee('alex', 'alex@gmail.com');
 }
-// The Admin variable will allow you to access the Employee class outside the module with the help of the export keyword in TypeScript
 let nick = new Admin.Employee('nick', 'nick@yahoo.com');
 ```
 
 
 ## 17、如何使用 Typescript 将字符串转换为数字？
-与 JavaScript 类似，你可以使用parseInt或parseFloat函数分别将字符串转换为整数或浮点数。你还可以使用一元运算符+将字符串转换为最合适的数字类型，“3”成为整数，3而“3.14”成为浮点数3.14。
-```ts
-var x = "32";
-var y: number = +x;
-```
+- 1、使用`parseInt`或`parseFloat`函数分别将字符串转换为整数或浮点数
+  ```ts
+  var x = '32'
+  var y: number = parseInt(x)
+  ```
+- 2、还可以使用`一元运算符+`将字符串转换为最合适的数字类型
+  - `“3”`成为整数`3`
+  - 而`“3.14”`成为浮点数`3.14`
+  ```ts
+  var x = "32";
+  var y: number = +x;
+  ```
 
 
 ## 18、TypeScript 和 JavaScript 有什么区别？
@@ -412,25 +478,34 @@ TypeScript 在以下方面与 JavaScript 不同：
 
 
 ## 19、TypeScript 中的 JSX 是什么？可以在 TypeScript 中使用 JSX 吗？
-JSX 只是具有不同扩展名的 Javascript。Facebook 提出了这个新扩展，以便他们可以区别于 JavaScript 中类似 XML 的 HTML 实现。<br>
-JSX 是一种可嵌入的类 XML 语法。它旨在转换为有效的 JavaScript。JSX 在 React 框架中流行起来。TypeScript 支持将 JSX 直接嵌入、类型检查和编译到 JavaScript 中。<br>
-要使用 JSX，必须做两件事。
-- 使用 `.tsx` 扩展名命名文件
-- 启用 `jsx` 选项
+JSX是一种JavaScript的语法扩展，全称`JavaScript XML`，运用于React架构中，其格式比较像是模版语言，但事实上完全是在JavaScript内部实现的。
+
+在typescript中使用JSX，必须做两件事:
+- 使用`.tsx`(替代`.ts`)扩展名命名文件
+- 启用`jsx`选项: `tsconfig.json`配置文件的`compilerOptions`里设置选项`"jsx": "react"`
 
 
 ## 20、TypeScript 支持哪些 JSX 模式？
-TypeScript有内置的支持preserve，react和react-native。
-- preserve 保持 JSX 完整以用于后续转换。
-- react不经过 JSX 转换，而是react.createElement作为.js文件扩展名发出和输出。
-- react-native结合起来preserve，react因为它维护所有 JSX 和输出作为.js扩展。
+TypeScript有内置的支持`preserve`，`react`和`react-native`，不同的模式会输出不同的结果，具体如下：
+- `preserve`保持JSX完整以用于后续转换。
+  - 输入：`<div />`
+  - 输出：`<div />`
+  - 输出文件扩展名：`.jsx`
+- `react`不经过JSX转换，而是`react.createElement`作为`.js`文件扩展名发出和输出。
+  - 输入：`<div />`
+  - 输出：`React.createElement("div")`
+  - 输出文件扩展名：`.js`
+- `react-native`结合起来`preserve`，`react`因为它维护所有JSX和输出作为`.js`扩展。
+  - 输入：`<div />`
+  - 输出：`<div />`
+  - 输出文件扩展名：`.js`
 
 
 ## 21、如何编译 TypeScript 文件？
-你需要调用 TypeScript 编译器tsc来编译文件。你需要安装 TypeScript 编译器，你可以使用npm.
-```shell
+你需要调用TypeScript编译器`tsc`来编译文件。你需要安装TypeScript编译器，可以使用`npm`安装
+```sh
 npm install -g typescript
-tsc <TypeScript File Name>
+tsc hello.ts
 ```
 
 
@@ -441,7 +516,7 @@ tsc <TypeScript File Name>
 
 
 ## 23、TypeScript 中的箭头/lambda 函数是什么？
-ES6 版本的 TypeScript 提供了用于定义匿名函数的简写语法，即函数表达式。这些箭头函数也称为 Lambda 函数。lambda 函数是没有名称的函数。箭头函数省略了 `function` 关键字。
+ES6版本的TypeScript提供了用于定义匿名函数的简写语法，即函数表达式。这些箭头函数也称为**Lambda函数**。**lambda函数是没有名称的函数**。箭头函数省略了 `function` 关键字。
 ```js
 let sum = (a: number, b: number): number => {    
   return a + b;    
@@ -452,25 +527,26 @@ console.log(sum(20, 30)); //returns 50
 
 
 ## 24、解释rest参数和声明rest参数的规则。
-`rest`参数用于将零个或多个值传递给函数。它是通过在参数前添加三个点字符 (`...`) 来声明的。它允许函数在不使用 `arguments` 对象的情况下拥有可变数量的参数。当有不确定数量的参数时，它非常有用。
+ES6 引入`rest参数`(形式为`...变量名`)，用于获取函数的多余参数，这样就不需要使用`arguments`对象了。`rest参数`搭配的变量是一个数组，该变量将多余的参数放入数组中。
 
 rest参数要遵循的规则：
 - 一个函数中只允许有一个剩余参数。
 - 它必须是数组类型。
 - 它必须是参数列表中的最后一个参数。
-
 ```ts
-function sum(a: number, ...b: number[]): number {    
-  let result = a;    
-  for (var i = 0; i < b.length; i++) {    
-    result += b[i];    
-  }    
-  console.log(result);    
- }    
-let result1 = sum(3, 5);    
-let result2 = sum(3, 5, 7, 9);
+function sum(a: number, ...b: number[]) {
+  console.log(b);
+}
+let result1 = sum(3, 5); // [5] 
+let result2 = sum(3, 5, 7, 9); // [5, 7, 9]
+
+// arguments演示
+function add () {
+  console.log(arguments)
+}
+add(1, 2, 3) // [1, 2, 3]
 ```
-rest 参数必须是参数定义的最后一个，并且每个函数只能有一个 rest 参数。
+注意: **`rest`参数必须是参数定义的最后一个，并且每个函数只能有一个`rest`参数**。
 
 
 ## 25、什么是三斜线指令？有哪些三斜杠指令？
@@ -480,12 +556,20 @@ rest 参数必须是参数定义的最后一个，并且每个函数只能有一
 - `/// <reference lib="..." />`允许您显式包含内置lib文件。
 
 
-## 26、Omit类型有什么作用？
-Omit是实用程序类型的一种形式，它促进了常见的类型转换。Omit允许你通过传递电流Type并选择Keys在新类型中省略来构造类型。
+## 26、Omit、Pick、Partial类型有什么作用？
+::: tip Omit
+`Omit`是TypeScript3.5新增的一个辅助类型。
+> 作用: 以一个类型为基础支持**剔除**某些属性，然后返回一个新类型。
 ```ts
-Omit<Type, Keys>
+type Todo = {
+  title: string;
+  description: string;
+  completed: boolean;
+  createdAt: number;
+}
+type newTodo = Omit<Todo, 'title' | 'description'>;
 ```
-例如：
+应用于`interface`接口
 ```ts
 interface Todo {
   title: string;
@@ -493,12 +577,96 @@ interface Todo {
   completed: boolean;
   createdAt: number;
 }
-type TodoPreview = Omit<Todo, "description">;
+type newTodo = Omit<Todo, "description">;
 ```
+我们使用返回的新类型创建一个变量
+```ts
+const todo: newTodo = {
+  title: '代办1',
+  completed: false,
+  createdAt: Date.now()
+}
+console.log(todo.description)
+```
+会发现，我们在访问`todo.description`时编译器会报错: `类型“newTodo”上不存在属性“description”`。
+注意: `Omit`的第二个参数也接受键的并集。
+```ts
+type newTodo = Omit<Todo, 'description' | 'completed' | ...>;
+```
+:::
+
+::: tip Pick
+`Pick`也是TypeScript的一个辅助类型。只能用来生成`类型`而不是`接口`。
+> 作用: 以一个类型为基础支持**挑选**一些属性，然后返回一个新类型，与`Omit`恰好相反。
+```ts
+type Todo = {
+  title: string;
+  description: string;
+  completed: boolean;
+  createdAt: number;
+}
+type newTodo = Pick<Todo, 'title' | 'description'>;
+```
+与`Omit`一样，应用于`interface`接口
+```ts
+interface Todo {
+  title: string;
+  description: string;
+  completed: boolean;
+  createdAt: number;
+}
+type newTodo = Pick<Todo, 'title' | 'description'>;
+```
+我们使用返回的新类型创建一个变量
+```ts
+const todo: newTodo = {
+  title: '代办1',
+  description: '代办1的描述'
+}
+console.log(todo.createdAt)
+```
+会发现，我们在访问`todo.createdAt`时编译器会报错: `类型“newTodo”上不存在属性“createdAt”`。
+```ts
+interface newTodo = Pick<Todo, 'title' | 'description'>;
+```
+上面的代码会报错: `“Pick”仅表示类型，但在此处却作为值使用`，即`Pick`只能用来定义类型而不是接口。
+:::
+
+::: tip Partial
+`Partial`也是TypeScript的一个辅助类型。
+> 作用: 将返回类型的所有属性设置为可选的。
+```ts
+type Todo = {
+  title: string;
+  description: string;
+  completed: boolean;
+  createdAt: number;
+}
+type newTodo = Partial<Todo>;
+```
+应用于`interface`
+```ts
+interface Todo {
+  title: string;
+  description: string;
+  completed: boolean;
+  createdAt: number;
+}
+type newTodo = Partial<Todo>;
+```
+我们使用返回的新类型创建一个变量
+```ts
+const todo: newTodo = {
+  title: '123'
+}
+```
+可以发现上面的所有的属性都是可选的，从下图可以看出
+![202303191448552.png](http://img.itchenliang.club/img/202303191448552.png)
+:::
 
 
 ## 27、TypeScript中如何实现函数重载？
-要在 TypeScript 中重载函数，只需创建两个名称相同但参数/返回类型不同的函数。两个函数必须接受相同数量的参数。这是 TypeScript 中多态性的重要组成部分。
+要在 TypeScript 中重载函数，只需创建两个函数名称相同、参数数量相同但类型不同、返回值类型不同的函数。这是 TypeScript 中多态性的重要组成部分。
 
 例如，你可以创建一个add函数，如果它们是数字，则将两个参数相加，如果它们是字符串，则将它们连接起来。
 ```ts

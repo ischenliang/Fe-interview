@@ -1,37 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <style>
+    .box {
+      width: 200px;
+      height: 200px;
+      background-color: #eee;
+      position: relative;
+      margin-top: 20px;
+    }
+    .center {
+      line-height: 200px;
+      text-align: center;
+    }
+  </style>
 </head>
-<body>
-  <div id="app">
-    <button id="btn">更新</button>
-    <p>数组内容: <span class="array-content"></span></p>
-  </div>
-  <script>
-    function render () {
-      console.log('更新视图')
-    }
-    // 获取数组的原型对象，即是获取原型链上绑定的push、pop等函数
-    const originalArray = Array.prototype
-    // 创建一个对象作为拦截器
-    let arrayMethods = Object.create(originalArray)
-    // 需要劫持的数组
-    const methods = ['push', 'pop', 'shift', 'unshift', 'splice']
-    methods.forEach(method => {
-      arrayMethods[method] = function (...args) {
-        render()
-        Array.prototype[method].call(this, ...args)
-      }
-    })
 
-    // 监听data数据的方法
-    function defineReactive (obj) {
-      
-    }
-  </script>
+<body>
+  <div class="box">
+    <div class="center">文字居中</div>
+  </div>
 </body>
+
 </html>
