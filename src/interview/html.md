@@ -9,11 +9,6 @@ comment: true
 
 
 # HTML面试题汇总
-参考：
-- https://www.yuque.com/cuggz/interview/gme0bw
-- https://juejin.cn/post/7095899257072254989
-- https://github.com/yisainan/web-interview/blob/master/content/HTML.md
-
 ## 1、🔥src和href的区别
 src和href都是HTML中特定元素的属性，都可以用来引入外部的资源，src用于引用资源，替换当前元素；href用于在当前文档和引用资源之间确立联系。两者区别如下：
 - src：全称source，它通常用于img、video、audio、script元素，通过src指向请求外部资源的来源地址，指向的内容会嵌入到文档中当前标签所在位置，在请求src资源时，它会将资源下载并应用到文档内，比如说：js脚本、img图片、frame等元素。当浏览器解析到该元素时，会暂停其它资源下载，直到将该资源加载、编译、执行完毕。这也是为什么将js脚本放在底部而不是头部的原因。
