@@ -1,5 +1,28 @@
 # vue-router面试题汇总
 ## 1、vue-router有几种钩子函数?执行流程如何?
+vue-router有7种钩子函数，分别是：
+1. `beforeEach`：在路由跳转之前执行，可以用来做登录验证等操作。
+2. `beforeResolve`：在路由跳转之前执行，解析异步路由组件之后。
+3. `afterEach`：在路由跳转之后执行，常用来做页面跟踪等操作。
+4. `beforeEnter`：在进入某个路由前执行，和beforeEach类似，但只作用于某个具体的路由。
+5. `beforeRouteUpdate`：在当前路由改变，但是该组件被复用时调用。
+6. `beforeRouteLeave`：在离开当前路由前执行，可以用来做离开提示等操作。
+7. `scrollBehavior`：在切换路由时控制滚动行为。
+
+执行流程如下：
+1. 导航触发路由改变；
+2. 执行全局 beforeEach 钩子函数；
+3. 执行路由独享的 beforeEnter 钩子函数；
+4. 解析异步路由组件；
+5. 执行全局 beforeResolve 钩子函数；
+6. 执行路由组件 beforeRouteEnter 钩子函数；
+7. 执行异步路由组件加载完成的回调函数；
+8. 执行全局 afterEach 钩子函数；
+9. 触发 DOM 更新；
+10. 执行路由组件 beforeRouteUpdate 钩子函数；
+11. 执行导航被确认的全局 afterEach 钩子函数；
+12. 控制滚动行为，执行 scrollBehavior 钩子函数；
+13. 最终更新 DOM，显示完整的页面。
 
 
 ## 2、vue-router的两种路由模式的区别
@@ -27,9 +50,48 @@ const router = new VueRouter({
 
 
 ## 3、vue嵌套路由怎么定义？
+在 Vue 中定义嵌套路由，需要在父级路由的组件中使用`<router-view>`标签来渲染子路由组件，并在父级路由的`routes`配置项中定义子路由的路径和组件。示例如下:
+```js
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/parent',
+      component: ParentComponent,
+      children: [
+        {
+          path: 'child',
+          component: ChildComponent
+        }
+      ]
+    }
+  ]
+})
+```
 
 
 ## 4、怎么定义vue-router的动态路由？怎么获取传过来的动态参数？
+在 Vue Router 中，可以通过动态路由来创建一个路径参数，并将其传递给组件。定义动态路由的方式是在路由路径中使用冒号 : 来指定参数名，例如：
+```js
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/user/:id',
+      component: UserComponent
+    }
+  ]
+})
+```
+当访问`/user/123`时，`:id`将会被解析为`123`，并传递给`UserComponent`组件。
+
+在组件中获取动态路由参数的方式是通过`$route.params`对象来访问。例如，在`UserComponent`组件中，可以使用以下代码来获取 id 参数：
+```js
+export default {
+  mounted() {
+    const userId = this.$route.params.id;
+    // do something with userId
+  }
+}
+```
 
 
 ## 5、vue-router是什么？它有哪些组件？
@@ -91,6 +153,20 @@ beforeRouteLeave (to, from, next) {
 
 
 ## 11、说说你对router-link的了解
+`router-link`是 Vue Router 提供的一个组件，用于生成带有路由功能的锚点链接。它可以根据指定的路由名称或路径自动生成相应的链接地址，并且会自动添加激活状态的 CSS 类名。
+
+`router-link`的使用非常简单，只需要将要跳转的路由信息传递给 to 属性即可。例如：
+```html
+<router-link to="/home">Home</router-link>
+```
+除了基本的路由跳转功能之外，`router-link`还支持以下几个重要的属性：
+除了基本的路由跳转功能之外，router-link 还支持以下几个重要的属性：
+- to: 用于指定要跳转的路由路径或名称。
+- replace: 用于控制是否使用替换模式进行路由跳转，默认为 false。
+- append: 用于控制是否在当前路径后追加新的路由路径，默认为 false。
+- tag: 用于指定渲染成哪种 HTML 标签，默认为 a。
+- active-class: 用于指定激活状态的 CSS 类名，默认为 "router-link-active"。
+- exact: 用于控制是否进行精确匹配，默认为 false。
 
 
 ## 12、vue-router如何响应路由参数的变化？
@@ -100,6 +176,33 @@ beforeRouteLeave (to, from, next) {
 
 
 ## 14、切换到新路由时，页面要滚动到顶部或保持原先的滚动位置怎么做呢？
+可以通过以下两种方式来实现：
+1. 使用`scrollBehavior`方法
+  ```js
+  const router = new VueRouter({
+    scrollBehavior(to, from, savedPosition) {
+      return { x: 0, y: 0 }
+    }
+  })
+  ```
+2. 在组件中使用`$nextTick`方法
+  ```js
+  export default {
+    mounted() {
+      this.$nextTick(() => {
+        const scrollTop = sessionStorage.getItem('scrollTop')
+        if (scrollTop) {
+          window.scrollTo(0, scrollTop)
+          sessionStorage.removeItem('scrollTop')
+        }
+      })
+    },
+    beforeRouteLeave(to, from, next) {
+      sessionStorage.setItem('scrollTop', window.scrollY)
+      next()
+    }
+  }
+  ```
 
 
 ## 15、在什么场景下会用到嵌套路由？
@@ -112,6 +215,7 @@ beforeRouteLeave (to, from, next) {
 
 
 ## 18、怎么实现路由懒加载呢？
+Vue Router 提供了一种简单的方式来实现路由懒加载，即使用动态`import()`函数来加载组件代码。
 
 
 ## 19、如果让你从零开始写一个vue路由，说说你的思路
