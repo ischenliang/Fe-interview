@@ -3,253 +3,81 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>轮播图</title>
+  <title>HTML5实现拖拽操作</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    a {
-      text-decoration: none;
-    }
-
-    .w {
-      overflow: hidden;
-      position: relative;
-      width: 720px;
-      height: 454px;
-      margin: 200px auto;
-      background: black;
-    }
-
-    ul li {
-      list-style: none;
-    }
-
-    .main .focus ul {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 600%;
-    }
-
-    .main .focus ul li {
+    .album {
+      border: 3px dashed #ccc;
       float: left;
+      margin: 10px;
+      min-height: 100px;
+      padding: 10px;
+      width: 220px;
     }
 
-    .main .focus ul li img {
-      width: 720px;
-    }
-
-    a[class^='arrow'] {
-      /* 开始时隐藏箭头 */
-      display: none;
-      z-index: 1;
-      position: absolute;
-      cursor: pointer;
-      width: 30px;
-      height: 50px;
-      color: #fff;
-      text-align: center;
-      line-height: 50px;
-      font-weight: 700;
-      background-color: rgba(0, 0, 0, .3);
-    }
-
-    .arrow-left {
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    .arrow-right {
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    .main .focus ol {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 10px;
-      border-radius: 15px;
-      background-color: rgba(255, 255, 255, .5);
-    }
-
-    .main .focus ol li {
-      cursor: pointer;
-      float: left;
-      margin: 6px 6.5px;
-      list-style: none;
-      width: 15px;
-      height: 15px;
-      border-radius: 50%;
-      background-color: #fff;
-    }
-
-    .main .focus .current {
-      background-color: #f76211;
+    img {
+      width: 200px;
     }
   </style>
 </head>
 
 <body>
-  <div class="main w">
-    <div class="focus">
-      <!-- 左边按钮 -->
-      <a href="#" class="arrow-left">&lt;</a>
-      <!-- 右边按钮 -->
-      <a href="#" class="arrow-right">&gt;</a>
-      <!-- 轮播图部分 -->
-      <ul>
-        <li>
-          <a href="#"><img src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/00.png" alt=""></a>
-        </li>
-        <li>
-          <a href="#"><img src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/01.png" alt=""></a>
-        </li>
-        <li>
-          <a href="#"><img src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/02.png" alt=""></a>
-        </li>
-        <li>
-          <a href="#"><img src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/1.png" alt=""></a>
-        </li>
-        <!-- 这一张的作用是为了后面做无缝链接 -->
-        <li>
-          <a href="#"><img src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/00.png" alt=""></a>
-        </li>
-      </ul>
-      <!-- 下面小圆点部分 -->
-      <ol class="circle">
-      </ol>
-    </div>
+  <div id="info">
+    <h2>可将照片直接拖到垃圾箱中</h2>
   </div>
+  <div id="album" class="album">
+    <h2>相册</h2>
+    <img draggable="true" id="img1"
+      src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/00.png" />
+    <img draggable="true" id="img2"
+      src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/01.png" />
+    <img draggable="true" id="img3"
+      src="http://project.itchenliang.club/images/project-image/virtual-simulator/new/02.png" />
+  </div>
+  <div id="trash" class="album">
+    <h2>回收站</h2>
+  </div>
+  <script>
+    function init() {
+      var info = document.getElementById("info");
+      var src = document.getElementById("album");
+      //开始拖放操作
+      src.ondragstart = function (e) {
+        var dragImgId = e.target.id;
+        //获得被拖动元素
+        var dragImg = document.getElementById(dragImgId);
+        //拖放操作结束
+        dragImg.ondragend = function (e) {
+          info.innerHTML = "可将照片直接拖到回收站";
+        };
+        e.dataTransfer.setData("text", dragImgId);
+      };
+      //拖放过程中
+      src.ondrag = function (e) {
+        info.innerHTML = "照片正在被拖动";
+      }
+      //获得拖放的目标元素
+      var target = document.getElementById("trash");
+      //取消默认事件
+      target.ondragenter = function (e) {
+        e.preventDefault();
+      }
+      target.ondragover = function (e) {
+        e.preventDefault();
+      }
+      target.ondrop = function (e) {
+        var draggedID = e.dataTransfer.getData("text");
+        //获取相册中的DOM对象
+        var oldElem = document.getElementById(draggedID);
+        //从相册DIV中删除该照片的节点
+        oldElem.parentNode.removeChild(oldElem);
+        //将被拖动的照片DOM节点添加到垃圾桶DIV中；
+        target.appendChild(oldElem);
+        info.innerHTML = "可将照片直接拖到回收站";
+        e.preventDefault();
+      }
+    }
+  </script>
 </body>
-<script>
-  // 滑动函数
-  function moves(obj, target, callback) {
-    window.clearInterval(obj.timer);
-    obj.timer = window.setInterval(function () {
-      var step = (target - obj.offsetLeft) / 10;
-      step = step > 0 ? Math.ceil(step) : Math.floor(step);
-      if (obj.offsetLeft == target) {
-        window.clearInterval(obj.timer);
-        if (callback) {
-          callback();
-        }
-      } else {
-        obj.style.left = obj.offsetLeft + step + 'px';
-      }
-    }, 15)
-  }
-  // 移动到图片上的时候左右的箭头才显示出来 离开后又隐藏
-  var focusing = document.querySelector('.focus');
-  // 获取左箭头
-  var arrowleft = document.querySelector('.arrow-left');
-  // 获取右箭头
-  var arrowright = document.querySelector('.arrow-right');
-  var ul = document.querySelector('ul');
-  // 获得图片张数
-  var len = ul.children.length;
-  // 动态生成下面的小圆点
-  var ol = document.querySelector('ol');
-  for (var i = 0; i < len - 1; i++) {
-    var newcircle = document.createElement('li');
-    ol.appendChild(newcircle);
-  }
-  // 把ol里面的第一个li的类名设置成current
-  ol.children[0].className = 'current';
-  // 收移动到focus的时候显示箭头
-  focusing.addEventListener('mouseenter', function () {
-    // 鼠标移动到图片的时候清除定时器
-    window.clearInterval(timer);
-    timer = null;
-    arrowleft.style.display = 'block';
-    arrowright.style.display = 'block';
-
-  })
-  // 鼠标离开又隐藏
-  focusing.addEventListener('mouseleave', function () {
-    // 鼠标离开又重新设置定时器
-    // 自动播放轮播图
-    timer = window.setInterval(function () {
-      // 手动调用点击事件
-      arrowright.click();
-    }, 2000)
-    arrowleft.style.display = 'none';
-    arrowright.style.display = 'none';
-  })
-  // 给每个小圆点设置自定义属性
-  for (var i = 0; i < len - 1; i++) {
-    ol.children[i].setAttribute('index', i);
-  }
-  // 点击哪个小圆圈哪个小圆圈就变色 -排他思想
-  for (var i = 0; i < len - 1; i++) {
-    ol.children[i].addEventListener('click', function () {
-      for (var j = 0; j < len - 1; j++) {
-        ol.children[j].className = '';
-      }
-      // 点击第几个小圆点ul就移动小圆点坐标乘以图片宽度
-      // alert(-(this.getAttribute('index') * ul.children[0].offsetWidth));
-      moves(ul, -this.getAttribute('index') * ul.children[0].offsetWidth)
-      num = this.getAttribute('index');
-      circle = this.getAttribute('index');
-      this.className = 'current';
-      // ul.style.left = "-720px";
-    })
-  }
-  // 点击右边箭头 设置一个num进行移动距离
-  var num = 0;
-  // 点击右边的箭头小圆圈也变色
-  var circle = 0;
-  arrowright.addEventListener('click', function () {
-    if (num == len - 1) {
-      ul.style.left = 0;
-      num = 0;
-      circle = 0
-    }
-    num++;
-    moves(ul, -num * ul.children[0].offsetWidth);
-    circle++;
-    for (var i = 0; i < len - 1; i++) {
-      ol.children[i].className = '';
-    }
-    // 在加到最后一张重复图片的时候就把第一个圆点变色
-    if (circle == len - 1) {
-      // alert('haha')
-      ol.children[0].className = 'current';
-    }
-    ol.children[circle].className = 'current';
-  })
-  // 点击左边箭头
-  arrowleft.addEventListener('click', function () {
-    if (num == 0) {
-      num = len - 1;
-      ul.style.left = -num * ul.children[0].offsetWidth;
-      circle = len - 1;
-    }
-    num--;
-    moves(ul, -num * ul.children[0].offsetWidth);
-    circle--;
-    for (var i = 0; i < len - 1; i++) {
-      ol.children[i].className = '';
-    }
-    // 在减到最后一张重复图片的时候就把第一个圆点变色
-    if (circle == 0) {
-      // alert('haha')
-      ol.children[0].className = 'current';
-    }
-    ol.children[circle].className = 'current';
-  })
-  // 自动播放轮播图
-  var timer = window.setInterval(function () {
-    // 手动调用点击事件
-    arrowright.click();
-  }, 2000)
-</script>
 
 </html>

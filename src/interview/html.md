@@ -483,6 +483,102 @@ Canvas 是画布，通过 Javascript 来绘制2D 图形，是逐像素进行渲�
 - dragleave：事件主体是目标元素，在被拖放元素移出目标元素是触发。
 - drop：事件主体是目标元素，在目标元素完全接受被拖放元素时触发。
 - dragend：事件主体是被拖放元素，在整个拖放操作结束时触发。
+```html
+<style>
+  .container {
+    width: 200px;
+    height: 200px;
+    background: #ccc;
+    position: relative;
+  }
+  .box {
+    width: 50px;
+    height: 50px;
+    background: blue;
+    color: black;
+  }
+</style>
+<body>
+  <div class="container"></div>
+  <div class="box" draggable="true" id="image">image</div>
+  <script>
+    const container = document.querySelector('.container')
+    const box = document.querySelector('.box')
+    // 在拖动目标上触发事件: dragstart、drag、dragend
+    // 释放目标时触发的事件: dragenter、dragover、dragleave、drop
+
+    // 用户开始拖动元素时触发
+    box.addEventListener('dragstart', (event) => {
+      event.dataTransfer.setData('Text', JSON.stringify({
+        id: event.target.id,
+        data: {
+          style: {
+            color: 'black',
+            width: '50px',
+            height: '50px',
+            background: 'blue'
+          }
+        }
+      }))
+      event.target.style.background = 'red'
+      console.log('dragstart')
+    })
+    // 正在拖动时触发
+    box.addEventListener('drag', (event) => {
+      event.target.style.color = 'white'
+      console.log('drag')
+    })
+    // 完成元素拖动后触发
+    box.addEventListener('dragend', (event) => {
+      console.log('dragend')
+    })
+    // 当被鼠标拖动的对象进入其容器范围内时触发此事件
+    container.addEventListener('dragenter', (event) => {
+      event.target.style.border = '2px dashed yellow'
+      console.log('dragenter')
+    })
+    // 当某被拖动的对象在另一对象容器范围内拖动时触发此事件
+    container.addEventListener('dragover', (event) => {
+      // 默认情况下，元素不能在其他元素中被拖放，对于drop必须组织元素的默认行为
+      event.preventDefault()
+      console.log('dragover')
+    })
+    // 当被鼠标拖动的对象离开其容器范围内时触发此事件
+    container.addEventListener('dragleave', (event) => {
+      event.target.style.border = 'none'
+      console.log('dragleave')
+    })
+    // 在一个拖动过程中，释放鼠标键时触发此事件
+    container.addEventListener('drop', (event) => {
+      // 对于drop事件，我们需要阻止默认行为
+      event.preventDefault()
+      // 复位样式
+      box.style.background = 'blue'
+      box.style.color = 'black'
+      event.target.style.border = 'none'
+      // 利用 dataTransfer.getData() 方法获得拖放数据
+      const { id, data: { style } } = JSON.parse(event.dataTransfer.getData('Text'))
+      const el = document.getElementById(id)
+      // 保障原有数据不被删除，否则可以直接将 el 直接appendChild到event.target中即可
+      const res = document.createElement('div')
+      res.innerHTML = el.innerHTML
+      for (let key in style) {
+        res.style[key] = style[key]
+      }
+      event.target.appendChild(res)
+      res.style.position = 'absolute'
+      // 以box中心点为标准，故需要减去宽度，否则会跳位
+      res.style.left = event.pageX - 25 + 'px'
+      //  以box中心点为标准，故需要减去宽度，否则会跳位
+      res.style.top = event.pageY - 25 + 'px'
+      console.log('drop')
+    })
+  </script>
+</body>
+```
+效果如下所示: 
+![202303211016135.gif](http://img.itchenliang.club/img/202303211016135.gif)
+
 
 ## 21、🔥新的 HTML5 文档类型和字符集是？
 HTML5 文档类型很简单：
@@ -696,7 +792,7 @@ HTML的数据属性，用于将数据储存于标准的HTML元素中作为额外
 - repaint(重绘)：根据计算好的信息绘制整个页面（Painting）
 
 ## 43、写一个选择器，完成从 DOM 中获取所有`<a>`中包含`163.com`的链接筛选出来
-```js
+```html
 <a href="www.163.com">163</a>
 <a href="http://163.com">163</a>
 <a href="www.baidu.com">baidu</a>
@@ -938,8 +1034,9 @@ HTML 解释器的工作就是将网络或者本地磁盘获取的 HTML 网页和
 
 
 ## 66、`<noscript>`标签的作用
-noscript 元素用来定义在脚本未被执行时的替代内容（文本）。
-此标签可被用于可识别`<script>`标签但无法支持其中的脚本的浏览器。<br>
+用于在浏览器不支持 JavaScript 或用户禁用 JavaScript 时提供备用内容。
+- 当浏览器不支持 JavaScript 时， 标签内的内容会被显示；
+- 当用户禁用 JavaScript 时，也会显示 标签内的内容。
 
 
 ## 67、DTD 介绍
@@ -955,23 +1052,42 @@ DTD 是对 HTML 文档的声明，还会影响浏览器的渲染模式（工作�
 - DOM 可控性区别。可以通过 JS 操作 DOM ，插入 link 标签来改变样式；由于 DOM 方法是基于文档的，无法使用 @import 的方式插入样式。
 
 
-## 69、什么是文档的预解析？（浏览器解析过程）
-Webkit 和 Firefox 都做了这个优化，当执行 JavaScript 脚本时，另一个线程解析剩下的文档，并加载后面需要通过网络加载的资源。这种方式可以使资源并行加载从而使整体速度更快。需要注意的是，预解析并不改变 DOM 树，它将这个工作留给主解析过程，自己只解析外部资源的引用，比如外部脚本、样式表及图片。
+## 69、什么是文档的预解析？
+文档的预解析（HTML Parsing）是浏览器在加载 HTML 页面时针对某些元素进行的一种提前处理，目的是为了优化页面加载性能。
+> 具体来说，浏览器会在下载完 HTML 文件后，开始对文件中的一些标记进行预处理，例如检查是否存在缺失的结束标签、检查标记是否嵌套正确等等。这些操作可以在构建 DOM 树和 CSSOM 树之前先完成，从而加快页面的渲染速度，并且减少出错情况的发生，同时还可以提供一些有用的信息给 JavaScript，例如判断页面加载进度等。
+
+注意: 不是所有浏览器都支持文档的预解析，而且这种预处理仅限于某些标记（如`script`和`style`），因此在实际开发中，最好不要过分依赖它产生的效果，而应该通过其他方式来优化页面性能。
 
 
-## 70、CSS 如何阻塞文档解析？（浏览器解析过程）
-理论上，既然样式表不改变 DOM 树，也就没有必要停下文档的解析等待它们，然而，存在一个问题，JavaScript 脚本执行时可能在文档的解析过程中请求样式信息，如果样式还没有加载和解析，脚本将得到错误的值，显然这将会导致很多问题。
+## 70、CSS 如何阻塞文档解析？
+css阻塞文档解析的方式有如下两种: 
+1. 大量 CSS 文件：如果 HTML 中引用了大量的 CSS 文件，浏览器在解析 HTML 时需要等待所有 CSS 文件加载完成后才能继续解析 HTML，因此这会阻塞文档的解析。
+2. 嵌入式 CSS：如果 HTML 中包含了大量的嵌入式 CSS 样式表，也会导致浏览器在解析 HTML 时需要先解析并应用这些样式，从而阻塞文档的解析。
 
-所以如果浏览器尚未完成 CSSOM 的下载和构建，而我们却想在此时运行脚本，那么浏览器将延迟 JavaScript 脚本执行和文档的解析，直至其完成 CSSOM 的下载和构建。也就是说，在这种情况下，浏览器会先下载和构建 CSSOM，然后再执行 JavaScript，最后再继续文档的解析。
+为了避免上述情况造成的性能问题，可以使用以下几种优化策略：
+- 合并和压缩 CSS 文件，减少文件大小和数量，从而加快下载和加载速度。
+- 将 CSS 文件放到 body 元素底部或使用 defer 属性来延迟加载 CSS，以便让浏览器更早地解析 HTML。
+- 减少嵌入式 CSS 的使用，并尽量将其转移到外部样式表中。
+- 使用浏览器缓存，减少对相同文件的多次请求。
 
 
-## 71、渲染页面时常见哪些不良现象？（浏览器渲染过程）
-FOUC：主要指的是样式闪烁的问题，由于浏览器渲染机制（比如firefox），在 CSS 加载之前，先呈现了 HTML，就会导致展示出无样式内容，然后样式突然呈现的现象。会出现这个问题的原因主要是 css 加载时间过长，或者 css 被放在了文档底部。
+## 71、渲染页面时常见哪些不良现象？
+页面渲染时常见的不良现象有以下几种：
+- FOUC（Flash of Unstyled Content）：指页面在加载过程中先展示未经 CSS 样式处理的原始内容，然后再突然变成经过样式处理的页面，这种效果会给用户带来闪烁感和不稳定感。
+- 页面卡顿：指页面响应缓慢，无法流畅地滚动、点击或拖拽等，这种效果会影响用户体验，尤其是在移动设备上更为明显。
+- 图片模糊：当浏览器调整图片大小或显示位置时，可能会出现模糊或失真的效果，这通常是由于图片的像素密度与设备像素比不匹配所导致的。
+- 瀑布流错位：在使用瀑布流布局时，如果页面中的元素高度、宽度等属性不一致，则可能会出现错位的效果，从而影响页面展示效果。
+- 引用阻塞：当网页引用的外部资源（如 JavaScript 文件、CSS 文件等）未能及时加载完成时，会导致页面的渲染受到阻碍，从而影响用户的交互体验。
 
-白屏：有些浏览器渲染机制（比如chrome）要先构建 DOM 树和 CSSOM 树，构建完成后再进行渲染，如果 CSS 部分放在 HTML 尾部，由于 CSS 未加载完成，浏览器迟迟未渲染，从而导致白屏；也可能是把 js 文件放在头部，脚本的加载会阻塞后面文档内容的解析，从而页面迟迟未渲染出来，出现白屏问题。
+针对以上问题，可以采取以下优化策略来提升页面渲染效果：
+- 减少 FOUC 的出现，例如通过内联 CSS 样式表、将脚本放在底部、使用 font-display 属性等方式来控制页面样式的加载。
+- 对于页面卡顿问题，可以进行性能优化，例如减少 HTTP 请求、压缩文件、延迟加载等。
+- 针对图片模糊问题，可以通过使用 srcset 属性或响应式图片技术来解决。
+- 解决瀑布流错位问题，可以通过设置元素的高度和宽度、使用 CSS grid 或 flex 布局等方式来确保页面元素的一致性。
+- 解决引用阻塞问题，可以通过使用 defer 和 async 属性、异步加载等方式来避免对页面渲染的阻塞。
 
 
-## 72、如何优化关键渲染路径？（浏览器渲染过程）
+## 72、如何优化关键渲染路径？
 为尽快完成首次渲染，我们需要最大限度减小以下三种可变因素：
 - （1）关键资源的数量。
 - （2）关键路径长度。
@@ -990,18 +1106,18 @@ FOUC：主要指的是样式闪烁的问题，由于浏览器渲染机制（比�
 - （4）优化其余关键资源的加载顺序：您需要尽早下载所有关键资产，以缩短关键路径长度。
 
 
-## 73、什么是重绘和回流？（浏览器绘制过程）
+## 73、什么是重绘和回流(重排)？（浏览器绘制过程）
 **重绘**: 当渲染树中的一些元素需要更新属性，而这些属性只是影响元素的外观、风格，而不会影响布局的操作，比如 background-color，我们将这样的操作称为重绘。<br>
-**回流**：当渲染树中的一部分（或全部）因为元素的规模尺寸、布局、隐藏等改变而需要重新构建的操作，会影响到布局的操作，这样的操作我们称为回流。
+**回流**：即重排，当渲染树中的一部分（或全部）因为元素的规模尺寸、布局、隐藏等改变而需要重新构建的操作，会影响到布局的操作，这样的操作我们称为回流。
 
 常见引起回流属性和方法：<br>
 任何会改变元素几何信息（元素的位置和尺寸大小）的操作，都会触发回流。
 - （1）添加或者删除可见的 DOM 元素；
 - （2）元素尺寸改变——边距、填充、边框、宽度和高度
-- （3）内容变化，比如用户在 input 框中输入文字
-- （4）浏览器窗口尺寸改变——resize事件发生时
-- （5）计算 offsetWidth 和 offsetHeight 属性
-- （6）设置 style 属性的值
+- （3）内容变化，比如用户在`input`框中输入文字
+- （4）浏览器窗口尺寸改变——`resize`事件发生时
+- （5）计算`offsetWidth`和`offsetHeight`属性
+- （6）设置`style`属性的值
 - （7）当你修改网页的默认字体时。
 
 回流必定会发生重绘，重绘不一定会引发回流。回流所需的成本比重绘高的多，改变父节点里的子节点很可能会导致父节点的一系列回流。
@@ -1011,11 +1127,12 @@ FOUC：主要指的是样式闪烁的问题，由于浏览器渲染机制（比�
 常见引起回流属性和方法：
 ![202302101725448.png](http://img.itchenliang.club/img/202302101725448.png)
 
-## 74、如何减少回流？（浏览器绘制过程）
-- （1）使用 transform 替代 top
+
+## 74、如何减少回流(重排)？（浏览器绘制过程）
+- （1）使用`transform`替代`top`
 - （2）不要把节点的属性值放在一个循环里当成循环里的变量
-- （3）不要使用 table 布局，可能很小的一个小改动会造成整个 table 的重新布局
-- （4）把 DOM 离线后修改。如：使用 documentFragment 对象在内存里操作 DOM
+- （3）不要使用`table`布局，可能很小的一个小改动会造成整个 table 的重新布局
+- （4）把 DOM 离线后修改。如：使用`documentFragment`对象在内存里操作 DOM
 - （5）不要一条一条地修改 DOM 的样式。与其这样，还不如预先定义好 css 的 class，然后修改 DOM 的 className。
 
 
@@ -1024,8 +1141,10 @@ FOUC：主要指的是样式闪烁的问题，由于浏览器渲染机制（比�
 
 
 ## 76、DOMContentLoaded 事件和 Load 事件的区别？
-- 当初始的 HTML 文档被完全加载和解析完成之后，DOMContentLoaded 事件被触发，而无需等待样式表、图像和子框架的加载完成。
-- Load 事件是当所有资源加载完成后触发的。
+1. 触发时间不同：`DOMContentLoaded`事件在`HTML文档`被完全加载和解析后触发，而`Load`事件在`整个页面及其所有资源`（如图片、样式表、脚本等）都加载完成后触发。
+2. 意义不同：`DOMContentLoaded`事件表示`DOM树`已经构建完成，可以进行操作，而`Load`事件则表示整个页面及其所有资源都已经完全加载完成，可以进行一些需要所有资源都准备就绪的操作，例如图像尺寸计算等。
+3. 响应速度不同：`DOMContentLoaded`事件响应速度较快，因为它只需要等待`HTML文档`加载和解析完毕即可触发，而`Load`事件需要等待整个页面及其所有资源加载完成后才能触发，因此响应速度较慢。
+4. 兼容性不同：`DOMContentLoaded`事件在大多数现代浏览器中都得到支持，而`Load`事件也具有广泛的兼容性，但在某些旧版本浏览器中可能存在兼容性问题。
 
 
 ## 77、如何实现浏览器内多个标签页之间的通信?
@@ -1041,7 +1160,7 @@ FOUC：主要指的是样式闪烁的问题，由于浏览器渲染机制（比�
 - 还有一种方式是使用 postMessage 方法，如果我们能够获得对应标签页的引用，我们就可以使用 postMessage 方法，进行通信。
 
 
-## 78、webSocket 如何兼容低版本浏览器？
+## 78、webSocket如何兼容低版本浏览器？
 - Adobe Flash Socket 、
 - ActiveX HTMLFile (IE) 、
 - 基于 multipart 编码发送 XHR 、
@@ -1083,118 +1202,74 @@ Ajax：
 
 
 ## 83、怎么重构页面？
-- 编写 CSS
-- 让页面结构更合理化，提升用户体验
-- 实现良好的页面效果和提升性能
+重构页面通常需要遵循以下步骤：
+1. 分析和评估：先了解页面的设计目的、用户需求以及所要达成的业务目标，对页面进行全面分析和评估。
+2. 备份和清理代码：备份现有代码，删除不必要的代码和样式，提高整体代码质量，优化性能。
+3. 修改HTML结构：根据新的设计要求，修改HTML结构，使其更加合理、语义化。
+4. 重构CSS样式：通过修改CSS样式来改变页面外观和布局，去除冗余的CSS，简化CSS选择器，减少CSS文件大小，提高页面性能。
+5. 添加交互效果：根据用户需求和业务目标，添加必要的JavaScript交互效果，如表单验证、动态加载数据等。
+6. 测试和调试：在完成重构后，进行全面测试和调试，确保页面在各种设备和浏览器上均能正常显示和运行。
+
+总之，重构页面需要仔细分析、理性评估、精心设计和细致实现，才能让页面功能更加完善、性能更加优秀，并为用户带来更好的使用体验。
 
 
 ## 84、浏览器架构
-```
-* 用户界面
-  * 主进程
-  * 内核
-      * 渲染引擎
-      * JS 引擎
-          * 执行栈
-      * 事件触发线程
-          * 消息队列
-              * 微任务
-              * 宏任务
-      * 网络异步线程
-      * 定时器线程
-```
+浏览器通常由以下几个主要组件构成：
+1. 用户界面(User Interface)：包括浏览器的地址栏、前进/后退按钮、书签菜单等。用户通过界面与浏览器进行交互。
+2. 渲染引擎(Rendering Engine)：解析HTML、CSS等文档，将其渲染成可视化的网页。常用的渲染引擎有WebKit、Blink和Gecko等。
+3. JavaScript解释器(JavaScript Interpreter)：负责解析和执行JavaScript代码。
+4. 呈现引擎(Layout Engine)：负责将渲染引擎输出的内容显示在屏幕上，处理页面布局、绘制等操作。常见的呈现引擎有Blink、Gecko和Trident等。
+5. 数据存储(Data Storage)：浏览器需要保存一些用户数据，如cookie、本地存储等。不同的浏览器采用不同的存储方式，如localStorage、sessionStorage、IndexedDB等。
+6. 网络(Networking)：负责网络请求和响应，实现HTTP协议等。
+
+这些组件可以协同工作，完成浏览器的基本功能。
 
 
 ## 85、用于预格式化文本的标签是？
-预格式化就是保留文字在源码中的格式 最后显示出来样式与源码中的样式一致 所见即所得。`<pre>`定义预格式文本，保持文本原有的格式。
+预格式化就是保留文字在源码中的格式，最后显示出来样式与源码中的样式一致，所见即所得。
+> 用于预格式化文本的标签是`<pre>`
 
 
 ## 86、DHTML 是什么？
-DHTML 将 HTML、JavaScript、DOM 以及 CSS 组合在一起，用于创造动态性更强的网页。通过 JavaScript 和 HTML DOM，能够动态地改变 HTML 元素的样式。
-
-DHTML 实现了网页从 Web 服务器下载后无需再经过服务的处理，而在浏览器中直接动态地更新网页的内容、排版样式和动画的功能。例如，当鼠标指针移到文章段落中时，段落能够变成蓝色，或者当鼠标指针移到一个超级链接上时，会自动生成一个下拉式子链接目录等。
-
-包括：
-- 动态内容（Dynamic Content）：动态地更新网页内容，可“动态”地插入、修改或删除网页的元件，如文字、图像、标记等。
-- 动态排版样式（Dynamic Style Sheets）：W3C 的 CSS 样式表提供了设定 HTML 标记的字体大小、字形、样式、粗细、文字颜色、行高度、加底线或加中间横线、缩排、与边缘距离、靠左右或置中、背景图片或颜色等排版功能，而“动态排版样式”即可以“动态”地改变排版样式。
+DHTML是指动态 HTML（Dynamic Hypertext Markup Language），是一种在网页中实现动态效果的技术。它结合了 HTML、CSS 和 JavaScript，可以让网页元素在页面加载后进行修改和交互，从而增强用户体验。DHTML 技术被广泛应用于制作动态菜单、动画效果、表单验证等方面。
 
 
 ## 87、在 HTML5 中，哪个方法用于获得用户的当前位置？
+使用Geolocation API可以通过以下方法来获取用户的当前位置：
 ```js
-getCurrentPosition()
+navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options);
 ```
+其中，`successCallback`和`errorCallback`是两个回调函数，分别用于处理获取位置成功和失败的情况。`options`是一个可选参数对象，可以指定获取位置的精度、超时时间等配置。
 
 
 ## 88、disabled 和 readonly 的区别？
-- disabled 指当 input 元素加载时禁用此元素。input 内容不会随着表单提交。
-- readonly 规定输入字段为只读。input 内容会随着表单提交。
+- `disabled`指当 input 元素加载时禁用此元素。`input`内容不会随着表单提交。
+- `readonly`规定输入字段为只读。`input`内容会随着表单提交。
 
-无论设置 readonly 还是 disabled，通过 js 脚本都能更改`input`的`value`
+无论设置`readonly`还是`disabled`，通过js脚本都能更改`input`的`value`
 
 
 ## 89、主流浏览器内核私有属性 css 前缀？
-- mozilla 内核 （firefox,flock 等）    -moz
-- webkit  内核 （safari,chrome 等）   -webkit
-- opera   内核 （opera 浏览器）        -o
-- trident 内核 （ie 浏览器）           -ms
+- mozilla内核(firefox,flock等): `-moz-`
+- webkit内核(safari,chrome等): `-webkit-`
+- opera内核(opera浏览器): `-o-`
+- trident内核(ie浏览器): `-ms-`
 
 
 ## 90、前端性能优化？
-前端性能优化主要是为了提高页面的加载速度，优化用户的访问体验。我认为可以从这些方面来进行优化。
-
-第一个方面是页面的内容方面
-- （1）通过文件合并、css 雪碧图、使用 base64 等方式来减少 HTTP 请求数，避免过多的请求造成等待的情况。
-- （2）通过 DNS 缓存等机制来减少 DNS 的查询次数。
-- （3）通过设置缓存策略，对常用不变的资源进行缓存。
-- （4）使用延迟加载的方式，来减少页面首屏加载时需要请求的资源。延迟加载的资源当用户需要访问时，再去请求加载。
-- （5）通过用户行为，对某些资源使用预加载的方式，来提高用户需要访问资源时的响应速度。
-
-第二个方面是服务器方面
-- （1）使用 CDN 服务，来提高用户对于资源请求时的响应速度。
-- （2）服务器端启用 Gzip、Deflate 等方式对于传输的资源进行压缩，减小文件的体积。
-- （3）尽可能减小 cookie 的大小，并且通过将静态资源分配到其他域名下，来避免对静态资源请求时携带不必要的 cookie
-
-第三个方面是 CSS 和 JavaScript 方面
-- （1）把样式表放在页面的 head 标签中，减少页面的首次渲染的时间。
-- （2）避免使用 @import 标签。
-- （3）尽量把 js 脚本放在页面底部或者使用 defer 或 async 属性，避免脚本的加载和执行阻塞页面的渲染。
-- （4）通过对 JavaScript 和 CSS 的文件进行压缩，来减小文件的体积。
+1. 压缩和合并文件：将多个CSS或JavaScript文件压缩并合并到一个文件中可以减少页面加载时间。
+2. 缓存：利用浏览器缓存来减少页面加载时间。
+3. 图片优化：使用适当的格式和大小来减少图像的大小，从而减少加载时间。
+4. 资源延迟加载：只在需要时加载资源（例如图片、视频等）。
+5. 减少DOM操作：频繁的DOM操作会导致性能下降，应该尽量避免。
+6. 懒加载：将长页面分成多个部分，只有滚动到相应部分时再去加载其中的内容。
+7. 使用CDN：使用Content Delivery Network（CDN）可以提高静态资源的加载速度。
+8. 代码优化：优化JavaScript代码可以提高页面性能。例如，避免使用全局变量和尽量减少循环嵌套等。
 
 
-## 91、Chrome 中的 Waterfall ？
-浏览器根据html中外连资源出现的顺序，依次放入队列（Queue）,然后根据优先级确定向服务器获取资源的顺序。同优先级的资源根据html中出现的先后顺序来向服务器获取资源
-- Queueing. 出现下面的情况时，浏览器会把当前请求放入队列中进行排队
-  - 有更高优先级的请求时.
-  - 和目标服务器已经建立了6个TCP连接（最多6个，适用于HTTP/1.0和HTTP/1.1）
-  - 浏览器正在硬盘缓存上简单的分配空间
-- Stalled. 请求会因为上面的任一个原因而阻塞
-- DNS Lookup. 浏览器起正在解析IP地址.
-- Proxy negotiation. The browser is negotiating the request with a proxy server.
-- Request sent. The request is being sent.
-- ServiceWorker Preparation. The browser is starting up the service worker.
-- Request to ServiceWorker. The request is being sent to the service worker.
-- Waiting (TTFB). 浏览器等待响应第一个字节到达的时间. 包含来回的延迟时间和服务器准备响应的时间.
-- Content Download. The browser is receiving the response.
-- Receiving Push. The browser is receiving data for this response via HTTP/2 Server Push.
-- Reading Push. The browser is reading the local data previously received.
-- DNS Lookup - 在浏览器和服务器进行通信之前, 必须经过DNS查询, 将域名转换成IP地址. 在这个阶段, 你可以处理的东西很少. 但幸运的是, 并非所有的请求都需要经过这一阶段.
-- Initial Connection - 在浏览器发送请求之前, 必须建立TCP连接. 这个过程仅仅发生在瀑布图中的开头几行, 否则这就是个性能问题(后边细说).
-- SSL/TLS Negotiation - 如果你的页面是通过SSL/TLS这类安全协议加载资源, 这段时间就是浏览器建立安全连接的过程. 目前Google将HTTPS作为其 搜索排名因素 之一, SSL/TLS 协商的使用变得越来越普遍了.
-- Time To First Byte (TTFB) - TTFB 是浏览器请求发送到服务器的时间+服务器处理请求时间+响应报文的第一字节到达浏览器的时间. 我们用这个指标来判断你的web服务器是否性能不够, 或者说你是否需要使用CDN.
-- Downloading - 这是浏览器用来下载资源所用的时间. 这段时间越长, 说明资源越大. 理想情况下, 你可以通过控制资源的大小来控制这段时间的长度.
-
-![202302101806373.png](http://img.itchenliang.club/img/202302101806373.png)
-
-**根据瀑布图进行性能优化**<br>
-那么我们如何是一个web页面加载的更快并且创造更好的用户体验呢? 瀑布图提供是三个直观的玩意儿来协助我们达成这一目标:
-- 首先, 减少所有资源的加载时间. 亦即减小瀑布图的宽度. 瀑布图越窄, 网站的访问速度越快.
-- 其次, 减少请求数量 也就是降低瀑布图的高度. 瀑布图越矮越好.
-- 最后, 通过优化资源请求顺序来加快渲染时间. 从图上看, 就是将绿色的"开始渲染"线向左移. 这条线向左移动的越远越好.
-
-如图所示，select2_metro.css在位置上要比avatar1_small.png和index.js靠后，但是优先级确实最高(Higthest-->High-->Medium-->Low),所以这个下载顺序是：select2_metro.css-->index.js-->avatar1_small.png
-![202302101807294.png](http://img.itchenliang.club/img/202302101807294.png)
-Connection ID:可以看到总共有6个值--166718、166774、166775、166776、166777、166778，因为浏览器并发数limit是6；如果两个url相同，就表示两个资源的下载共用的同一个tcp长连接
-![202302101807472.png](http://img.itchenliang.club/img/202302101807472.png)
+## 91、Chrome 中的 Waterfall？
+Chrome中的Waterfall是指网络面板(Network Panel)中的一个图形化展示工具，用于显示页面上所有资源的加载时间和顺序。它以时间轴为横轴，以请求开始时间和结束时间为纵轴，将每个资源的请求和响应过程以条形图的形式展示出来。
+> 通过Waterfall，开发人员可以很容易地了解到每个资源在页面加载过程中所需的时间、是否存在阻塞问题以及如何进一步优化页面的性能。例如，在Waterfall中，可以看到浏览器请求HTML文档后需要等待服务器返回后才能继续请求其他资源，这可能会导致网页加载时间延长。开发人员可以通过Waterfall找到这些瓶颈并进行优化，从而提高页面的性能和用户体验。
  
 
 ## 92、扫描二维码登录网页是什么原理，前后两个事件是如何联系的？
@@ -1202,89 +1277,77 @@ Connection ID:可以看到总共有6个值--166718、166774、166775、166776、
 
 
 ## 93、Html 规范中为什么要求引用资源不加协议头http或者https？
-如果用户当前访问的页面是通过 HTTPS 协议来浏览的，那么网页中的资源也只能通过 HTTPS 协议来引用，否则浏览器会出现警告信息，不同浏览器警告信息展现形式不同。
+HTML规范中要求在引用资源时不加协议头（`http://`或`https://`）
+> 是为了避免浏览器在请求资源时出现不必要的重定向。如果不加协议头，则浏览器会默认使用与当前页面相同的协议来请求资源。这样可以提高网页加载速度和性能，并且还有助于避免因HTTPS混合内容而导致的安全问题。
 
-为了解决这个问题，我们可以省略 URL 的协议声明，省略后浏览器照样可以正常引用相应的资源，这项解决方案称为protocol-relative URL，暂且可译作协议相对 URL。
-
-如果使用协议相对 URL，无论是使用 HTTPS，还是 HTTP 访问页面，浏览器都会以相同的协议请求页面中的资源，避免弹出类似的警告信息，同时还可以节省5字节的数据量。
+安全问题: 
+> 如果用户当前访问的页面是通过HTTPS协议来浏览的，那么网页中的资源也只能通过HTTPS协议来引用，否则浏览器会出现警告信息，不同浏览器警告信息展现形式不同。
 
 
 ## 94、Data URI scheme 是什么 ？
-Data URI scheme 是在 RFC2397 中定义的，目的是将一些小的数据，直接嵌入到网页中，从而不用再从外部文件载入。减少对 HTTP 的请求次数。达到优化网页的效果。
+Data URI scheme(数据统一资源标识符方案)是一种用于在 URL 中嵌入小型数据的方法，可以将数据直接放到 URL 中，而无需单独请求一个外部文件。这些数据可以包括文本、图像、音频、视频等任何类型的文件。
 
-base64 后面那一串字符，其实是一张图片，将这些字符串复制粘贴到浏览器的中打开，就能看到图片了
+Data URI 的一般格式如下：
+```js
+data:[<media type>][;base64],<data>
+```
+- `<media type>`: 表示媒体类型，例如文本、图片、音频等，可以指定为MIME类型或者简写形式（例如`text/plain`或`image/png`）;
+  - `data:text/plain`: 文本数据
+  - `data:text/html`: HTML代码
+  - `data:text/html`: base64编码的HTML代码
+  - `data:text/css`: CSS代码
+  - `data:text/javascript`: Javascript代码
+  - `data:image/gif`: base64编码的gif图片数据
+  - `data:image/png`: base64编码的png图片数据
+  - `data:image/jpeg`: base64编码的jpeg图片数据
+  - `data:image/x-icon`: base64编码的icon图片数据
+- `;base64`: 如果要将数据编码成`base64`格式，则需要在媒体类型后面添加`;base64`标志;
+- `<data>`: 实际的数据内容，可以直接插入到 URL 中;
 
 假设你有的图像：A.jpg ，把它在网页上显示出来的标准方法是：
 ```html
 <img src="http://sjolzy.cn/images/A.jpg"/>
 ```
-这种取得数据的方法称为 http URI scheme 。
+这种取得数据的方法称为`http URI scheme`。
 ```html
 <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGElEQVQIW2P4DwcMDAxAfBvMAhEQMYgcACEHG8ELxtbPAAAAAElFTkSuQmCC" />
 ```
-这种取得数据的方法称为 Data URI scheme 。
+这种取得数据的方法称为`Data URI scheme`。
 
-
-## 95、Data URI scheme 的语法
-在上面的 Data URI scheme 中：
-- data 表示取得数据的协定名称；
-- image/png 是数据类型名称；
-- base64 是数据的编码方法，逗号后面就是这个image/png文件base64编码后的数据。
-
-目前，Data URI scheme支持的类型有：
-- data: 文本数据
-- data: text/plain, ------- 文本数据
-- data: text/html, -------- HTML代码
-- data: text/html;base64, -------- base64编码的HTML代码
-- data: text/css, ---------- CSS代码
-- data: text/css;base64, ---------- base64编码的CSS代码
-- data: text/javascript, ------------ Javascript代码
-- data: text/javascript;base64, --------- base64编码的Javascript代码
-- data: image/gif;base64, ---------------- base64编码的gif图片数据
-- data: image/png;base64, -------------- base64编码的png图片数据
-- data: image/jpeg;base64, ------------- base64编码的jpeg图片数据
-- data: image/x-icon;base64, ---------- base64编码的icon图片数据
-
-1. 在 HTML 中使用 data URL （不建议这样使用）
-  ```html
-  <img src="data:image/png;base64,image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGElEQVQIW2P4DwcMDAxAfBvMAhEQMYgcACEHG8ELxtbPAAAAAElFTkSuQmCC"/>
-  ```
-2. 在 CSS 中使用 data URL
-  ```css
-  body { 
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAADCAIAAAA7ljmRAAAAGElEQVQIW2P4DwcMDAxAfBvMAhEQMYgcACEHG8ELxtbPAAAAAElFTkSuQmCC")
-  };
-  ```
-3. 在 script 中使用 data URL
-  ```js
-  _captchaImage() {
-		captchaImage().then(res => {  //请求接口
-			if (res.code == 200) {
-				this.codeUrl = 'data:image/gif;base64,' + res.img; // 拼接请求回来的数据
-				this.formModel.uuid = res.uuid;
-		   }
-	   });
-	}
-  ```
 
 ## 96、Data URI scheme 的优缺点
-**优点**<br>
-减少HTTP请求数，没有了TCP连接消耗和同一域名下浏览器的并发数限制。对于小文件会降低带宽。虽然编码后数据量会增加，但是却减少了http头，当http头的数据量大于文件编码的增量，那么就会降低带宽。 对于HTTPS站点，HTTPS和HTTP混用会有安全提示，而HTTPS相对于HTTP来讲开销要大更多，所以Data URI在这方面的优势更明显。可以把整个多媒体页面保存为一个文件。
+**优点**
+- 减少 HTTP 请求次数，降低网页加载时间；
+- 可以方便地将小型文件嵌入到 HTML、CSS、JavaScript 等文件中，减少对外部资源的依赖；
+- 可以使用 base64 编码来加密敏感数据，增强安全性。
 
 **缺点**：
-1. 无法被重复利用，同一个文档多次被应用到同一内容中，数据被大量增加，消耗了下载时间。
-2. 无法被独自缓存，其包含文档重新加载时，它也要重新加载。
-3. 耗时，客户端需要重新解码和显示，增加消耗。
-4. 不支持数据压缩，base64编码会增加1/3大小，而urlencode后数据量会增加更多
-5. 不安全，不利于安全软件的过滤，同时也存在一定的安全隐患。
+- Data URI 会增加 HTML、CSS、JavaScript 文件的大小，导致文件传输时间变长；
+- 不同浏览器对 Data URI 的支持程度不同，可能存在兼容性问题；
+- 由于 Data URI 中包含了完整的数据内容，因此不适合用于大型文件的传输，否则可能影响网页性能。
 
 
 ## 97、你有使用过MediaRecorder吗？说说它的运用场景有哪些？
-录屏
+**运用场景**:
+1. 视频会议：通过`MediaRecorder`可以实现对视频会议的录制功能，以便于对会议内容进行回放和共享。
+2. 在线教育：通过`MediaRecorder`可以实现对在线教育课程的录制，以便于学生们随时复习和学习。
+3. 视频直播：通过`MediaRecorder`可以实现对实时视频直播内容的录制，以便于后期编辑和分享。
+4. 视频监控：通过`MediaRecorder`可以实现对视频监控数据的录制，以便于对安全事件进行调查和分析。
+
+**注意**: 由于浏览器对于音视频数据流的格式支持有限，因此在使用MediaRecorder时需要选择适当的编码格式和参数，以确保生成的音视频文件能够被常见的媒体播放器所识别和播放。另外，在浏览器兼容性方面也需要进行相应的测试和处理。
 
 
 ## 98、H5的哪些特性需要https支持呢？
-service workers：一个服务器与浏览器之间的中间人角色，如果网站中注册了service worker那么它可以拦截当前网站所有的请求，并且可以让开发者自己控制管理缓存的内容以及版本
+H5（HTML5）中需要使用HTTPS支持的特性主要包括：
+1. Geolocation API：获取用户地理位置信息时需要使用HTTPS协议。
+2. DeviceMotion 和 DeviceOrientation API：获取设备运动和方向信息时需要使用HTTPS协议。
+3. getUserMedia API：访问用户摄像头和麦克风时需要使用HTTPS协议。
+4. Service Workers：用于实现离线缓存、推送通知等功能时需要使用HTTPS协议。
+5. Web App Manifest：用于定义Web应用程序元数据时需要使用HTTPS协议。
+6. WebGL：3D绘图技术，对安全性有一定要求，通常在HTTPS环境下使用。
+7. Payment Request API：用于处理电子商务支付时需要使用HTTPS协议。
+
+除了上述特性外，使用HTTPS可以提高网站的安全性和保护用户隐私。因此，在开发H5应用时，建议尽可能采用HTTPS协议来保障应用安全。
 
 
 ## 99、你知道短链接的生成原理吗？

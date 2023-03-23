@@ -1770,14 +1770,22 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序，默认元素�
 
 
 ## 59、怎么让 Chrome 支持小于 12px 的文字？
-使用css3 的`transform`属性，设置值为 `scale(x, y)` 定义 2D 缩放转换
-```css
-.test {
-  font-size: 12px;
-  transform: scale(0.50);
-}
-```
-最终字体大小则是`6px`。
+1. 使用`-webkit-text-size-adjust`属性：将其设置为`none`可以禁用 Chrome 的字体大小调整机制，这样可以使得小于`12px`的字体正常显示。例如：
+  ```css
+  body {
+    -webkit-text-size-adjust: none;
+  }
+  ```
+2. 使用`transform`缩放：将父元素的`font-size`设置为大于等于`12px`的值，然后再对子元素使用`transform`缩放来达到小于`12px`的效果。例如：
+  ```css
+  .parent {
+    font-size: 12px;
+  }
+  .child {
+    transform: scale(0.8);
+  }
+  ```
+  上面代码中，`parent`元素的`font-size`被设置为`12px`，然后`child`元素使用`transform`缩放为原来的`80%`，从而实现了小于`12px`的效果。需要注意的是，这种方法可能会导致模糊和锯齿效果，因此不适合用在大段文本中。
 
 
 ## 60、display:inline-block 什么时候会显示间隙？
@@ -1838,17 +1846,8 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序，默认元素�
 
 
 ## 66、在网页中的应该使用奇数还是偶数的字体？为什么呢？
-应该使用偶数字体
-1. 比例关系
-  相对来说偶数字号比较容易和页面中其他部分的字号构成一个比例关系。如我使用 14px 的字体作为正文字号，那么其他部分的字体（如标题）就可以使用 14×1. 5 =21px 的字体，或者在一些地方使用到了 14×0. 5=7px 的 padding 或者 margin，如果你是在用 sass 或者 less 编写 css，这时候用处就凸显出来了。
-2. UI 设计师的缘故
-  大多数设计师用的软件如 ps 提供的字号是偶数，自然到了   前端那边也是用的是偶数。
-3. 浏览器缘故
-  - 其一是低版本的浏览器 ie6 会把奇数字体强制转化为偶数，即 13px 渲染为 14px。
-  - 其二是为了平分字体。偶数宽的汉字，如 12px 的汉子，去掉 1 像素的字体间距，填充了的字体像素宽度其实就是 11px，这样的汉字中竖线左右是平分的，如“中”子，左右就是 5px 了。
-4. 系统差别
-  - Windows 自带的点阵宋体（中易宋体）从 Vista 开始只提供 12、14、16 px 这三个大小的点阵，而 13、15、17 px 时用的是小一号的点阵（即每个字占的空间大了 1 px，但点阵没变），于是略显稀疏。
-  - 在 Linux 和其他手持设备上，奇数偶数的渲染效果其实相差不大。
+在网页中，应该使用偶数像素值的字体。
+> 因为当使用奇数像素值的字体时，如`13px`、`15px`等，在某些设备上可能会出现模糊和不清晰的问题，这是由于这些设备的屏幕分辨率与像素之间的对应关系导致的。而选择偶数像素值的字体，则可以避免这样的问题，并且能够在不同的设备上保持更加一致的显示效果。
 
 
 ## 67、CSS 合并方法
@@ -1858,15 +1857,20 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序，默认元素�
 
 
 ## 68、列出你所知道可以改变页面布局的属性
-width、height、float、position、display、margin、left、top、right、bottom等
+`display`、`position`、`float`、`clear`、`flexbox`、`grid`、`columns`、`width`、`height`、`margin`、`padding`、`overflow`、`visibility`、`z-index`、`transform`、`transition`、`animation`
 
 
 ## 69、CSS 在性能优化方面的实践
-1. 内联首屏关键 CSS（Critical CSS）
-  内联 CSS 能够使浏览器开始页面渲染的时间提前，只将渲染首屏内容所需的关键 CSS 内联到 HTML 中
-2. 异步加载 CSS
-3. 文件压缩
-4. 去除无用 CSS
+- 1、压缩CSS文件，减小文件大小，可以使用压缩工具或者Webpack等打包工具自带的压缩功能。
+- 2、避免使用`@import`加载CSS文件，因为每个`@import`都会增加HTTP请求。
+- 3、使用CSS Sprites技术来减少图片请求，将多张小图标合并成一张大图，并通过`background-position`属性和定位来显示不同的图标。
+- 4、避免使用过多的CSS选择器，因为选择器越复杂，匹配元素所需的时间就越长。如果可能的话，尽量缩短选择器的层级。
+- 5、尽量避免使用`!important`，因为它会增加样式计算的复杂度，使得浏览器更难进行优化。
+- 6、使用类代替标签选择器，因为类的查找速度比标签要快。
+- 7、使用CSS前缀来支持不同浏览器的特性，但要避免使用过多的前缀。
+- 8、使用`flexbox`和`grid`布局来代替传统的布局方法，因为它们的性能更好。
+- 9、避免使用大量的阴影、边框和渐变效果等CSS3特性，因为它们对性能有一定的影响。
+- 10、使用媒体查询和响应式设计来减少不必要的CSS代码和布局计算。
 
 
 ## 70、CSS3 动画（简单动画的实现，如旋转等）
@@ -1933,70 +1937,36 @@ transition 有四个属性:
 
 
 ## 73、对偏移、卷曲、可视的理解
-参考：https://www.yht7.com/news/86379
-**偏移**
-```css
-offsetWidth  width + padding + border
-offsetHeight height + padding + border
-offsetLeft
-offsetTop
-offsetParent
-注意：没有offsetRight和offsetBottom
-```
-**卷曲**
-```css
-scrollWidth  width + padding
-scrollHeight  当内部的内容溢出盒子的时候， 顶边框的底部，计算到内容的底部；若是内容没有溢出盒子，计算方式为盒子内部的真实高度（边框到边框）
-scrollLeft   这个scroll系列属性不是只读的
-scrollTop
-scroll()
+- 偏移(Offset): 指元素相对于某个参照物的位置。通常指元素相对于其父级元素或文档的位置
+  > offset包含`width`、`padding`和`border`
+  - offsetWidth、offsetHeight、offsetLeft、offsetTop、offsetParent，注意：没有offsetRight和offsetBottom
+- 卷曲(Scroll): 指当页面内容超出可视区域时，通过滚动条进行上下左右滚动，以便查看被遮挡的部分内容。
+  > scroll包含`width`和`padding`
+  - scrollWidth、scrollHeight、scrollLeft、scrollTop
+- 可视(Visible): 指在当前浏览器窗口可见的部分。
+  > client包含`width`和`padding`
+  - clientWidth、clientHeight、clientLeft、clientTop
 
-此函数能够获取卷曲的高度和卷曲的宽度
-function myScroll() {
-  return {
-   top: window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0,
-   left: window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0
-  };
-}
-滚动滚动条的时候触发事件
-box（window）.onscroll = function () {}
-```
-**可视**
-```css
-clientWidth  获取的是元素内部的真实宽度 width + padding
-clientHeight 边框之间的高度
-clientLeft  至关于左边框的宽度 若是元素包含了滚动条，而且滚动条显示在元素的左侧。这时，clientLeft属性会包含滚动条的宽度17px
-clientTop   至关于顶边框的宽度
-client()
-
-此函数能够获取浏览器可视区域的宽高
-function myClient() {
-  return {
-    wid: window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0,
-    heit: window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0
-  };
-}
-\----------------------------------------------------------------------------------------------
-@offsetHeight和style.height的区别
-demo.style.height只能获取行内样式，若是样式写到了其余地方，甚至根本就没写，便没法获取
-style.height是字符串（并且带单位），offsetHeight是数值
-demo.style.height能够设置行内样式，offsetHeight是只读属性
-所以，通常用demo.offsetHeight来获取某元素的真实宽度/高度，用style.height来设置宽度/高度
-\----------------------------------------------------------------------------------------------
-@offsetLeft和style.left的区别
-1、style.left只能获取行内样式
-2、offsetLeft只读，style.left可读可写
-3、offsetLeft是数值，style.left是字符串而且有单位px
-4、若是没有加定位，style.left获取的数值多是无效的
-5、最大区别在于offsetLeft以border左上角为基准，style.left以margin左上角为基准
-\----------------------------------------------------------------------------------------------
-@scrollHeight和scrollWidth
-标签内部实际内容的高度/宽度
-不计算边框，若是内容不超出盒子，值为盒子的宽高（不带边框）
-若是内容超出了盒子，就是从顶部或左部边框内侧一直到内容a的最外部分
-\----------------------------------------------------------------------------------------------
-@scrollTop和scrollLeft
-被卷去部分的 顶部/左侧 到可视区域 顶部/左侧 的距离
+注意: 上面所说的只是基于标准盒模型情况，如果是怪异盒模型时，则需要去除`padding`的宽高。
+```html
+<style>
+  .box {
+    width: 40px;
+    height: 40px;
+    padding: 20px;
+    border: 2px solid #ddd;
+    overflow: auto;
+  }
+</style>
+<div class="box">
+  <div style="height: 100px;"></div>
+</div>
+<script>
+  const box = document.querySelector('.box')
+  console.log('offset:', box.offsetHeight) // 84 = 40 + 20 * 2 + 2 * 2
+  console.log('client:', box.clientHeight) // 80 = 40 + 20 * 2
+  console.log('scroll:', box.scrollHeight) // 140 = 100 + 20 * 2
+</script>
 ```
 
 
@@ -2027,29 +1997,25 @@ after 伪元素通过 content 在元素的后面生成了内容为一个点的�
 ## 76、请阐述 float 定位的工作原理
 浮动（float）是 CSS 定位属性。浮动元素从网页的正常流动中移出，但是保持了部分的流动性，会影响其他元素的定位（比如文字会围绕着浮动元素）。这一点与绝对定位不同，绝对定位的元素完全从文档流中脱离。
 
-CSS 的 clear 属性通过使用 `left`、`right`、`both`，让该元素向下移动（清除浮动）到浮动元素下面。
+float定位的工作原理如下：
+1. 浮动元素会从正常的文档流中脱离出来，不再占据原先在文档流中所占的位置，而是被视为一层覆盖在文档流之上。
+2. 如果浮动元素前面有非浮动元素，那么浮动元素会尽可能地靠近前面的元素，直到不能再靠近为止。
+3. 如果浮动元素前面也是浮动元素，则会按照源代码中的顺序依次排序，尽量靠近前面的浮动元素。
+4. 在浮动元素后面的文本和行内元素会环绕在浮动元素周围，形成文字环绕效果。
+5. 父元素的高度会因为浮动元素的脱离而发生塌陷，需要使用清除浮动的方法来避免这种情况。
 
-如果父元素只包含浮动元素，那么该父元素的高度将塌缩为 0。我们可以通过清除（clear）从浮动元素后到父元素关闭前之间的浮动来修复这个问题。
-
-有一种 hack 的方法，是自定义一个 `.clearfix` 类，利用伪元素选择器 `::after` 清除浮动。另外还有一些方法，比如添加空的`<div></div>`和设置浮动元素父元素的 overflow 属性。与这些方法不同的是， `clearfix`方法，只需要给父元素添加一个类，定义如下：
-```css
-.clearfix::after {
-  content: "";
-  display: block;
-  clear: both;
-}
-```
-值得一提的是，把父元素属性设置为`overflow: auto`或`overflow: hidden`，会使其内部的子元素形成块格式化上下文（Block Formatting Context），并且父元素会扩张自己，使其能够包围它的子元素。
+**注意**: 在使用float定位时，可能会出现浮动元素重叠、对齐问题等，需要通过设置`clear`和使用其他布局技巧进行解决。
 
 
 ## 77、请阐述 z-index 属性，并说明如何形成层叠上下文（stacking context）
-CSS 中的 `z-index` 属性控制重叠元素的垂直叠加顺序。 `z-index`只能影响`position`值不是`static`的元素。
+`z-index`是CSS中的一个属性，用于控制元素在层叠上下文中的显示顺序。层叠上下文是一种概念，它定义了元素如何在三维空间中堆叠，并影响元素的可见性。
+> 具体来说，当一个元素的`z-index`属性值为正数时，在同一个层叠上下文中，它会覆盖在`z-index`值较小的元素之上；如果z-index值相同，则后出现的元素会覆盖先出现的元素。当一个元素的`z-index`属性值为负数时，会将该元素放置到当前层叠上下文的下方。
 
-没有定义 z-index 的值时，元素按照它们出现在 DOM 中的顺序堆叠（层级越低，出现位置越靠上）。非静态定位的元素（及其子元素）将始终覆盖静态定位（static）的元素，而不管 HTML 层次结构如何。
-
-**层叠上下文**：是包含一组图层的元素。 在一组层叠上下文中，其子元素的 z-index 值是相对于该父元素而不是 document root 设置的。每个层叠上下文完全独立于它的兄弟元素。如果元素 B 位于元素 A 之上，则即使元素 A 的子元素 C 具有比元素 B 更高的 z-index 值，元素 C 也永远不会在元素 B 之上.
-
-每个层叠上下文是自包含的：当元素的内容发生层叠后，整个该元素将会在父层叠上下文中按顺序进行层叠。少数 CSS 属性会触发一个新的层叠上下文，例如 opacity 小于 1， filter 不是 none ， transform 不是 none 。
+层叠上下文的形成有以下几种方式：
+1. 根元素(标签)是最初的层叠上下文，所有其他元素默认位于这个上下文中。
+2. 每个定位元素(`position`属性值为`absolute、relative、fixed`)和flex项(`display：flex或inline-flex`)都会创建一个新的层叠上下文。
+3. `z-index`不为`auto`的元素创建层叠上下文。（注意：`z-index`属性只能应用于定位元素）
+4. 元素的`opacity`小于1时，会创建一个新的层叠上下文。
 
 
 ## 78、如何解决不同浏览器的样式兼容性问题？
@@ -2061,31 +2027,30 @@ CSS 中的 `z-index` 属性控制重叠元素的垂直叠加顺序。 `z-index`�
 
 ## 79、如何为功能受限的浏览器提供页面？ 使用什么样的技术和流程？
 - 优雅的降级：为现代浏览器构建应用，同时确保它在旧版浏览器中正常运行。
-- Progressivepx enhancement - The practice of building an application for a base level of user experience, but adding - functional enhancements when a browser supports it.
-- 渐进式增强：构建基于用户体验的应用，但在浏览器支持时添加新增功能。
-- 利用 caniuse. com 检查特性支持。
-- 使用 autoprefixer 自动生成 CSS 属性前缀。
-- 使用 Modernizr进行特性检测。
+- 渐进式增强：在旧的或较少功能的浏览器中提供基本的功能，为现代浏览器提供更高级的功能。
+- 特性检测：使用特性检测来检查浏览器是否支持所需功能。如果不支持，则提供另一种方法或替代方案。
+  > 利用`caniuse.com`检查特性支持。
+- Polyfills或Shims: Polyfills或Shims可以补充浏览器缺失的API或功能，以确保网站在所有浏览器上都可以正常运行。
+- 使用`autoprefixer`自动生成 CSS 属性前缀。
 
 
 ## 80、除了 screen ，你还能说出一个 @media 属性的例子吗？
 - all：适用于所有设备。
-- print：为了加载合适的文档到当前使用的可视窗口. 需要提前咨询 paged media（媒体屏幕尺寸）, 以满足个别设备网页尺寸不匹配等问题。
-- screen：主要适用于彩色的电脑屏幕
-- speech：speech 这个合成器. 注意: CSS2 已经有一个相似的媒体类型叫 aural.
-
-[更多参考](https://www.cnblogs.com/xiaohuochai/p/5848612.html)
+- print：用于打印机和打印预览。
+- screen：用于电脑屏幕，平板电脑，智能手机等。
+- speech：应用于屏幕阅读器等发声设备。
 
 
 ## 81、对于你使用过的 CSS 预处理，说说喜欢和不喜欢的地方？
-优点：
+**优点**
 - 在CSS的语法基础上增加了变量（variable）、嵌套（nested rules）、混合（mixins)、导入（inline imports）、继承（extend）等高级功能，这些拓展令CSS更加强大与优雅。
 - 让你的CSS更加简洁、适应性更强、可读性更佳，更易于代码的维护等诸多好处。
 - 提高开发效率
 
-缺点：
+**缺点**
 - 需要多一个编译器来重新编译一次你的CSS代码，也就是给浏览器多了一道工序，网页显示的速度会减慢
 - 需要一个学习的过程，用之不当反而弄巧反拙
+
 
 ## 82、`* { box-sizing: border-box; } `会产生怎样的效果？
 浏览器默认值是`box-sizing: content-box`。
@@ -2108,20 +2073,20 @@ CSS 中的 `z-index` 属性控制重叠元素的垂直叠加顺序。 `z-index`�
 - Bootstrap：更新周期缓慢。Bootstrap 4 已经处于 alpha 版本将近两年了。添加了在页面中广泛使用的微调按钮组件。
 - Semantic UI：源代码结构使得自定义主题很难理解。非常规主题系统的使用体验很差。外部库的路径需要硬编码（hard code）配置。变量重新赋值没有 Bootstrap 设计得好。
 - Bulma：需要很多非语义的类和标记，显得很多余。不向后兼容，以至于升级版本后，会破坏应用的正常运行。
+- tailwind.css: 通过提供大量预定义的样式类来帮助开发人员快速构建网站和应用程序。
 
 
 ## 84、响应式设计与自适应设计有何不同？
-响应式设计和自适应设计都以提高不同设备间的用户体验为目标，根据视窗大小、分辨率、使用环境和控制方式等参数进行优化调整。
+响应式设计和自适应设计都是为了使网站或应用程序能够在不同设备和屏幕尺寸上呈现出更好的用户体验，但它们有着不同的实现方式。
+- 响应式设计是一种通过使用`CSS媒体查询`和`弹性布局`等技术，使页面能够根据浏览器窗口大小和设备类型动态地调整布局和样式的设计方法。
+- 自适应设计是一种通过使用`不同版本的网站`或`应用程序`来适应不同设备和屏幕尺寸的设计方法。
 
-**响应式设计的适应性原则**：网站应该凭借一份代码，在各种设备上都有良好的显示和使用效果。响应式网站通过使用媒体查询，自适应栅格和响应式图片，基于多种因素进行变化，创造出优良的用户体验。就像一个球通过膨胀和收缩，来适应不同大小的篮圈。
-
-自适应设计更像是渐进式增强的现代解释。与响应式设计单一地去适配不同，自适应设计通过检测设备和其他特征，从早已定义好的一系列视窗大小和其他特性中，选出最恰当的功能和布局。与使用一个球去穿过各种的篮筐不同，自适应设计允许使用多个球，然后根据不同的篮筐大小，去选择最合适的一个。
+虽然这两种方法都旨在提供更好的用户体验，但响应式设计通常是更常见和更灵活的做法，因为它只需要维护一个代码库，并且可以适应新设备的出现。与此相比，自适应设计需要为每个设备类型维护单独的代码库，这可能会变得难以管理。
 
 
 ## 85、你有没有使用过视网膜分辨率的图形？当中使用什么技术？
 我倾向于使用更高分辨率的图形（显示尺寸的两倍）来处理视网膜显示。更好的方法是使用媒体查询，像`@media only screen and (min-device-pixel-ratio: 2) { ... }`，然后改变`background-image`。
-
-对于图标类的图形，我会尽可能使用 svg 和图标字体，因为它们在任何分辨率下，都能被渲染得十分清晰。
+> 对于图标类的图形，我会尽可能使用`svg`和`图标字体`，因为它们在任何分辨率下，都能被渲染得十分清晰。
 
 还有一种方法是，在检查了`window.devicePixelRatio`的值后，利用 JavaScript 将`<img>`的`src`属性修改，用更高分辨率的版本进行替换。
 
@@ -2155,8 +2120,9 @@ html, body, div {
 
 
 ## 87、为什么要初始化 CSS 样式
-- 因为浏览器的兼容问题，不同浏览器对有些标签的默认值是不同的，如果没对 CSS 初始化往往会出现浏览器之间的页面显示差异。
-- 去掉标签的默认样式如：margin, padding，其他浏览器默认解析字体大小，字体设置。
+- 初始化 CSS 样式是为了确保网页在不同浏览器和设备上呈现的效果一致，并且避免浏览器的默认样式对页面造成干扰。
+- 不同的浏览器对于相同的标签和属性可能会有不同的默认样式，这可能会导致网页在不同浏览器上呈现出不同的外观。另外，浏览器的默认样式也可能会影响网页的布局和性能。
+- 通过初始化 CSS 样式，可以清除掉浏览器的默认样式，从而避免以上问题的出现，同时也提供了更好的可定制性和维护性，使得网页开发更加方便和高效。
 
 
 ## 88、transform translate transition 的区别
@@ -2187,11 +2153,89 @@ html, body, div {
 
 
 ## 89、全屏滚动的原理是什么？用到了 CSS 的那些属性？
-原理类似图片轮播原理，超出隐藏部分，滚动时显示。<br>
-css属性：`overflow:hidden; transform:translate(100%, 100%); display:none;`
+全屏滚动的原理是通过 JavaScript 监听鼠标滚轮事件或者触摸事件，根据用户的操作来切换显示区域，从而实现页面的滚动效果。
+> 一般来说，全屏滚动会将整个页面分为多个区块，每个区块占据一屏的高度，并且使用 CSS 的定位和过渡属性来实现页面滑动的效果。在切换不同的区块时，会通过 JavaScript 来修改 CSS 中的 transform 属性，从而改变页面的位置。
+
+具体来说，在实现全屏滚动的过程中，通常会用到以下 CSS 属性：
+- `position: absolute/fixed`：用于控制页面元素的定位方式。
+- `top/bottom/left/right`：用于控制页面元素的位置。
+- `width/height`：用于控制页面元素的尺寸大小。
+- `transform`：用于控制页面元素的平移、旋转、缩放等变换效果。
+- `transition`：用于控制页面元素的过渡动画效果。
+
+例子:
+```html
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+x.section {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s ease;
+}
+.section1 {
+  background-color: red;
+}
+.section2 {
+  background-color: green;
+  top: 100%;
+}
+.section3 {
+  background-color: blue;
+  top: 200%;
+}
+</style>
+<div class="wrapper">
+  <div class="section section1"></div>
+  <div class="section section2"></div>
+  <div class="section section3"></div>
+</div>
+<script>
+var sections = document.querySelectorAll(".section");
+var currentSectionIndex = 0;
+
+function scrollToSection(index) {
+  if (index < 0 || index > sections.length - 1) {
+    return;
+  }
+  var translateY = index * -100;
+  for (var i = 0; i < sections.length; i++) {
+    sections[i].style.transform = "translateY(" + translateY + "%)";
+  }
+  currentSectionIndex = index;
+}
+document.addEventListener("wheel", function(event) {
+  event.preventDefault();
+  var delta = event.deltaY;
+  var direction = delta > 0 ? 1 : -1;
+  scrollToSection(currentSectionIndex + direction);
+});
+document.addEventListener("touchstart", function(event) {
+  touchStartY = event.touches[0].clientY;
+});
+document.addEventListener("touchmove", function(event) {
+  event.preventDefault();
+  var touchMoveY = event.touches[0].clientY;
+  var delta = touchMoveY - touchStartY;
+  var direction = delta > 0 ? -1 : 1;
+  scrollToSection(currentSectionIndex + direction);
+});
+</script>
+```
+以上代码实现了一个简单的全屏滚动页面，当用户通过鼠标滚轮或者触摸屏幕时，会自动滑动到下一个或上一个区块，并且使用 CSS 的`transform`属性来实现平移效果。
 
 
-## 90、什么是响应式设计？响应式设计的基本原理是什么？如何兼容低版本的 IE？
+## 90、什么是响应式设计？响应式设计的基本原理是什么？如何兼容低版本的IE？
 - 概念：响应式设计就是网站能够兼容多个终端，而不是为每个终端做一个特定的版本。
 - 基本原理：是利用CSS3媒体查询，为不同尺寸的设备适配不同样式。
 - 兼容：对于低版本的IE，可采用JS获取屏幕宽度，然后通过resize方法来实现兼容：
@@ -2339,26 +2383,67 @@ input:-webkit-autofill {
 
 
 ## 93、让页面里的字体变清晰，变细用 CSS 怎么做？
+要让页面上的字体变得更清晰和更细，可以使用CSS的`font-weight`和`font-smoothing`属性来实现。例如：
 ```css
--webkit-font-smoothing: antialiased;
+/* 让字体变细 */
+body {
+  font-weight: 300;
+}
+/* 让字体更清晰 */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 ```
-其默认可以支持6个值：`auto | antialiased | inherit | initial | none | subpixel-antialiased`
+- `font-weight`属性用于设置字体的粗细程度，值越大表示越粗，值越小表示越细。常见的取值包括100-900之间的整数值，以及“normal”（默认）、“bold”（加粗）等关键字。
+- `font-smoothing`属性则用于控制字体的平滑度，即是否启用反锯齿技术来使字体显示更加平滑。不同浏览器支持的取值可能有所差异，常见的取值包括“antialiased”（启用反锯齿，Webkit浏览器），“subpixel-antialiased”（启用亚像素级反锯齿，Webkit浏览器）、“grayscale”（启用灰阶反锯齿，Firefox浏览器）等。
 
-暂时我能看到效果的就是三个：`none | subpixel-antialiased | antialiased`
 
-
-## 94、font-style 属性可以让它赋值为“oblique” oblique 是什么意思？
+## 94、font-style属性可以让它赋值为“oblique”，oblique是什么意思？
 - Italic会显示一个`斜体`的字体样式，不是我们强加给字体的属性，而是字体自身的一种状态；
 - Oblique会显示一个`倾斜`的字体样式，自身没有斜体效果的字体，强制向右倾斜文字；
 
 
 ## 95、position:fixed; 在 android 下无效怎么处理？
-这个是因为移动端浏览器默认的 viewport 是 layoutviewport，它的宽度大于移动端屏幕，所以页面会出现左右滚动条，fixed 是相对layoutviewport 来固定的，而不是屏幕，所以会感觉出现 fixed 无效;
+在Android下，可能会遇到`position: fixed`无法生效的问题。这是因为某些Android浏览器（例如低版本的Android默认浏览器）对于fixed定位的支持存在一定的兼容性问题。
 
-如果想实现fixed相对于屏幕的固定效果，我们需要改变的是viewport的大小为ideal viewport，可以如下设置：
+解决这个问题的方法之一是使用JavaScript实现fixed效果，具体步骤如下：
+1. 监听`scroll`事件，当页面滚动时执行相应的操作；
+2. 获取需要固定的元素和页面滚动的距离；
+3. 判断页面滚动的距离是否超过了需要固定的元素的位置，如果超过了，则将元素的`position`属性设为`fixed`，否则设置为`static`；
+4. 设置元素的`top`和`left`值，使其固定在页面的指定位置。
 ```html
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-sca
-le=1.0,user-scalable=no"/>
+<style>
+#fixed-element {
+  position: static; /* 初始状态 */
+  width: 100%;
+  height: 50px;
+  background-color: #ccc;
+}
+
+.fixed {
+  /* 加上 !important 的原因，在于id选择器的优先级高于类选择器*/
+  position: sticky !important; /* 粘性定位 */
+  top: 0;
+  left: 0;
+}
+</style>
+<div id="fixed-element">我是需要固定的元素</div>
+<div style="height: 1000px;"></div>
+<script>
+// 获取需要固定的元素和页面滚动的距离
+var fixedElement = document.getElementById("fixed-element");
+// 监听scroll事件
+window.addEventListener("scroll", function() {
+  var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+  // 判断页面滚动的距离是否超过了需要固定的元素的位置
+  if (scrollTop > 50) { // 假设元素需要固定的位置距离页面顶部50px
+    fixedElement.classList.add("fixed"); // 添加固定样式
+  } else {
+    fixedElement.classList.remove("fixed"); // 移除固定样式
+  }
+});
+</script>
 ```
 
 
@@ -2374,9 +2459,9 @@ scroll-behavior: smooth;
 
 ## 98、如何美化 CheckBox
 实现思路：
-1. 首先让原来的input不可见
-2. 利用label for设置替代input的样式
-3. 设置 input:checked + label:before的样式
+1. 首先让原来的`input`不可见
+2. 利用`label for`设置替代`input`的样式
+3. 设置`input:checked + label:before`的样式
 ```html
 <input id="check1" type="checkbox"/>
 <label  for="check1"></label>
@@ -2406,7 +2491,8 @@ scroll-behavior: smooth;
 
 
 ## 99、float 和 display:inline-block 的区别是什么？
-对元素设置display：inline-block ，元素不会脱离文本流，而float就会使得元素脱离文本流，且还有父元素高度坍塌的效果。
+- 对元素设置`display：inline-block`，元素不会脱离文本流
+- `float`就会使得元素脱离文本流，且还有父元素高度坍塌的效果。
 
 
 ## 100、rem 布局字体太大怎么处理?
@@ -2458,7 +2544,6 @@ getComputedStyle方法能够获取到计算后的样式、大小。
 ## 102、使用css实现一个持续的动画效果
 ```css
 animation:mymove 5s infinite;
-
 @keyframes mymove {
   from {
     top: 0px;
@@ -2484,6 +2569,7 @@ animation:mymove 5s infinite;
   - 如果该内联元素被跨行分割了，那么“包含块”是未定义的，也就是CSS2.1规范并没有明确定义，浏览器自行发挥
   否则，“包含块”由该祖先的padding box边界形成。
   - 如果没有符合条件的祖先元素，则“包含块”是“初始包含块”。
+
 
 ## 104、CSS 里的 visibility 属性有个 collapse 属性值是干嘛用的？在不同浏览器下以后什么区别？
 - （1）对于一般的元素，它的表现跟visibility：hidden;是一样的。元素是不可见的，但此时仍占用页面空间。
@@ -2753,29 +2839,53 @@ ex是CSS中的一个相对单位，指的是小写字母x的高度，没错，�
 
 
 ## 131、无依赖绝对定位是什么？
-- 没有设置left/top/right/bottom属性值的绝对定位称为“无依赖绝对定位”。
-- 无依赖绝对定位其定位的位置和没有设置position:absolute时候的位置相关。
+无依赖绝对定位（"independent absolute positioning"）是一种CSS中的布局技术，它允许元素相对于其最近的已定位祖先元素进行定位，而不考虑其他元素的影响。
+
+无依赖绝对定位是指通过设置元素的top、right、bottom、left属性来精确地定位元素，而不依赖于其他元素或父容器的位置和大小。以下是一个简单的例子：
+```html
+<style>
+  .box {
+    position: absolute;
+    top: 50px;
+    left: 100px;
+    width: 200px;
+    height: 100px;
+    background-color: yellow;
+  }
+</style>
+<div class="box">我是一个绝对定位的元素</div>
+```
 
 
 ## 132、clip 裁剪是什么？
-所谓“可访问性隐藏”，指的是虽然内容肉眼看不见，但是其他辅助设备却能够进行识别和访问的隐藏。
-- clip剪裁被我称为“最佳可访问性隐藏”的另外一个原因就是，它具有更强的普遍适应性，任何元素、任何场景都可以无障碍使用。
-
-
-## 133、什么是层叠水平？
-层叠水平，英文称作stacking level，决定了同一个层叠上下文中元素在z轴上的显示顺序。
-> 显而易见，所有的元素都有层叠水平，包括层叠上下文元素，也包括普通元素。然而，对普通元素的层叠水平探讨只局限在当前层叠上下文元素中。
+CSS `clip`是一种用于裁剪元素的属性。它可以将一个元素裁剪成一个矩形区域，并只显示该区域内的内容，超出区域的部分则被隐藏掉。
+- `clip`属性需要指定一个裁剪区域，以左上角和右下角的坐标值表示，具体语法如下：
+  ```css
+  clip: rect(top, right, bottom, left);
+  clip: rect(30px 120px 80px 20px);
+  ```
+  其中`top、right、bottom、left`四个值分别表示裁剪区域上边界、右边界、下边界和左边界的位置，可以使用像素、百分比等单位来指定。
+  > 注意: `clip`属性已经在 CSS3 中被废弃了，推荐使用更加灵活的`clip-path`属性进行裁剪。
+- `clip-path`属性是一种用于裁剪元素的属性，它可以指定一个SVG路径或基本形状来定义一个裁剪区域，以将元素的可见部分限制在该区域内。相比于已经被废弃的 `clip`属性，`clip-path`更加灵活和强大。
+  ```css
+  clip-path: <url>|<basic-shape>|<geometry-box>|none;
+  ```
+  取值可以为以下三种类型之一：
+  - `<url>`：指定 SVG 文件中定义的路径元素（例如`<path>、<circle>`等）；
+  - `<basic-shape>`：指定基本几何形状，包括`inset()、circle()、ellipse()、polygon()`等；
+  - `<geometry-box>`：指定参考的盒模型，包括`padding-box、border-box、content-box`等。
+  例如，要将一个元素裁剪成一个四边形，可以这样设置`clip-path`属性：
+  ```css
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  ```
+  这会将元素裁剪成一个居中的菱形区域。
 
 
 ## 134、隐藏元素的 background-image 到底加不加载？
-根据测试，一个元素如果display计算值为none，在IE浏览器下（IE8～IE11，更高版本不确定）依然会发送图片请求，Firefox浏览器不会，至于Chrome和Safari浏览器则似乎更加智能一点：如果隐藏元素同时又设置了background-image，则图片依然会去加载；如果是父元素的display计算值为none，则背景图不会请求，此时浏览器或许放心地认为这个背景图暂时是不会使用的。
-
-如果不是background-image，而是`<img>`元素，则设置display:none在所有浏览器下依旧都会请求图片资源。
-
-还需要注意的是如果设置的样式没有对应的元素，则background-image也不会加载。hover情况下的background-image，在触发时加载。
-- 元素的背景图片
-  元素本身设置 display:none，会请求图片 -父级元素设置 display:none，不会请求图片 -样式没有元素使用，不会请求 -:hover 样式下，触发时请求
-- img 标签图片任何情况下都会请求图片
+根据测试，隐藏元素的方法主要有如下三种:
+- `display: none;`: 在这种情况下，设置的背景图片不会加载；
+- `visibility: hidden;`: 在这种情况下，设置的背景图片会加载；
+- `opacity: 0;`: 在这种情况下，设置的背景图片会加载；
 
 
 <!-- ======================================== 评论区 ======================================== -->

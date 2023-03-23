@@ -4,6 +4,12 @@ const jsSidebar = [
     link: 'guide',
   },
   {
+    text: 'Web API接口',
+    items: [
+      { text: 'Observer', link: 'observer' }
+    ]
+  },
+  {
     text: 'JavaScript基础',
     items: [
       { text: '解构赋值', link: 'destructuring' },

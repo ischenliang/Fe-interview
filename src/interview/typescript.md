@@ -827,45 +827,77 @@ myVar = false;
   ```
 
 
-
 ## 30、什么是装饰器，它们可以应用于什么？
-装饰器是一种特殊的声明，可以应用于类、方法、访问器、属性或参数。装饰器只是以 `@expression` 符号为前缀的函数，其中表达式必须计算为一个函数，该函数将在运行时使用有关装饰声明的信息进行调用。<br>
-TypeScript 装饰器的目的是以声明的方式将注释和元数据添加到现有代码中。装饰器是为 ES7 提议的一个实验性特性。它已经被包括 Angular 2 在内的一些 JavaScript 框架使用。装饰器可能会在未来的版本中发生变化。<br>
-要启用对装饰器的实验性支持，需要在命令行或 `tsconfig.json` 中启用 `experimentalDecorators` 编译器选项：
-
-命令行：
+在TypeScript中，装饰器（Decorators）是一种特殊的声明，它可以用来为类、方法、属性或参数等添加元数据并修改它们的行为。
+> 装饰器通过`@`符号后跟一个函数来定义，并可以被应用于类、方法、属性或参数等。以下是一个简单的装饰器示例：
 ```ts
-tsc --target ES5 --experimentalDecorators
-```
-tsconfig.json
-```json
-{    
-  "compilerOptions": {    
-    "target": "ES5",    
-    "experimentalDecorators": true    
-  }    
+function log(target: any, key: string, descriptor: PropertyDescriptor) {
+  // 在控制台输出日志
+  console.log(`Calling "${key}" method`);
+  // 返回修改后的PropertyDescriptor对象
+  return descriptor;
 }
+
+class MyClass {
+  @log
+  greet(name: string) {
+    console.log(`Hello, ${name}!`);
+  }
+}
+
+let obj = new MyClass();
+obj.greet("John");  // 输出："Calling "greet" method" 和 "Hello, John!"
 ```
+在上面的示例中，我们定义了一个装饰器函数`log`，它接受三个参数：目标对象、属性名称和属性描述符。然后，我们将该装饰器应用于`MyClass`类中的`greet`方法上。当我们调用`obj.greet`时，装饰器函数将自动执行，并在控制台输出日志，同时仍然按预期执行`greet`方法。
 
-它们可以附加到：
-- 类声明
-- 方法
-- 配件
-- 特性
-- 参数
-
-**注意**：默认情况下不启用装饰器。要启用它们，你必须`experimentalDecorators`从`tsconfig.json`文件或命令行编辑编译器选项中的字段。
+除了自定义装饰器之外，TypeScript还提供了许多内置的装饰器，例如`@deprecated`、`@sealed`和`@observable`等，可用于标记和修改类中的各种属性和方法。
 
 
 ## 31、如何将多个ts文件合并为一个js文件
-```shell
-tsc --outFile comman.js file1.ts file2.ts file3.ts
+```ts
+// file1.ts
+function file1 () {
+  console.log('file1')
+}
+// file2.ts
+function file2 () {
+  console.log('file2')
+}
 ```
-这样就将三个ts文件合并到`comman.js`文件中。在这种情况下，当没有像下面的命令那样提供输出文件名时。
 ```shell
-tsc --outFile file1.ts file2.ts file3.ts
+tsc --outFile merge.js file1.ts file2.ts
 ```
-然后，`file2.ts`和`file3.ts`会被编译，输出会放在`file1.ts`中。所以现在的 `file1.ts` 包含 JavaScript 代码。
+这样就将三个ts文件合并到`merge.js`文件中，`merge.js`文件内容如下
+```js
+function file1() {
+  console.log('file1');
+}
+function file2() {
+  console.log('file2');
+}
+```
+
+**特殊情况**
+> 首先我们在上面示例的基础上新建`file3.ts`，其内容如下
+```ts
+function file3() {
+  console.log('file3');
+}
+```
+然后使用下面的命令
+```shell
+tsc --outFile file3.ts file1.ts file1.ts
+```
+最终得到的结果是，`file2.ts`和`file3.ts`会被编译，并且输出会放在`file3.ts`中。
+> 所以现在的 `file3.ts` 包含 JavaScript 代码。
+```js
+function file1() {
+  console.log('file1');
+}
+function file2() {
+  console.log('file2');
+}
+```
 
 
 ## 32、如何自动编译ts文件，并且自动修改ts文件
@@ -887,54 +919,56 @@ TypeScript 支持以下面向对象的术语：
 
 
 ## 34、TypeScript中的泛型
-TypeScript 泛型是一种工具，它提供了一种创建可重用组件的方法。它能够创建可以处理多种数据类型而不是单一数据类型的组件。泛型在不影响性能或生产力的情况下提供类型安全。泛型允许创建泛型类、泛型函数、泛型方法和泛型接口。<br>
-在泛型中，类型参数写在开 (`<`) 和闭 (`>`) 括号之间，这使其成为强类型集合。泛型使用一种特殊的类型变量 `<T>` 来表示类型。泛型集合仅包含相似类型的对象。
+在TypeScript中，泛型（Generics）是一种将类型参数化以在多个地方重复使用的方式。
+
+使用泛型可以写出更灵活、可重用的代码，并且可以增加类型安全性。例如，以下是一个简单的泛型函数示例：
 ```ts
 function identity<T>(arg: T): T {
   return arg;
 }
-let output1 = identity<string>("myString");
-let output2 = identity<number>( 100 );
-console.log(output1);
-console.log(output2);
+let output1 = identity<string>("hello");  // 类型推断为 string
+let output2 = identity<number>(42);       // 类型推断为 number
 ```
+在上面的示例中，`identity`函数接受一个类型参数`T`并返回该类型的值。通过使用`<T>`语法来指定泛型类型，我们可以在不同的调用中传递不同的类型，并让TypeScript进行类型推断。
+
+**注意**: 除了函数之外，还可以使用泛型类和泛型接口，它们具有与泛型函数相似的语法和目的，使您可以编写通用的代码，同时保持类型安全和灵活性。
 
 
 ## 35、TypeScript中const和readonly的区别是什么？枚举和常量的区别？
-const 和 readonly 区别？
-- const 用于变量，readonly用于属性
-- const 在运行时检查，readonly在编译时检查
-- 使用 const 变量保存的数组，可以使用push，pop等方法。但是如果使用`Readonly Array`声明的数组不能使用push，pop等方法
-
-枚举和常量的区别：
-- 枚举会被编译时会编译成一个对象，可以被当作对象使用
-- const 枚举会在 typescript 编译期间被删除，const 枚举成员在使用的地方会被内联进来，避免额外的性能开销
-
-先看下面代码，枚举会被编译成什么：
+在TypeScript中，`const`和`readonly`都用于创建不可变的变量或属性，但它们有着不同的作用和使用场景。
+::: tip `const`和`readonly`的区别
+- `const`用于定义常量，常量的值在编译时就必须已知，并且不能被重新赋值。
+- `readonly`用于定义只读属性或变量，只能在声明时或构造函数中初始化，并且不能被重新赋值。
 ```ts
-// 枚举
+const PI = 3.14;
+PI = 3; // Error: Cannot assign to 'PI' because it is a constant.
+
+class MyClass {
+  readonly name: string;
+
+  constructor(name: string) {
+    this.name = name;
+  }
+
+  setName(name: string) {
+    this.name = name;  // Error: Cannot assign to 'name' because it is a read-only property.
+  }
+}
+```
+:::
+::: tip 枚举和常量的区别
+- `枚举`是一组具有命名值的相关常量的集合，与常量不同，枚举成员可以包含其他值（例如字符串或数字）。
+- `常量`是指在编译时已知并且不会改变的值，而枚举则是一组相关的常量。
+```ts
 enum Color {
-  Red,
-  Green,
-  Blue
+  Red = "#FF0000",
+  Green = "#00FF00",
+  Blue = "#0000FF"
 }
-var sisterAn = Color.Red
-// 会被编译成 JavaScript 中的 var sisterAn = Color.Red
-// 即在运行执行时，它将会查找变量 Color 和 Color.Red
+const PI = 3.14;
 ```
-常量枚举 会被编译成什么：
-```ts
-// 常量枚举
-const enum Color {
-  Red,
-  Green,
-  Blue
-}
-var sisterAn = Color.Red
-// 会被编译成 JavaScript 中的 var sisterAn = 0
-// 在运行时已经没有 Color 变量
-```
-由此可见，使用 常量枚举 会有更好的性能。
+在上面的示例中，我们定义了一个`Color`枚举，其中包含三个成员，并将其用作颜色代码的映射。另外我们还定义了一个常量`PI`，它的值为`3.14`。
+:::
 
 
 ## 36、TypeScript中的枚举是什么？
@@ -977,16 +1011,6 @@ type（类别名的） 和 interface （接口）的区别？
 | 接口重名时会产生合并 | 类型别名重名时编译器会抛出错误 |
 
 
-
-## 38、TypeScript中的类型断言？
-类型断言的工作方式类似于其他语言中的类型转换，但它不像其他语言(如 C# 和 Java)那样执行类型检查或数据重组。类型转换带有运行时支持，而类型断言对运行时没有影响。但是，类型断言纯粹由编译器使用，并为编译器提供有关我们希望如何分析代码的提示。
-```ts
-let empCode: any = 111;     
-let employeeCode = <number> code;     
-console.log(typeof(employeeCode)); //Output: number
-```
-
-
 ## 39、TypeScript的as语法是什么？
 `as` 是 TypeScript 中类型断言的附加语法。引入 `as-syntax` 的原因是原始语法 (`<type>`) 与 JSX 冲突。
 ```ts
@@ -1012,29 +1036,46 @@ console.log(Gender[1]); // : Female
 
 
 ## 41、TS中的声明合并
-声明合并是编译器合并两个或多个单独声明的过程。将同名的声明声明为单个定义。这个合并的定义具有两个原始声明的特征。最简单，也许是最常见的声明合并类型是接口合并。在最基本的层面上，合并将两个声明的成员机械地连接到一个同名的接口中。
-```ts
-interface Cloner {  
-  clone(animal: Animal): Animal;  
-}  
-interface Cloner {  
-  clone(animal: Sheep): Sheep;  
-}  
-interface Cloner {  
-  clone(animal: Dog): Dog;  
-  clone(animal: Cat): Cat;  
-} 
-```
-将这三个接口合并为一个单独声明
-```ts
-interface Cloner {  
-  clone(animal: Dog): Dog;  
-  clone(animal: Cat): Cat;  
-  clone(animal: Sheep): Sheep;  
-  clone(animal: Animal): Animal;  
-} 
-```
-**在TypeScript中不是所有的合并都允许。目前，类不能与其他类或变量合并。**
+在TypeScript中，当具有相同名称的函数、类或命名空间等多个声明出现时，它们会自动合并为一个声明。这称为声明合并。
+
+声明合并适用于以下情况：
+1. 函数声明和函数表达式
+2. 同名接口
+  ```ts
+  // 同名接口合并
+  interface Person {
+    name: string;
+  }
+  interface Person {
+    age: number;
+  }
+  let person: Person = { name: "John", age: 30 };
+  ```
+3. 类型别名
+  ```ts
+  // 类型别名合并
+  type Point = [number, number];
+  type Point = {
+    x: number;
+    y: number;
+  };
+  let point: Point = { x: 0, y: 0 };
+  ```
+4. 命名空间
+  ```ts
+  // 命名空间合并
+  namespace MyNamespace {
+    export const name = "MyNamespace";
+  }
+  namespace MyNamespace {
+    export function greet() {
+      console.log(`Hello from ${name}!`);
+    }
+  }
+  MyNamespace.greet(); // 输出：Hello from MyNamespace!
+  ```
+
+注意: **声明合并仅限于类型和命名空间，不适用于变量、函数等其他实体**。
 
 
 ## 42、TypeScript中?. , ?? , !： , _ , ** 等符号的含义？

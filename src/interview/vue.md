@@ -37,9 +37,25 @@ new Proxy(data,{
 - 当运行`render`函数的时候，发现用到了响应式数据，这时候就会运行`getter`函数，然后`watcher（发布订阅）`就会记录下来。当响应式数据发生变化的时候，就会调用`setter`函数，`watcher`就会再记录下来这次的变化，然后通知`render`函数，数据发生了变化，然后就会重新运行`render`函数，重新生成虚拟`dom`树。
 :::
 
-### ❓Vue3响应式数据实现
+### Vue3响应式数据实现
 ```js
-
+let obj = {}
+const objProxy = new Proxy(obj, {
+  get: (target, key, receiver) => {
+    console.log('get ' + key)
+    return Reflect.get(target, key, receiver)
+  },
+  set: (target, key, value, receiver) => {
+    console.log('set', key)
+    if (key === 'text') {
+      input.value = value
+      p.innerHTML = value
+    }
+    return Reflect.set(target, key, value, receiver)
+  }
+})
+objProxy.name = '张三' // set name
+objProxy.name // get name
 ```
 
 ### Vue2响应式数据实现
@@ -168,8 +184,7 @@ export default class Dep {
 所谓模板编译过程就是把用户写的模板经过一系列的处理最终生成`render`函数的过程。
 
 **模板编译原理**
-- 将html模板转换化成AST
-  - AST: 抽象语法树，一个用来表示`html`的js对象
+- 将模板字符串解析成 AST（抽象语法树）
 - 将AST中的静态节点打上标签
   - 在AST中找出静态节点并打上标记，即`static`属性设为`true`
   - 在AST中找出静态根节点并打上标记，即`staticRoot`属性设为`true`
@@ -178,23 +193,15 @@ export default class Dep {
 
 
 ## 6、Vue生命周期钩子是如何实现的?
-生命周期钩子在内部会被vue维护成一个数组(vue内部有一个方法`mergeOption`)和全局的生命周期合并最终转换成数组，当执行到具体流程时会执行钩子(发布订阅模式)，`callHook`来实现调用。源码位置：`src/core/instance/lifecycle.js`
-```js
-export function callHook (vm: Component, hook: string) {
-  pushTarget()
-  const handlers = vm.$options[hook]
-  const info = `${hook} hook`
-  if (handlers) {
-    for (let i = 0, j = handlers.length; i < j; i++) {
-      invokeWithErrorHandling(handlers[i], vm, null, vm, info)
-    }
-  }
-  if (vm._hasHookEvent) {
-    vm.$emit('hook:' + hook)
-  }
-  popTarget()
-}
-```
+Vue 的生命周期钩子本质上是一些在不同阶段执行的回调函数。这些钩子函数是通过 Vue 实例的原型链继承而来的，当创建一个 Vue 实例时，会按照特定顺序自动调用这些钩子。
+::: tip 原理
+具体实现原理如下：
+1. 在初始化 Vue 实例时，会将所有的生命周期钩子函数存储到一个数组中。
+2. 当组件被挂载到 DOM 上时，会依次调用`beforeCreate、created、beforeMount`钩子。
+3. 然后创建真实的 DOM 元素并将其插入到页面中，接着调用`mounted`钩子。
+4. 如果组件数据发生变化，会触发`beforeUpdate、updated`钩子。
+5. 如果组件被销毁，会依次调用`beforeDestroy、destroyed`钩子并将组件从 DOM 上移除。
+:::
 
 
 ## 7、Vue组件生命周期有哪些？vue2和vue3的生命周期对比？
@@ -277,7 +284,12 @@ console.log(child) // {name: "涨小三", age: 18}
 ```
 
 
-## 10、❓请说明nextTick的原理？
+## 10、请说明nextTick的原理？
+Vue的`nextTick`是一个异步方法，它的作用是在下次DOM更新循环结束之后执行指定的回调函数。
+::: tip 原理
+原理是利用了浏览器的事件循环机制。当数据发生变化时，Vue会将需要更新的DOM操作放入一个队列中，在下次事件循环中执行这些DOM更新操作，并通知`nextTick`所传入的回调函数。
+> 具体来说，当`nextTick`被调用时，Vue会先检查是否存在微任务队列，如果有，则将回调函数添加到微任务队列中；否则，将回调函数添加到事件循环队列中，并通过`Promise`和`MutationObserver`等方式确保在DOM更新完毕后立即执行回调函数。
+:::
 
 
 ## 11、computed、watch和methods的区别是什么?
@@ -293,10 +305,171 @@ console.log(child) // {name: "涨小三", age: 18}
 - `watch`和`computed`相比，`computed`是计算出一个属性，而`watch`则可能是做别的事情，如上报数据。
 :::
 
-## 12、❓Vue.set方法是如何实现的?
+
+## 12、Vue.set方法是如何实现的?
+::: danger 原理
+`Vue.set`方法用于向响应式对象添加新的属性，以确保添加的属性也是响应式的。其实现原理如下：
+1. 首先判断传入对象是否为响应式对象，如果不是，直接返回。
+2. 判断传入`key`是否已经存在于对象中，如果已经存在，则直接更新其值，否则执行第 3 步。
+3. 判断当前对象是否为`Vue`实例或根数据对象，如果是，则无法将新的属性转换为响应式对象，直接赋值；否则使用`Vue.observable`即`defineReactive`方法将新的属性转换为响应式对象，并将它添加到当前对象中。
+4. 触发响应式更新，通知相关的组件进行重新渲染。
+:::
+
+`Vue.set`方法会传入三个参数，分别是`target`、`key`和`value`。
+> target: 对象或者数组，key: 属性名或者数组索引，value: 对应设置的值。返回值为设置的值即`value`。
+
+大致实现原理如下:
+- 首先判断传入的`target`是数组，并且`key`是索引，就调用`splice`变异方法，将`val`值添加；
+- 如果传入的是一个对象，首先判断`key`是否存在于`target`中
+  - 如果存在，则表示不是新增属性，只需要修改值即可
+  - 如果不存在，会先会获取并判断`target`上的`__ob__`属性(该属性用于判断`target`是否为响应式对象)是否存在
+    - 如果`target`上的`__ob__`属性不存在，则表示`target`不是响应式对象，只需要给他添加新属性即可，不用将新属性转换成响应式
+    - 如果`target`上的`__ob__`属性存在，则表示`target`是响应式对象，就会调用`defineReactive`方法将新属性添加到`target`上
+    > `defineReactive`方会将新属性添加完之后并将其转化成响应式，最后通知依赖更新。
+
+对应`vue`源码位置`src/core/observer/index.js`
+```ts
+export function set (target, key, val){
+  if (process.env.NODE_ENV !== 'production' && (isUndef(target) || isPrimitive(target))) {
+    warn('Cannot set reactive property on undefined, null, or primitive value: ' + target)
+  }
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    target.length = Math.max(target.length, key)
+    target.splice(key, 1, val)
+    return val
+  }
+  if (key in target && !(key in Object.prototype)) {
+    target[key] = val
+    return val
+  }
+  const ob = (target: any).__ob__
+  if (target._isVue || (ob && ob.vmCount)) {
+    process.env.NODE_ENV !== 'production' && warn(
+      'Avoid adding reactive properties to a Vue instance or its root $data ' +
+      'at runtime - declare it upfront in the data option.'
+    )
+    return val
+  }
+  if (!ob) {
+    target[key] = val
+    return val
+  }
+  defineReactive(ob.value, key, val)
+  ob.dep.notify()
+  return val
+}
+```
+
+
+## 12、vm.$watch实现原理？
+`vm.$watch`是用来监听数据变化的方法。其实现原理:
+> 在调用`vm.$watch`方法时，Vue会创建一个新的`Watcher`对象，并把需要监听的数据作为`Watcher`的依赖。当被监听的数据发生变化时，`Watcher`会执行回调函数，并把新值和旧值作为参数传递给该函数。
+
+
+## 12、Vue.delete实现原理
+`Vue.delete`用于删除对象的属性或者数组的元素。其实现原理:
+1. 首先判断传入的第一个参数是否为数组或对象，如果不是则直接返回。
+2. 如果是数组，则使用JavaScript原生的`Array.prototype.splice()`方法来删除指定索引处的元素，并通知Vue响应式系统更新视图。
+3. 如果是对象，则使用JavaScript的`delete`操作符删除指定属性，并通知Vue响应式系统更新视图。
+
+
+## 12、Vue.extend实现原理
+`Vue.extend()`是Vue.js提供的一个全局API，用于创建可复用的组件构造器。其实现原理如下：
+> `Vue.extend()`的实现原理就是利用JavaScript的原型链和原型继承机制来创建一个集成了父类选项的子类构造函数，并通过该构造函数创建子类实例。
+1. 首先通过`Vue.extend()`方法创建一个子类构造函数Sub，并让它继承自父类构造函数Super。
+2. 接着使用`Object.create()`方法创建一个新对象`options`，它的原型指向父类的选项对象。这样，子类就能够继承父类的所有选项。
+3. 然后将传入`Vue.extend()`方法的选项对象混入到options中，覆盖父类选项的同名属性。
+4. 最后通过`new Sub(options)`创建一个子类实例，并返回该实例。
+
+
+## 12、Vue.directive实现原理
+`Vue.directive()`是Vue.js提供的一个全局API，用于注册全局自定义指令。其实现原理如下：
+> `Vue.directive()`的实现原理就是在Vue实例的选项对象中注册全局自定义指令，然后在组件中创建并绑定指令实例，利用指令实例对元素进行各种操作并响应元素的生命周期事件。
+1. 首先通过`Vue.directive()`方法，在Vue实例的`options.directives`属性上注册一个全局自定义指令。
+2. 在组件渲染时，如果该组件中使用了自定义指令，则会在`directives`选项中找到对应的指令配置对象，并创建一个指令实例。
+3. 指令实例包含一些生命周期钩子和一些方法，可以监听元素的生命周期事件，或者直接操作元素的DOM等。
+4. 当指令实例被绑定到元素上时，它会根据`bind、inserted、update`等生命周期钩子函数进行初始化。
+5. 当元素被插入到文档中或者更新时，指令实例中的相应钩子函数将被调用，执行特定的逻辑，更新元素的状态或者DOM。
+
+
+## 12、Vue.filter实现原理
+`Vue.filter()`是Vue.js提供的一个全局API，用于注册全局过滤器。其实现原理如下：
+> `Vue.filter()`的实现原理就是在Vue实例的选项对象中注册全局过滤器，然后在组件中使用过滤器时，调用该过滤器函数对指定的值进行处理并返回处理结果。
+1. 首先通过`Vue.filter()`方法，在Vue实例的`options.filters`属性上注册一个全局过滤器。
+2. 在组件渲染时，如果该组件中使用了过滤器，则会在`filters`选项中找到对应的过滤器函数，并调用该函数对指定的值进行处理。
+3. 过滤器函数接收被处理的值作为第一个参数，可以接收其他参数，并返回处理后的结果。
+4. 当组件中使用过滤器时，Vue.js会自动将指令表达式的值和过滤器参数传递给对应的过滤器函数，并获取处理后的结果。
+
+
+## 12、Vue.mixin实现原理
+`Vue.mixin()`是Vue.js提供的一个全局API，用于混入全局的组件选项。其实现原理如下：
+> `Vue.mixin()`的实现原理就是在Vue实例的选项对象中注册一个全局混入对象，并在组件实例化时将混入对象的选项合并到组件的选项中。
+1. 首先通过`Vue.mixin()`方法，在Vue实例的`options.mixins`属性上注册一个全局混入对象。
+2. 在组件实例化时，如果该组件中使用了混入对象，则会将混入对象中的所有选项合并到组件的选项中。
+3. 如果混入对象和组件选项中存在同名的选项，则会进行合并。具体的合并策略由Vue.js内部的`mergeOptions()`函数确定。
+4. 组件中的选项将覆盖混入对象中的同名选项，如果需要访问混入对象中的选项，可以通过特殊的方式来获取。
+
+
+## 12、Vue.component实现原理
+`Vue.component()`是Vue.js提供的一个全局API，用于注册全局组件。其实现原理如下：
+> `Vue.component()`的实现原理就是在Vue实例的选项对象中注册一个全局组件，然后在组件中创建并渲染组件实例，利用组件实例对组件进行各种操作并响应组件的生命周期事件。
+1. 首先通过`Vue.component()`方法，在Vue实例的`options.components`属性上注册一个全局组件。
+2. 在组件渲染时，如果该组件中使用了注册的全局组件，则会在`components`选项中找到对应的组件构造函数，并创建一个组件实例。
+3. 创建组件实例时，Vue.js会根据组件选项创建一个组件的虚拟DOM，并将其渲染成真实的DOM元素。
+4. 组件实例包含一些生命周期钩子和一些方法，可以监听自身的生命周期事件，或者直接操作自身的DOM等。
+
+
+## 12、Vue.compile实现原理
+`Vue.compile()`是Vue.js提供的一个全局API，用于将字符串模板编译为渲染函数。其实现原理如下：
+> `Vue.compile()`的实现原理就是利用Vue.js内部的编译工具将字符串模板编译为渲染函数。这样，我们就可以方便地在运行时动态地编译和渲染模板，提高程序的灵活性和可维护性。
+1. 首先通过`compileToFunctions()`方法，将字符串模板编译为渲染函数。
+2. `compileToFunctions()`方法会先从缓存中查找是否已经编译过该模板，如果已经编译过，则直接返回缓存中的渲染函数。
+3. 如果没有缓存，则使用`baseCompile()`方法对模板进行编译。`baseCompile()`方法会将模板解析为抽象语法树，并执行一系列的优化和静态分析。
+4. 最后，将抽象语法树转换成渲染函数代码字符串，并使用new Function()构造函数创建渲染函数。
+
+
+## 12、Vue.version实现原理
+`Vue.version`是Vue.js提供的一个全局属性，用于获取当前使用的Vue.js版本号。其实现原理如下:
+构建时读取了`package.json`中的`version`字段，然后将其赋值给`Vue.version`。
+
+
+## 12、Vue3中watch和watchEffect实现原理
+Vue 3中使用了基于`Proxy`的响应式系统，并引入了新的API`watchEffect`和`watch`，用于监视数据变化并执行相应的回调函数。
+::: tip watchEffect
+`watchEffect`的实现原理如下：
+1. 创建一个`ReactiveEffect`对象，并将回调函数作为参数传递给该对象。`ReactiveEffect`对象包含一些生命周期钩子和一些方法，可以监听数据变化事件，并响应相应的回调函数。
+2. 在回调函数中访问到响应式数据时，`ReactiveEffect`对象会将其依赖收集到一个`Set`中，并记录当前依赖关系。
+3. 当依赖发生变化时，`ReactiveEffect`对象会重新运行回调函数，并更新依赖关系。
+:::
+::: tip watch
+`watch`的实现原理如下：
+1. 创建一个响应式的`Ref`对象，并将要监视的数据作为参数传递给该对象。
+2. 使用`watchEffect`创建一个`ReactiveEffect`对象，并将回调函数作为参数传递给该对象。
+3. 在回调函数中访问到响应式数据时，`ReactiveEffect`对象会将其依赖收集到一个`Set`中，并记录当前依赖关系。
+4. 当依赖发生变化时，`ReactiveEffect`对象会重新运行回调函数，并更新依赖关系。
+:::
+
+
+## 12、Vue3中createApp实现原理
+`createApp`是Vue 3中创建应用程序实例的工厂函数。其实现原理如下：
+1. 创建一个Vue应用程序实例对象，并将根组件作为参数传递给该对象。
+2. 在应用程序实例对象中，创建各种全局API，并将其挂载到该实例的原型链上。
+3. 在应用程序实例对象中，创建全局状态管理器，并将其挂载到该实例的config.globalProperties属性上。
+4. 在应用程序实例对象中，创建各种全局指令和全局混入等功能，并将其挂载到该实例的选项对象中。
+5. 最后，通过调用应用程序实例对象的mount方法来挂载根组件到DOM节点上。
+
+
+## 12、Vue3 Fragment实现原理
+Vue3 中的`Fragment`本质上是一个组件，它可以将多个子节点包裹成一个单独的父节点，并且不会在页面上渲染出任何标签。
+> `Fragment`的实现原理其实很简单，它在编译阶段被处理为一个特殊的虚拟节点，这个虚拟节点不会直接渲染到页面中，而是将它的所有子节点都挂载到父节点上，形成一个包裹层级。因此，当我们在使用`Fragment`时，可以把多个子元素放进一个
 
 
 ## 13、Vue为什么要用虚拟Dom？
+::: danger 为什么使用虚拟DOM
+Vue使用虚拟DOM的主要原因是为了优化性能，提高渲染速度和效率。通过将组件结构表示为轻量级、独立于平台的虚拟节点，Vue可以避免在每次数据变更时直接操作真实DOM，从而减少不必要的计算量和浏览器重排/重绘的开销。这样可以大大提升应用的响应速度和用户体验。
+> 另外，虚拟DOM还使得Vue可以跨平台运行，如在Web、移动端或桌面端等多种环境中使用相同的代码来构建UI界面。 
+:::
+
 ::: tip 什么是虚拟 DOM？
 Virtual DOM理解为一个简单的JS对象，包含`tag`(标签名)、`props | attrs`(属性)、`children`(子元素对象)三个属性。
 :::
@@ -308,64 +481,95 @@ Virtual DOM理解为一个简单的JS对象，包含`tag`(标签名)、`props | 
 
 
 ## 14、Vue的diff算法的作用？diff算法原理是什么？
-::: tip 为什么要用Diff算法
-由于在浏览器中操作DOM是很昂贵的，频繁的操作DOM，会产生一定的性能问题，这就是虚拟DOM的产生原因。虚拟DOM本质上是JavaScript对象，是对真实DOM的抽象状态变更时，记录新树与旧树的差异，最后把差异更新到真正的DOM中。
-
-即使使用了Virtual DOM来进行真实DOM的渲染，在页面更新的时候，也不能全量地将整颗Virtual DOM进行渲染，而是去渲染改变的部分，这时候就需要一个计算Virtual DOM树改变部分的算法了，这个算法就是Diff算法。
+::: danger diff算法的作用
+Vue的diff算法的主要作用是在数据发生变化时，高效地更新虚拟DOM树，并尽可能少地操作真实DOM，从而提高应用性能。
+> diff算法可以通过比较新旧虚拟DOM树的差异，只更新必要的部分，避免了不必要的重新渲染和重绘操作，从而减少了浏览器的计算量和开销。这种优化方式被称为“局部更新”，相比于全量更新，它可以极大地提高应用的响应速度和用户体验。
 :::
+::: danger diff算法的实现原理
+diff算法原理也是比较两个虚拟DOM树之间的差异。具体来说，当数据发生变化时，Vue会重新渲染组件，并生成新的虚拟DOM树。然后，Vue会将新旧两个虚拟DOM树进行比较，找出其中不同的部分，并尽可能地复用旧的DOM节点，从而最小化真实DOM操作的次数。
 
-**diff算法的作用**
-> 用来修改DOM的一小段，不会引起dom树的重绘
+**Vue2 diff算法实现原理**: Vue2中采用的是基于虚拟DOM的diff算法，其实现原理主要分为以下几个步骤：
+1. 首先将新旧两个虚拟DOM节点进行比较，如果节点类型不同，则直接销毁旧节点，并使用新节点替换它。
+2. 如果节点类型相同，则遍历新旧两个节点的属性列表，对比属性值是否相同。如果有不同的属性，则更新该属性值。
+3. 对比子节点列表:
+  - 如果旧节点没有子节点，而新节点有子节点，则直接将新节点的子节点添加到DOM中。
+  - 如果新节点没有子节点，而旧节点有子节点，则直接从DOM中移除旧节点的所有子节点。
+  - 如果新旧节点都有子节点，则对子节点列表进行Diff算法的递归操作。
 
-**diff算法的实现原理**
-> diff算法将虚拟DOM的某个节点数据改变后生成新的的node节点与旧节点进行比较，并替换为新的节点，具体过程就是调用Patch方法，比较新旧节点，一边比较一边给真实DOM打补丁进行替换。
+**Vue3 diff算法实现原理**: Vue3中采用的是基于虚拟DOM的diff算法，其实现原理主要分为以下几个步骤：
+1. 首先，Vue3将新的vDOM树和旧的vDOM树进行比较，找到它们之间的差异。
+2. Vue3使用一个叫做`PatchFlags`的标记来记录差异。这个标记表示需要对节点进行何种类型的更新操作，如创建、删除、替换、移动、更新等。
+3. 对于每个需要更新的节点，Vue3会使用相应的更新策略来进行更新。例如，对于文本节点，Vue3会直接更新其textContent属性。对于元素节点，则会更新它的属性列表、子节点及事件监听器等。
+4. 如果存在需要移动节点的情况，Vue3则会尝试复用已有的节点，而不是销毁并重新创建它们。这样可以减少DOM操作的开销，提高性能。
+
+**Vue3 diff算法在Vue2基础上优化地方**
+1. 响应式系统：使用 Proxy 对象替代了 Vue2 中的 Object.defineProperty，提高了响应式系统的性能。
+2. 静态提升和模板嵌套静态提升：通过将静态节点在编译阶段提取出来，减少了不必要的虚拟 DOM 操作，提高了渲染性能。
+3. 编译器优化：在编译阶段对模板进行分析，生成更加优化的渲染函数，使得渲染时只需要执行函数，而不用再解析模板，提高了渲染性能。
+4. 追踪机制：采用基于数组的追踪机制（Track-by-Array）替代了 Vue2 中的基于对象的追踪机制（Track-by-Reference），减少了不必要的触发更新操作，提高了渲染性能。
+5. 异步更新策略：在组件渲染过程中采用异步更新策略，防止出现意外的递归更新情况，提高了渲染性能和稳定性。
+:::
 
 
 ## 15、既然vue通过数据劫持可以精准的探测数据变化，为什么还要进行diff检测差异?
-响应式数据变化，Vue确实可以在数据发生变化时，响应式系统可以立刻得知。但是如果给每个属性都添加`watcher`用于更新的话，绑定细粒度过高，会产生大量的`watcher`，则会造成过大的内存和依赖追踪的开销，从而降低性能。而细粒度过低会造成无法侦测到变化，则导致更新不精准的问题。
-
-所以vue采用了中等细粒度的方案(`watcher` + `diff`)来检测差异，只针对组件级别的进行响应式监听，这样知道哪个组件发生了变化，再对组件进行`diff`算法找到具体变化的位置。这里可以在讲一下`diff`的原理。
+::: danger 
+虽然Vue可以通过数据劫持来监听数据变化，但是它并不能精确地知道哪些部分的DOM需要更新，因为一个组件可能有很多个视图依赖于不同的数据，而且这些视图之间的关系非常复杂。因此，Vue需要使用diff算法来检测哪些DOM节点需要更新，从而最小化DOM操作的次数，并提高页面渲染的性能。
+:::
 
 
 ## 16、请说明key的作用和原理
-::: tip 作用
-key就是一个标识，主要是被用在虚拟DOM算法中，在新旧`nodes`对比时辨识`VNodes`，相当于唯一标识ID，不会出现在真实DOM中。
+::: danger 作用
+用于标识每个列表项的唯一性。当一个列表发生更新时，Vue会根据新旧列表中的每个项的key值进行比较，并尽可能地复用已有的DOM节点，以减少页面渲染的开销。
 :::
-::: tip 原理
-https://blog.csdn.net/cun_king/article/details/120714227
+::: danger 原理
+实现原理可以简单概括为：
+1. Vue会在渲染列表时遍历每个列表项，并将其key值存储到一个哈希表中；
+2. 在下一次渲染列表时，Vue会再次遍历每个列表项，并根据其key值查找哈希表，判断它是否存在；
+3. 如果存在，则尝试复用已有的DOM节点；否则，创建新的DOM节点并插入到合适的位置。
 :::
 
 
 ## 17、谈谈对组件的理解
-组件系统是Vue的另一个重要概念，因为它是一个抽象，允许我们使用小型、独立和通常可复用的组件构建大型应用。几乎任何类型的应用界面都可以抽象为一个组件树。
+<span style="color: red;">组件是指将页面上的某个功能或模块进行封装，形成一个独立的、可复用的代码单元</span>。通过组件化开发，可以将UI界面的各个部分进行拆分和抽象，从而更好地管理和维护代码，提高开发效率和代码质量。
+> 在前端开发中，组件通常由HTML、CSS和JavaScript等代码构成，可以包含一些特定的业务逻辑、样式和交互效果等。组件的设计应该遵循高内聚、低耦合的原则，使得组件本身具有独立性、可扩展性和可维护性。
 
-组件就是对局部视图的封装，每个组件包含了
-- HTML结构`template`
-- CSS样式`style`
-- JavaScript行为（`script`，`data数据`、`methods行为`）
-  - 常用组件技术：属性prop、自定义事件、插槽，它们主要用于组件通信、扩展等。
-
-组件化开发能大幅提高了开发效率、代码的复用性、增强可维护性，更好的去解决软件上的高耦合、低内聚、无重用的三大代码问题。
-
-特点：
-- 可重用性: 每个组件都是具有独立功能的，它可以被使用在多个ui场景
-- 可维护性: 每个小的组件仅仅包含自己的逻辑，更容易被理解和维护
-- 可测试性: 每个组件都是独立的，那么可以对各个组件单独进行测试
-- 降低更新范围，值重新渲染变化的组件
-- 高内聚、低耦合、单向数据流
+组件具有如下几个特点:
+1. 独立性：每个组件都应该是独立的、完整的代码单元，不依赖于其他组件或模块；
+2. 可复用性：组件应该是可复用的，可以在不同的场景中多次使用，提高代码的重用率；
+3. 可定制性：组件应该具有一定的可定制性，允许开发者根据自己的需求对其进行修改和扩展；
+4. 易维护性：组件应该易于维护，当出现问题时，能够快速地定位和修复。
 
 
-## 18、❓请描述vue组件的渲染流程
-渲染组件时，会通过`Vue.extend`方法创建子组件的构造函数，并且进行实例化。最后手动调用了`$mount()`进行挂载，更新组件时会进行`patchVnode`流程，核心就是`diff`算法。
+## 18、请描述vue组件的渲染流程
+Vue组件的渲染流程可以简单概括为以下几个步骤：
+1. **解析模板**：Vue会先将组件的模板转换成抽象语法树（AST）并进行静态分析，以确定组件的依赖关系、渲染顺序等信息；
+2. **创建虚拟DOM**：对于每个组件实例，Vue会创建一个虚拟DOM节点树，用于描述组件的结构和状态；
+3. **进行数据响应式处理**：Vue会为组件实例设置一个响应式系统，用于监听组件内部数据的变化，并自动更新组件的视图；
+4. **渲染真实DOM**：当组件需要进行渲染时，Vue会通过虚拟DOM树生成相应的HTML代码，并将其插入到真实的DOM树中；
+5. **监听数据变化**：当组件内部数据发生变化时，Vue会自动更新虚拟DOM树，并比较新旧虚拟DOM树之间的差异，以最小化DOM操作的次数；
+6. **更新视图**：根据上一步的差异，Vue会执行最少的DOM操作，更新组件的视图。
+
+注意: Vue在进行组件渲染时，采用了异步更新机制，即将多个需要更新的组件合并成一个队列，在下一个事件循环周期中统一更新。这样做可以有效地避免不必要的重复渲染，并提高页面渲染的性能和稳定性。
 
 
-## 19、❓请描述vue组件的更新流程
+## 19、请描述vue组件的更新流程
+Vue组件的更新流程可以简单概括为以下几个步骤：
+1. **触发数据变化**：当组件内部的数据发生变化时，Vue会自动触发响应式系统，并向相应的依赖项发送通知，以通知需要更新的组件；
+2. **生成新的虚拟DOM树**：根据最新的数据状态，Vue会重新计算组件的虚拟DOM树，并生成一个新的虚拟DOM树；
+3. **比较新旧虚拟DOM树**：Vue会将新旧两个虚拟DOM树进行比较，找出它们之间的差异，并记录在一个变更列表中；
+4. **更新真实DOM节点**：根据变更列表，Vue会执行最少的DOM操作，更新真实的DOM节点；
+5. **执行钩子函数**：在更新完所有的DOM节点后，Vue会依次执行一些特定的钩子函数，如updated、activated等，以便开发者在必要的时候进行一些额外的处理。
+
+注意: Vue在进行组件更新时，采用了异步更新机制，即将多个需要更新的组件合并成一个队列，在下一个事件循环周期中统一更新。这样做可以有效地避免不必要的重复渲染，并提高页面渲染的性能和稳定性。
 
 
-## 20、❓异步组件原理
+## 20、Vue异步组件原理
+Vue的异步组件是一种优化手段，用于延迟组件的加载和渲染，从而提高页面的性能和用户体验。其原理是通过Webpack或者其他构建工具将组件打包成一个单独的文件，并使用动态导入（dynamic import）的方式来异步加载和注册组件。
+> 具体来说，当需要加载一个异步组件时，Vue会通过动态导入语法来请求相应的组件代码，这个请求是异步的，不会阻塞主线程。在异步组件加载完成后，Vue会将其缓存起来，并自动注册到全局的组件列表中，以便后续的使用。在使用异步组件时，只需要像普通组件一样使用即可，Vue会根据需要自动加载和渲染组件。
 
 
-## 21、❓函数组件的优势和原理
+## 21、❓Vue函数组件的优势和原理
+
 
 
 ## 22、组件的传值方式有哪些？Vue组件之间通信方式有哪些？
@@ -768,8 +972,8 @@ method2 running:  c组件
   ![2023030816341910.png](http://img.itchenliang.club/img/2023030816341910.png)
 
 
-## 27、❓Vue.use是干什么的？原理是什么？
-`Vue.use()`用于安装`Vue.js`插件。
+## 27、Vue.use是干什么的？原理是什么？
+`Vue.use()`是Vue.js提供的插件安装方法，用于全局注册Vue.js插件。
 > 注意: **当`install`方法被同一个插件多次调用，插件将只会被安装一次**。
 ::: tip 开发插件
 插件有如下两个方式开发。
@@ -818,7 +1022,10 @@ method2 running:  c组件
   ```
 :::
 
-::: tip `Vue.use()`原理
+::: danger `Vue.use()`原理
+1. 插件是一个对象或函数，在对象上提供`install`方法或在函数中直接定义`install`方法。
+2. 调用`Vue.use(插件)`，会检查插件是否已经安装过，如果安装过则直接返回，否则执行插件的`install`方法。
+3. 在执行`install`方法时，会将Vue构造函数作为参数传入，使得插件可以使用Vue的功能，同时也可以在Vue原型链上扩展新的方法或属性，实现对Vue.js的功能增强。
 :::
 
 
@@ -1039,7 +1246,23 @@ export default new Router({
 :::
 
 
-## 31、❓keep-alive平时在哪里使用？原理是什么？
+## 31、keep-alive平时在哪里使用？原理是什么？
+`<keep-alive>`是Vue.js内置组件，用于缓存动态组件或者组件的状态，从而提高应用的性能。
+::: danger 使用场景
+1. **在路由中缓存路由组件**：可以通过在`<router-view>`中嵌套`<keep-alive>`组件来缓存路由组件的状态，从而避免每次切换路由时都重新渲染路由组件，提升页面加载速度和用户体验。
+2. **在动态组件中缓存组件的状态**：有些组件是在运行时才创建并销毁的，例如对话框、折叠面板等。这种情况下，可以将动态组件包裹在一个`<keep-alive>`标签中，以便缓存组件的状态，避免每次打开或关闭组件时都重新渲染组件。
+3. **在组件中手动控制缓存**：如果我们需要手动控制一个组件的缓存，可以使用`<keep-alive>`的`include`和`exclude`属性来指定要缓存或排除的组件名称。
+:::
+::: danger 实现原理
+`<keep-alive>`的实现原理是通过 Vue.js 提供的抽象组件`AbstractComponent`和混入`keep-alive-mixin`实现的。
+> 当一个组件被包裹在`<keep-alive>`组件内时，该组件会被缓存起来。当我们再次访问该组件时，不会重新创建组件实例，而是直接从缓存中取出之前创建的组件实例，并将其重新挂载到 DOM 上。
+
+大致实现过程：
+1. 在每个被包裹在`<keep-alive>`内的组件上添加了一个`_isKeptAlive`标记。
+2. 当一个被包裹在`<keep-alive>`内的组件被激活时（即组件插入到页面中），如果它是从缓存中获取的，则从缓存中移除该组件，并触发组件的`activated`生命周期钩子函数。
+3. 当一个被包裹在`<keep-alive>`内的组件被停用时（即组件从页面中移除），则将该组件放入缓存中并触发组件的`deactivated`生命周期钩子函数。
+4. 当再次访问该组件时，如果该组件已经被缓存，则取出缓存中的组件实例，并将其重新挂载到 DOM 上。
+:::
 
 
 ## 32、谈谈Vue的性能优化有哪些?
@@ -1070,21 +1293,27 @@ export default new Router({
   - 服务端gzip压缩
 
 
-## 33、❓vue中使用了哪些设计模式?
-- **单例模式**: 单例模式就是整个程序有且仅有一个实例;
-- **工厂模式**: 传入参数就可以创建实例(虚拟节点的创建`createElement`);
-- **发布订阅模式**: `eventBus`订阅者把自己想订阅的事件注册到调度中心，当该事件触发时候，发布者发布该事件到调度中心，由调度中心统一调度订阅者注册到调度中心的处理代码;
-- **观察者模式**: `watch`和`dep`的关系
-- **代理模式**: 给某一个对象提供一个代理对象,并由代理对象控制对原对象的引用。`_data属性`、`proxy`、`防抖`、`节流`
-  ```js
-  let p = new Proxy()
-  ```
-- **中介者模式**: 中介者是一个行为设计模式,通过提供一个统一的接口让系统的不同部分进行通信(`vuex`);
-- **策略模式**: 策略模式指对象有某个行为,但是在不同的场景中,该行为有不同的实现方案(`mergeOptions`);
-- **外观模式**: 提供了统一的接口，用来访问子系统中的一群接口;
+## 33、vue中使用了哪些设计模式?
+1. **观察者模式**：Vue的响应式系统基于观察者模式实现，当数据发生变化时，会通知所有关联的观察者进行更新。
+2. **发布订阅模式**：Vue的事件系统也是基于发布订阅模式实现的，组件之间可以通过事件来进行通信。
+3. **代理模式**：Vue的虚拟DOM采用了代理模式，对真实DOM进行了封装，提供了更加便捷的API操作。
+4. **工厂模式**：Vue中组件的创建和销毁都是通过工厂模式实现的，使得组件的创建和管理更加灵活。
+5. **MVVM模式**：Vue采用MVVM（Model-View-ViewModel）模式，将视图与数据分离，通过ViewModel实现双向绑定，提高了代码的可维护性和可测试性。
 
 
-## 34、❓Watch中的`deep:true`是如何实现的？
+## 34、vue中Watch的 deep:true 是如何实现的？
+在Vue中，当使用`watch`监听对象时，可以通过设置`deep:true`选项来深度监听对象的变化。
+::: danger 原理
+当设置`deep:true`时，`watch`会递归遍历对象的所有属性，并为每个属性创建一个独立的观察者，这些观察者会在对象属性值发生变化时触发更新操作。
+
+具体实现步骤如下:
+1. 当使用`watch`监听一个对象时，Vue会为该对象创建一个观察者（Watcher）。
+2. 如果设置了`deep:true`选项，则对该对象进行递归遍历。
+3. 对于每个属性，创建一个新的观察者，同时将该观察者添加到该属性的依赖列表中。
+4. 当对象的某个属性值发生变化时，会通知该属性的所有观察者进行更新。
+5. 如果该属性是一个对象，则递归遍历该对象的所有属性，并为每个属性创建独立的观察者。
+6. 如果数组中的某个元素发生变化，则会触发数组的依赖更新，但不会递归遍历数组元素的属性。
+:::
 
 
 ## 35、Vue3速度快的原因？Vue3 为何比 Vue2 快？
@@ -1172,14 +1401,10 @@ export default {
 
 
 ## 37、怎样理解 Vue 的单向数据流？
-**Vue的单向数据流**
-> 指数据一般从父组件传到子组件，子组件没有权利直接修改父组件传来的数据，即子组件从`props`中直接获取的数据，只能请求父组件修改数据再传给子组件。父级属性值的更新会下行流动到子组件中。
+Vue 的单向数据流是指数据在 Vue 组件中的传递是单向的，即父组件可以通过 props 将数据传递给子组件，在子组件中不能直接修改这些数据。
+> 如果需要修改，必须通过`$emit`触发事件由子组件向父组件传递数据来实现，若果非要直接修改`prop`会抛出警告。
 
-这实际上是为了更好的解耦，在开发中如果有多个子组件依赖与父组件的某个数据，万一子组件真的可以直接修改父组件的数据，那么一个子组件的变化将会引发所有依赖于这个数据的子组件的都变化。这样会导致你的应用的数据流向难以理解。<br>
-所以vue不推荐子组件直接修改父组件的数据，直接修改`prop`会抛出警告。
-
-子组件想修改父组件的状态，只能通过`$emit`派发一个自定义事件，父组件接受到后，由父组件更改。
-
+这种单向数据流的设计使得组件之间的通信更加可预测和可维护，也有利于代码的复用和测试。
 
 
 ## 38、为什么不建议用index作为key？
@@ -1671,7 +1896,7 @@ export default {
 ```
 
 
-## 42、❓为什么要使用异步组件？实现原理？
+## 42、为什么要使用异步组件？实现原理？
 **什么是异步组件?**
 > 异步组件就是定义的时候什么都不做，只在组件需要渲染（组件第一次显示）的时候进行加载渲染并缓存，缓存是以备下次访问。
 
@@ -1690,12 +1915,8 @@ components:{
   }
 }
 ```
-
 **实现原理？**
-> 在`createComponent`方法中，会有相应的异步组件处理，首先定义一个`asyncFactory`变量，然后进行判断，如果组件是一个函数，然后会去调`resolveAsyncComponent`方法，然后将赋值在`asyncFactory`上的函数传进去，会让`asyncFactory`马上执行，执行的时候并不会马上返回结果，因为他是异步的，返回的是一个`promise`，这时候这个值就是`undefined`，然后就会先渲染一个异步组件的占位，空虚拟节点。如果加载完之后会调`factory`函数传入`resolve`和`reject`两个参数，执行后返回一个成功的回调和失败的回调，`promise`成功了就会调`resolve`，`resolve`中就会调取`forceRender`方法强制更新视图重新渲染，`forceRender`中调取的就是`$forceUpdate`，同时把结果放到`factory.resolved`上，如果强制刷新的时候就会再次走`resolveAsyncComponent`方法，这时候有个判断，如果有成功的结果就把结果直接放回去，这时候`resolveAsyncComponent`返回的就不是`undefined`了，就会接的创建组件，初始化组件，渲染组件。
-```html
-https://blog.csdn.net/qq_42072086/article/details/109642272
-```
+> 参考: [Vue异步组件原理](#_20、vue异步组件原理)
 
 
 ## 43、子组件可以直接改变父组件的数据么，说明原因？
@@ -1966,10 +2187,9 @@ binding 参数会是一个这样的对象：
 ```
 
 
-## 46、❓Vue computed实现？
-
-
-## 47、❓Vue中diff算法原理？
+## 46、Vue computed实现原理？
+实现原理是基于一个称为“响应式依赖追踪”的技术。当一个计算属性被声明时，Vue会将它的`getter`函数添加到响应式对象的依赖列表中。然后，在每次相关的数据发生变化时，Vue 会重新计算这个计算属性，并更新相关的视图。
+> 具体来说，Vue在初始化时会遍历所有的`data`属性和计算属性，通过`Object.defineProperty`来给它们添加`getter、setter`函数，使得在获取或者修改这些属性的值时，能够触发相应的依赖收集和派发更新操作。
 
 
 ## 48、动态给vue的data添加一个新的属性时会发生什么？怎样解决？
@@ -2007,7 +2227,7 @@ binding 参数会是一个这样的对象：
 8. 安装组件库`element-plus`并配置
 
 目录结构
-```
+```sh
 - node_modules         项目依赖包的保存目录
 - public               静态资源目录
   - index.html         首页入口.html文件
@@ -2241,16 +2461,16 @@ const ctx = getCurrentInstance().proxy
 
 
 ## 60、如何理解ref、toRef和toRefs？
-三个方法都可以将某个对象中的属性变成响应式数据。
-- `ref`是对原数据的拷贝，修改响应式数据时不会影响之前的数据，视图会更新
+在 Vue 中，`ref`、`toRef`和`toRefs`都是用来处理响应式数据的API。
+- `ref`: 用来创建一个响应式对象，并将其封装在一个对象中。可以通过`.value`访问和修改这个响应式对象的值。
   ```js
+  import { ref } from 'vue'
   const count = ref(0)
-  console.log(count.value) // 0
-
-  count.value++
-  console.log(count.value) // 1
+  console.log(count.value) // 输出 0
+  count.value++ // 修改值
+  console.log(count.value) // 输出 1
   ```
-- `ref`可用于获取`Dom`
+  初次之外，`ref`还可用于获取`Dom`
   ```html
   <template>
     <div ref="eleDom">ref-dom-test</div>
@@ -2263,61 +2483,38 @@ const ctx = getCurrentInstance().proxy
 		})
   </script>
   ```
-- `toRef`、`toRefs`是对原数据的引用，修改响应式数据，会影响到原始数据，但是视图不会更新
-  - `toRef`修改的是对象的某个属性
-  - `toRefs`修改的是整个对象
-- `toRef`一次仅能设置一个数据，接收两个参数，第一个参数是哪个对象，第二个参数是对象的哪个属性
+- `toRef`: 用来创建一个响应式引用，它接受两个参数：第一个参数是一个响应式对象，第二个参数是这个对象中的一个属性名。调用`toRef`后会返回一个仅包含该属性的响应式对象引用。
   ```js
+  import { reactive, toRef } from 'vue'
   const state = reactive({
-    foo: 1,
-    bar: 2
+    count: 0,
   })
-  const fooRef = toRef(state, 'foo')
-  // 更改该 ref 会更新源属性
-  fooRef.value++
-  console.log(state.foo) // 2
-
-  // 更改源属性也会更新该 ref
-  state.foo++
-  console.log(fooRef.value) // 3
+  const countRef = toRef(state, 'count')
+  console.log(countRef.value) // 输出 0
+  state.count++
+  console.log(countRef.value) // 输出 1
   ```
-- `toRefs`接收一个对象作为参数，它会遍历对象身上的所有属性，然后挨个调用`toRef`执行
+- `toRefs`: 用来将一个响应式对象转化为普通对象，但是每个属性都会变成一个响应式对象引用。
   ```js
+  import { reactive, toRefs } from 'vue'
+
   const state = reactive({
-    foo: 1,
-    bar: 2
+    count: 0,
+    name: 'Vue',
   })
-  const stateAsRefs = toRefs(state)
-  /*
-  stateAsRefs 的类型：{
-    foo: Ref<number>,
-    bar: Ref<number>
-  }
-  */
-  // 这个 ref 和源属性已经“链接上了”
-  state.foo++
-  console.log(stateAsRefs.foo.value) // 2
-
-  stateAsRefs.foo.value++
-  console.log(state.foo) // 3
+  const refs = toRefs(state)
+  console.log(refs.count.value) // 输出 0
+  console.log(refs.name.value) // 输出 'Vue'
+  state.count = 1
+  state.name = 'Vue3'
+  console.log(refs.count.value) // 输出 1
+  console.log(refs.name.value) // 输出 'Vue3'
   ```
-  当从组合式函数中返回响应式对象时，`toRefs`相当有用。使用它，消费者组件可以解构/展开返回的对象而不会失去响应性：
-  ```js
-  function useFeatureX() {
-    const state = reactive({
-      foo: 1,
-      bar: 2
-    })
-    // ...基于状态的操作逻辑
-    // 在返回时都转为 ref
-    return toRefs(state)
-  }
 
-  // 可以解构而不会失去响应性
-  const { foo, bar } = useFeatureX()
-  ```
-  `toRefs`在调用时只会为源对象上可以枚举的属性创建 ref。如果要为可能还不存在的属性创建`ref`，请改用`toRef`。
-  - `setup`中返回`toRefs(state)`, 或者`toRef(state, ‘xxx’)`—(这样就能够在`template`中不使用`state.xxx`)
+总结: 
+- `ref`创建一个响应式对象
+- `toRef`创建一个响应式对象引用
+- `toRefs`将整个响应式对象转化为普通对象，但每个属性都会变成一个响应式对象引用。
 
 
 ## 61、Proxy 相比于 defineProperty 的优势
@@ -2342,32 +2539,13 @@ Proxy 还拥有以下优势：
 
 
 ## 63、vue3性能比vue2好的原因？
-1. `diff`算法优化
-  - Vue2中的虚拟dom是进行全量对比的
-    ![2023031014045010.png](http://img.itchenliang.club/img/2023031014045010.png)
-  - Vue3新增了静态标记(`PatchFlag`)，在与上次数据虚拟节点对比的时候只对比有`patchFlag`的节点，并且可以通过静态标记得到本次要对比的内容
-    ![202303101405001.png](http://img.itchenliang.club/img/202303101405001.png)
-    可以在[Vue3 Template Explorer](https://vue-next-template-explorer.netlify.app/)中得到验证
-    ```js
-    export function render(_ctx, _cache, $props, $setup, $data, $options) {
-      return (_openBlock(), _createBlock("div", null, [
-        _createVNode("p", null, "这是一个段落"),
-        _createVNode("p", null, _toDisplayString(_ctx.msg), 1 /* TEXT */)
-      ]))
-    }
-    ```
-    很明显我们可以看见生成的`render`函数中有一个标记1
-2. 静态提升`hoistStatic`
-  - 在Vue2中无论元素是否参与更新，每次都会重新创建，然后再渲染。每次都会`createVNode`。
-    ![202303101400417.png](http://img.itchenliang.club/img/202303101400417.png)
-  - 但是在Vue3中使用了静态提升后，对于不参与更新的元素，只会被创建一次，在渲染时直接复用即可
-    ![202303101400563.png](http://img.itchenliang.club/img/202303101400563.png)
-3. 事件侦听器缓存`cacheHandles`
-  - 默认情况下`onClick`会被视为动态绑定，所以每次都会去追踪它的变化，但是因为是同一个函数，所以没必要去追踪它的变化，想办法将它直接缓存起来复用就会提升性能。
-  ![2023031014011510.png](http://img.itchenliang.club/img/2023031014011510.png)
-  ![202303101401309.png](http://img.itchenliang.club/img/202303101401309.png)
-  从上图就可以看到，`onClick`果然会被视为动态绑定，它有静态标记，查看刚才提到的目录中发现，8是动态属性。开启`cacheHandlers`后，静态标记就不存在了，那么这部分内容也就不会进行比较了。
-  ![202303101401557.png](http://img.itchenliang.club/img/202303101401557.png)
+1. **更快的渲染速度**：Vue3 借鉴了 React 的思路，使用了虚拟DOM中的静态提升和基于树的组件缓存等技术，可以减少不必要的渲染操作，从而提高渲染速度。
+  > 静态提升: 将静态的DOM节点提升为常量，在每次渲染时避免重复地创建相同的节点。这样可以减少运行时的开销，提高渲染性能。
+2. **更小的包体积**：Vue3 底层核心库使用了 Tree-shaking 技术，可以更好地优化依赖模块，从而减小打包后的文件体积。
+3. **更好的响应式性能**：Vue3 使用了`Proxy`来代替`Object.defineProperty`实现响应式数据绑定，从而减少了一些重复的监听操作，提高了响应式性能。
+4. **更好的TypeScript支持**：Vue3 为了支持 TypeScript，在代码设计上进行了改进，例如使用新的 ComponentOptions 类型来描述组件选项，使得类型检查更加准确、友好。
+5. **更强的扩展性**：Vue3 引入了 Composition API，可以让开发者更方便地组织和复用代码逻辑，从而提高代码的可维护性和复用性。同时，Composition API 可以与 Options API 混合使用，提供了更灵活的编程方式。
+
 
 
 ## 64、Proxy响应式绑定
@@ -2421,20 +2599,24 @@ Vue3使用了`Proxy`API做数据劫持，它劫持的是整个对象，自然对
 通过`Proxy`实现双向响应式绑定，相比`Object.defineProperty`的遍历属性的方式效率更高，性能更好，另外`Virtual DOM`只更新`diff`动态部分、时间缓存等，也带来了性能上的提升。
 
 
-## 65、❓ref响应式是怎样设计的？
-监听了value 的改变 劫持value属性的setter gatter, 因此ref一般用在基本数据，或者引用数据的嵌套层级不深得数据上
+## 65、ref响应式设计实现原理？
+ref是通过使用ES6的`Proxy`对象来实现的。当调用`ref`函数时，会创建一个值为`{value: initialValue}`的响应式对象，并将其封装到一个代理对象中。
+> 当我们使用`ref`对象读取或修改它的值时，实际上是在操作这个代理对象。这个代理对象会拦截我们对`value`属性的访问和修改，并通过Vue 3提供的`reactive`函数使得这些操作具有响应性。
 
 
-## 66、❓reactive响应式是怎样设计的？
-跟ref一样 但是底层采用的是ES6的Proxy代理了整个引用数据
+## 66、reactive响应式设计实现原理？
+响应式系统的实现主要基于ES6的`Proxy`对象和`Reflect`API。当我们调用`reactive`函数时，它会接收一个普通的JavaScript对象作为参数，并返回一个代理对象。这个代理对象会拦截我们对对象属性的访问和修改，并通过Vue 3提供的`track`和`trigger`函数来实现响应式。
+- 具体来说，当我们对代理对象的属性进行访问时，Vue 3会通过`track`函数将当前的依赖关系记录下来。如果该属性被用于渲染视图或计算其他响应式属性，则会在观察者中建立起这种依赖关系。
+- 当我们对代理对象的属性进行修改时，Vue 3会通过`trigger`函数通知所有依赖于该属性的观察者进行更新。这些观察者可能是渲染视图、计算其他响应式属性或执行副作用等。
 
 
 ## 67、什么是组合式API？
-组合式 API (Composition API) 是一系列 API 的集合，使我们可以使用函数而不是声明选项的方式书写 Vue 组件。它是一个概括性的术语，涵盖了以下方面的 API：
+组合式API是Vue 3中的一个新特性，它通过提供一组基础函数，可以更加灵活和直观地编写可重用的逻辑代码。组合式API提供了一些基础函数：
 - 响应式 API：例如`ref()`和`reactive()`，使我们可以直接创建响应式状态、计算属性和侦听器。
 - 生命周期钩子：例如`onMounted()`和`onUnmounted()`，使我们可以在组件各个生命周期阶段添加逻辑。
 - 依赖注入：例如`provide()`和`inject()`，使我们可以在使用响应式 API 时，利用 Vue 的依赖注入系统。
-组合式 API 是 Vue 3 及 Vue 2.7 的内置功能。
+
+组合式 API 是 Vue3 及 Vue2.7 的内置功能。
 
 
 ## 68、hook代码写在哪里？
@@ -2770,15 +2952,6 @@ Vue中标签绑定事件：
 - `main.js`: 程序入口文件;
 
 
-## 78、❓聊聊你对Vue.js的template编译的理解？ 
-> https://blog.csdn.net/qq_45670012/article/details/101625918
-
-简而言之，就是先转化成AST树，再得到的`render`函数返回`VNode`（Vue的虚拟DOM节点）
-> 首先，通过`compile`编译器把`template`编译成`AST`语法树(abstract syntax tree 即源代码的抽象语法结构的树状表现形式)，`compile`是`createCompiler`的返回值，`createCompiler`是用以创建编译器的。另外`compile`还负责合并`option`。
-
-然后，AST会经过`generate`(将AST语法树转化成render funtion字符串的过程)得到`render`函数，`render`的返回值是`VNode`,`VNode`是Vue的虚拟DOM节点,里面有(标签名、子节点、文本等等)。
-
-
 ## 79、dom是在哪一个生命周期完成渲染的？
 在`mounted`中就已经完成了。
 
@@ -2918,14 +3091,6 @@ const students = ref([
 数据驱动、组件系统
 
 
-## 86、❓Vue.js双向绑定的原理
-**Vue2**
-> 
-
-**Vue3**
-> 
-
-
 ## 87、MVC和MVVM的区别
 - MVC表示“模型-视图-控制器”，MVVM表示“模型-视图-视图模型”；
 - MVVM是由MVC衍生出来的。.
@@ -2942,7 +3107,6 @@ const students = ref([
   // query
   router.push({ name: 'Demo', query: { id: 1 } })
   router.push({ path: '/demo', query: { id: 1 } })
-
   // params
   router.push({ name: 'Demo', params: { id: 1 } })
   ```
@@ -3209,25 +3373,23 @@ p.name = '李四' // Uncaught Error: 除年龄外，其它属性不可以更改
 console.log(p.name) // 张三
 ```
 
-## 102、❓vue实例挂载的过程是什么？
-> https://www.jb51.net/article/239529.htm
+## 102、vue实例挂载的过程是什么？
+Vue实例的挂载过程主要分为以下几个步骤：
+1. **创建Vue实例**：通过`new`关键字创建Vue实例，并传入配置对象。
+2. **初始化生命周期**：在初始化阶段，Vue会为实例设置一些属性和生命周期钩子函数，如`data、methods、created`等。
+3. **编译模板**：如果使用了`template`选项或者`el`选项中指定的元素存在，Vue会将模板编译成`render`函数。
+4. **挂载实例**：如果`el`选项存在，则调用`$mount`方法将Vue实例挂载到指定的DOM元素上。如果没有指定el选项，则需要手动调用`$mount`方法进行挂载。
+5. **创建渲染Watcher实例**：Vue会创建一个Watcher实例来监测数据变化，当数据发生变化时触发更新视图的操作。
+6. 编译完成并插入到DOM：当Watcher实例被创建后，Vue会根据`render`函数生成虚拟DOM，并将其渲染到页面上。
 
 
 ## 103、Vue组件的设计原则
-- **就近管理**
-  - 单文件开发
-  - 依赖的静态资源放在同级目录
-  - 相关联组件也放在同级目录
-- **高复用性**
-  - 页面级别的复用（基础组件）
-  - 项目级别的复用- 私有组件库（业务组件）
-  - 公司级别的复用- 开源组件库（element-ui、iview）
-- **分层设计**
-  - 分层架构分为四个层：`展示层(presentation layer)`，`业务层(business layer)`，`持久层(persistence layer)`和`数据库层(database layer)`。
-  - 由于每一层都是封闭的，所以request必须逐层向下传递。那么为什么每一层都是封闭的呢，因为有个概念叫`层隔离`。层隔离就是说架构中某一层的改变不会影响到其他层，这些变化的影响范围仅限于当前层。
-  - 假如展示层和业务层都能够直接访问持久层，那么当持久层的数据变化时，会直接影响到展示层和业务层，这使得整个应用的耦合度变高了，使得组件之间相互依赖，降低了可维护性。
-- **灵活扩展**
-  - 组件要充分的考虑扩展性，除了提供丰富的`props`还要提供`slot`插槽来完成用户的定制化需求。或者提供可利用`render`函数动态渲染的功能。
+Vue组件的设计原则包括以下几点：
+1. **单一职责原则**：每个组件只负责一个特定的功能或模块，避免将多个功能耦合在同一个组件中。
+2. **可复用性原则**：组件应该具有高度的可复用性，可以在不同的场景中使用，并且不受环境和数据的影响。
+3. **清晰简洁原则**：组件应该尽量保持简洁、清晰，易于阅读和理解。可以通过props来接收参数，通过事件来传递数据和通知父组件进行操作。
+4. **可测试性原则**：组件应该具有良好的可测试性，便于单元测试和集成测试。可以使用mock数据等技术来模拟组件的运行环境。
+5. **可维护性原则**：组件的代码应该易于维护和修改，避免过于复杂的逻辑和过深的嵌套。
 
 
 ## 104、Vue slot是做什么的?
@@ -4015,12 +4177,13 @@ canScroll(){
 
 
 ## 118、Vue如何优化首屏加载速度？
-- 在`index.html`中通过`<script>`标签引⼊公用的js库，减小打包出来的js⽂件体积，让浏览器并行下载资源⽂件，提⾼下载速度;
-- 使用路由懒加载;
-- 使用图片懒加载;
-- 首页加一个骨架图;
-- 尽量⽤`CSS Sprites`或字体图标代替图片来做图标;
-- 
+1. **使用路由懒加载(异步组件)**：将页面拆分为多个模块，按需加载，避免一次性加载过多的资源。
+2. **使用keep-alive缓存组件**：使用keep-alive缓存组件可以避免重复渲染和重复请求数据，提高页面的响应速度。
+3. **静态资源压缩和CDN加速**：对静态资源进行压缩和使用CDN加速，可以减少网络请求时间，提高页面的加载速度。
+4. **减少HTTP请求个数**：使用webpack打包工具合并和压缩代码、样式等文件，减少HTTP请求的数量。
+5. **服务端渲染(SSR)**：通过服务端渲染可以在服务器端将页面内容渲染出来，减少客户端的请求时间，提高首屏加载速度。
+6. **开启gzip压缩**：开启服务器端的gzip压缩功能可以减小传输体积，提高页面加载速度。
+7. **前端性能监控**：使用前端性能监控工具对页面进行分析，找到影响页面性能的瓶颈，并做出相应的优化措施。
 
 
 ## 119、Vue打包命令是什么？
@@ -4080,8 +4243,14 @@ export default defineConfig({
 这里就是执行了`vite`开发与构建工具自带的`vite`命令。
 
 
-## 123、❓Vue.js全局运行机制
-> https://www.jianshu.com/p/e5e2563232fa
+## 123、Vue.js全局运行机制
+全局运行机制主要分为以下几个方面：
+1. **创建Vue实例**：通过实例化Vue构造函数创建一个 Vue 实例，可以在实例化时传入一些配置参数。
+2. **数据响应式**：Vue通过`Object.defineProperty()`方法对数据进行劫持，从而实现数据响应式更新。
+3. **模板解析**：Vue将模板转换为虚拟DOM，并通过`diff算法`对比新旧虚拟 DOM 的差异，最终只对需要更新的部分进行实际 DOM 操作。
+4. **组件注册和使用**：Vue 允许将应用划分为多个组件，每个组件都有自己的数据、逻辑和模板。通过注册组件并在父组件中使用子组件来实现应用的复用和可维护性。
+5. **生命周期**：Vue组件有生命周期钩子函数，在组件不同的阶段执行特定的代码，如`created、mounted`等等。
+6. **全局API**：Vue定义了许多全局 API，如`Vue.extend、Vue.directive、Vue.filter`等等，用于扩展 Vue 的功能或修改全局配置。
 
 
 ## 124、Vue如何编译 template 模板？
@@ -4095,8 +4264,15 @@ export default defineConfig({
 - 最后根据`vnode`创建真实的 DOM 节点，也就是原生 HTML 插入到视图中，完成渲染
 
 
-## 125、❓批量异步更新策略及nextTick原理？
-> https://blog.csdn.net/wangxinxin1992816/article/details/108676745
+## 125、批量异步更新策略及nextTick原理？
+当数据发生变化时，Vue 会将更新操作异步地加入一个队列中，然后在下一个事件循环周期统一执行这个队列中的更新操作。
+> 批量异步更新策略是 Vue 中一种非常有效的优化策略，可以提高页面渲染性能、保证页面稳定性，同时也简化了开发者的工作。
+
+这种批量异步更新策略有以下几个好处：
+1. **提高性能**：由于将多个更新操作合并到一个事件循环周期中执行，可以减少 DOM 操作和重绘的次数，从而提高页面渲染性能。
+2. **避免重复更新**：如果在同一个事件循环周期内多次修改同一个数据，Vue 只会将最后一次修改操作添加到更新队列中，避免了重复更新带来的性能损失。
+3. **稳定性**：批量异步更新策略可以保证在更新过程中不会出现因为数据的不一致性导致的异常情况。
+4. **简化开发**：使用批量异步更新策略可以使得开发者不需要手动控制更新时机，从而简化了代码编写和维护的难度。
 
 
 ## 126、Vue中如何实现proxy代理？
@@ -4370,75 +4546,86 @@ export default {
 上面例子中，我们分别在`首页`的输入框中输入`123`，然后在`关于`的输入框中输入`234`，然后来回切换按钮，可以发现`首页`的`123`被清除了，而`关于`的`234`却依然存在。
 
 
-## 130、❓vue 中实现切换页面时为左滑出效果
-> https://blog.csdn.net/a15297701931/article/details/125046778
-```html
-<template>
-  <div id="app">
-    <button :class="{ active: active === 'home' }" @click="active = 'home'">首页</button>
-    <button :class="{ active: active === 'about' }" @click="active = 'about'">关于</button>
-    <div class="content">
-      <Transition name="slide">
-        <keep-alive :include="['About']">
-          <component :is="active + '-component'"></component>
-        </keep-alive>
-      </Transition>
-    </div>
-  </div>
-</template>
-<script lang="ts">
-import HomeComponent from './views/Home.vue'
-import AboutComponent from './views/About.vue'
-export default {
-  components: {
-    HomeComponent,
-    AboutComponent
-  },
-  data () {
-    return {
-      active: 'home'
-    }
-  },
-}
-</script>
-<style lang="scss">
-.active {
-  color: red;
-}
-.content {
-  position: relative;
-}
-.slide-enter-active {
-  animation: slide-left 0.5s linear 0s;
-  position: absolute;
-  top: 0;
-}
-// 离开的时候设置成相反哒
-.slide-leave-active {
-  animation: slide-out 0.5s linear 0s;
-  position: absolute;
-  top: 0;
-}
-@keyframes slide-left {
-  0% {
+## 130、vue 中实现切换页面时为左滑出效果
+在 Vue 中实现页面左滑出效果，可以使用 Vue 的过渡效果配合 CSS3 动画来实现。具体步骤如下：
+1. 在需要实现动画的组件中添加`<transition>`标签，并设置`name`属性为动画名称，如下所示：
+  ```html
+  <transition name="slide-left">
+    <!-- 页面内容 -->
+  </transition>
+  ```
+2. 在 CSS 样式表中定义动画效果，这里以从右向左滑出为例，CSS 代码如下：
+  ```css
+  /* 定义进入动画 */
+  .slide-left-enter-active {
+    animation: slide-in-left 0.3s ease-out;
+  }
+  /* 定义离开动画 */
+  .slide-left-leave-active {
+    animation: slide-out-left 0.3s ease-out;
+  }
+  /* 定义进入时的初始状态和离开时的最终状态 */
+  .slide-left-enter,
+  .slide-left-leave-to {
     transform: translateX(100%);
   }
-  100% {
+  /* 定义进入时的最终状态和离开时的初始状态 */
+  .slide-left-enter-to,
+  .slide-left-leave {
     transform: translateX(0);
   }
-}
+  /* 定义动画关键帧 */
+  @keyframes slide-in-left {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes slide-out-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+  ```
+3. 最后，当路由进行跳转时，在路由配置中添加`meta`属性，用于标记当前页面是否要应用动画效果，如下所示：
+  ```js
+  const routes = [
+    {
+      path: '/foo',
+      component: Foo,
+      meta: {
+        transition: 'slide-left'
+      }
+    },
+    {
+      path: '/bar',
+      component: Bar,
+      meta: {
+        transition: 'slide-left'
+      }
+    }
+  ]
+  ```
+4. 在根组件中监听`$route`的变化，根据当前路由的`meta.transition`属性来判断是否需要应用动画效果，并将动画名称传递给`<transition>`组件，如下所示：
+  ```html
+  <template>
+    <div id="app">
+      <transition :name="currentTransitionName">
+        <router-view></router-view>
+      </transition>
+    </div>
+  </template>
 
-@keyframes slide-out {
-  0% {
-    transform: translateX(0);
+  <script>
+  export default {
+    computed: {
+      currentTransitionName() {
+        const to = this.$route.meta.transition
+        const from = this.$route.meta.transition
+        return to || from || 'fade'
+      }
+    }
   }
-  100% {
-    transform: translateX(-100%);
-    display: none;
-  }
-}
-</style>
-```
+  </script>
+  ```
+通过以上步骤，就可以在 Vue 中实现页面左滑出效果了。
 
 
 ## 131、vue中央事件总线的使用
@@ -4560,15 +4747,15 @@ export default {
 
 
 
-## 132、❓vue 的渲染机制
+## 132、vue 的渲染机制
+Vue 的渲染机制是基于 Virtual DOM（虚拟 DOM）的。
+> 当 Vue 实例中的数据发生变化时，Vue 会先生成一颗新的 Virtual DOM 树。然后，Vue 会将新旧两颗 Virtual DOM 树进行比较，找出需要更新的部分。最后，Vue 只更新这些部分的真实 DOM，从而避免了不必要的 DOM 操作，提高了性能。
+
+此外，Vue 还实现了异步更新队列和`nextTick`函数，以保证数据变化后的 DOM 更新在下一个事件循环周期中执行，从而避免了频繁的更新操作对性能的影响。
 
 
 ## 133、如何让 CSS 只在当前组件中起作用
 将当前组件的 `<style>`修改为`<style scoped>`
-
-
-## 134、指令 v-el 的作用是什么?
-提供一个在页面上已存在的 DOM 元素作为 Vue 实例的挂载目标, 可以是 CSS 选择器，也可以是一个 HTMLElement 实例
 
 
 ## 135、你们vue项目是打包了一个js文件，一个css文件，还是有多个文件？
@@ -4652,6 +4839,8 @@ export default {
       ```
 9. 本地开发跨域
   - 解决方案: 使用构建工具提供的`proxy`代理。
+10. 在`v-for`时，为每个子元素绑定的`key`为`index`时发生错乱
+  - 解决办法: 为每个子元素绑定不重复的唯一值
 
 
 ## 137、如何引入scss？引入后如何使用？
@@ -4666,9 +4855,12 @@ npm install node-sass --save-dev
 ## 138、vue-cli 工程常用的 npm 命令有哪些？
 ```shell
 npm install # 安装依赖包
+vue create my-project # 创建新的项目
 npm run dev # 启动 vue-cli 开发环境
 npm run serve # 启动 vue-cli 开发环境
 npm run build # vue-cli 生成 生产环境部署资源
+npm run lint # 代码运行检查工具ESlint
+vue ui # 启动一个可视化界面来管理项目和插件
 ```
 
 
@@ -5376,16 +5568,20 @@ module.exports = {
 
 
 ## 142、vue-cli 提供的几种脚手架模板
-- webpack-simple模板: 基于`webpack`和`vue-loader`的目录结构。
-- webpack模板: 基于`webpack`和`vue-loader`的目录结构，而且支持热部署、代码检查、测试及 css 抽取。
-- browerify：基于`Browerfiy`和`vueify`(作用于`vue-loader`类似)的结构，支持热部署、代码检查及单元测试。
-- browerify-simple：基于`Browerfiy`和`vueify`的结构。
-- simple：单个引入`Vue.js`的`index.html`页面。
+Vue CLI 提供了多种脚手架模板，可以根据不同的项目需求选择不同的模板：
+1. default：默认模板，包含了 Vue.js 的基础功能和设置。
+2. webpack：基于 Webpack 构建工具的模板，集成了一些常用的插件与配置。
+3. webpack-simple：一个简单的 Webpack 模板，适合快速原型开发。
+4. browserify：基于 Browserify 构建工具的模板，类似于 webpack 模板。
+5. browserify-simple：一个简单的 Browserify 模板，适合快速原型开发。
+6. pwa：一个 Progressive Web App（渐进式 Web 应用）模板，用于创建可离线访问的 Web 应用。
+7. simple：一个简单的 Hello World 模板，适合学习 Vue.js 和构建简单的应用程序。
+8. typescript：使用 TypeScript 语言的模板，用于创建类型安全的 Vue.js 应用程序。
 
 
 ## 143、vue-cli 开发环境和生产环境使用全局常量
-- 开发环境的全局常量定义在`.env`里
-- 生产环境的全局常量定义在`.env.production`里
+- 开发环境的全局常量定义在`.env`文件里
+- 生产环境的全局常量定义在`.env.production`文件里
 ```js
 process.env.NODE_ENV
 ```
@@ -5583,21 +5779,19 @@ vue 首页白屏是什么问题引起的？
   ```
 
 
-## 148、❓在 Vue 中，子组件为何不可以修改父组件传递的 Prop，如果修改了，Vue 是如何监控到属性的修改并给出警告的。
+## 148、在 Vue 中，子组件为何不可以修改父组件传递的 Prop，如果修改了，Vue 是如何监控到属性的修改并给出警告的。
 在组件进行`initProps`方法的时候，会执行`defineReactive`方法，这个方法就是运行`Object.defineProperty`对传入的`object`绑定`get/set`，传入的第四个参数是触发`set`的回调。所以`props`被修改时，就会查看是不是根组件、是不是更新子组件，那说明是子组件在修改`props`，给出`warn`警告。
 
 
-## 149、❓说说Vue的MVVM实现原理
-> https://blog.csdn.net/z2428478096/article/details/121459920
-1. Vue作为MVVM模式的实现库的2种技术
-  - 模板解析: 实现初始化显示
-    - 解析大括号表达式
-    - 解析指令
-  - 数据绑定: 实现更新显示
-    - 通过数据劫持实现
+## 149、说说Vue的MVVM实现原理
+> Vue的MVVM实现通过数据劫持、模板解析、编译器、渲染以及双向绑定等技术手段来实现数据与视图的自动同步。
 
-原理结构图
-![202302201243274.png](http://img.itchenliang.club/img/202302201243274.png)
+Vue的MVVM实现原理主要包括以下几个方面：
+1. **数据劫持**：Vue通过`Object.defineProperty()`方法来劫持数据的`getter`和`setter`，在数据发生变化时通知订阅者进行更新。
+2. **模板解析**：Vue将模板解析成AST（Abstract Syntax Tree）语法树，用于后续的渲染。
+3. **编译器**：Vue的编译器将模板转换为渲染函数，其中包含了对模板中指令、事件等的处理。
+4. **渲染**：Vue通过渲染函数生成虚拟DOM，并通过diff算法比较新旧虚拟DOM的差异，从而最小化DOM操作，提高渲染效率。
+5. **双向绑定**：Vue通过`v-model`指令实现双向绑定，即数据的改变会自动更新到视图上，同时视图上的改变也会同步到数据中。
 
 
 ## 150、使用vue开发过程你是怎么做接口管理的？
@@ -5609,23 +5803,39 @@ vue 首页白屏是什么问题引起的？
 4. 在使用地方通过引入`class`并通过`new`关键字实例化，然后通过`.`属性调用对应的功能方法
 
 
-## 151、❓new Vue() 发生了什么？
-需了解原码
+## 151、new Vue() 发生了什么？
+执行以下步骤：
+1. 创建一个空的 Vue 实例对象。
+2. 初始化实例的生命周期、事件、数据观测等属性。
+3. 如果存在`el`选项，则调用`$mount(el)`方法，挂载实例到 DOM 上。
+4. 如果存在`data`选项，则将其响应式地添加到实例上。
+5. 如果存在`created`钩子函数，则在实例创建完成后立即调用该钩子函数。
+
+最终返回一个 Vue 实例对象。
 
 
-## 152、❓vue3.x中Proxy只会代理对象的第一层，那么Vue3又是怎样处理这个问题的呢？
-判断当前`Reflect.get`的返回值是否为`Object`，如果是则再通过`reactive`方法做代理， 这样就实现了深度观测。
+## 152、vue3.x中Proxy只会代理对象的第一层，那么Vue3又是怎样处理这个问题的呢？
+判断当前`Reflect.get`的返回值是否为`Object`，如果是就递归通过`reactive`方法做代理， 这样就实现了深度观测。
 
 
-## 153、❓vue3.x中监测数组的时候可能触发多次get/set，那么如何防止触发多次呢？
-我们可以判断`key`是否为当前被代理对象`target`自身属性，也可以判断旧值与新值是否相等，只有满足以上两个条件之一时，才有可能执行`trigger`。
+## 153、vue3.x中监测数组的时候可能触发多次get/set，那么如何防止触发多次呢？
+在Vue 3.x中，可以使用`watchEffect`来监测响应式数据的变化。如果你想要监控数组的变化，可以使用`reactive`方法将数组转换为响应式对象，然后再使用`watchEffect`进行监测。
 
+如果使用`watch`监测数组的变化，会出现多次触发的问题，因为数组中的每个元素都是一个独立的响应式对象，当某个元素发生变化时，它也会触发数组的变化。
 
-## 154、❓vue2.x和Vue3.x渲染器的diff算法分别说一下
+若需要防止多次触发，可以使用`watchEffect`的第二个参数，即`{ flush: 'sync' }`选项来实现同步更新。这样，在数组发生变化时，会立即执行回调函数，而不会等到下一个事件循环周期。例如：
+```js
+import { reactive, watchEffect } from 'vue'
+const arr = reactive([1, 2, 3])
+watchEffect(() => {
+  console.log(arr)
+}, { flush: 'sync' })
+arr.push(4) // 这里只会触发一次回调
+```
 
 
 ## 155、vue 中 mixin 和 mixins 区别？
-- **mixin**: 全局注册一个混入，影响注册之后所有创建的每个Vue实例。插件作者可以使用混入，向组件注入自定义的行为。**不推荐在应用代码中使用**。
+- **mixin**: 是 Vue.js 中的一个选项，用于向组件注入可复用的功能。它可以是一个对象或函数，其中包含组件选项，并且可以在组件中通过 mixins 选项来使用。**不推荐在应用代码中使用**。
   ```js
   Vue.mixin({
     beforeCreate() {
@@ -5634,7 +5844,7 @@ vue 首页白屏是什么问题引起的？
     }
   })
   ```
-- **mixins**: 应该是我们最常使用的扩展组件的方式了。如果多个组件中有相同的业务逻辑，就可以将这些逻辑剥离出来，通过`mixins`混入代码，比如上拉下拉加载数据这种逻辑等等。
+- **mixins**: 是一个数组，用于将多个`mixin`混合到组件中。当多个`mixin`具有相同的选项时，其值将被合并为一个数组以保留所有`mixin`的值。
 > 另外需要注意的是`mixins`混入的**钩子函数会先于组件内的钩子函数**执行，并且在遇到同名选项的时候也会有选择性的进行合并。
 ```js
 var mixin = {
@@ -6186,9 +6396,8 @@ export default {
   ```
 
 
-## 186、❓Vue.observable你有了解过吗？说说看？原理分析？
-**Observable 是什么**
-> `Observable`翻译过来我们可以理解成可观察的，我们先来看一下其在Vue中的定义: `Vue.observable`让一个对象变成响应式数据。Vue内部会用它来处理`data`函数返回的对象。
+## 186、Vue.observable你有了解过吗？说说看？原理分析？
+`Vue.observable`是 Vue.js 提供的一个函数，用于将一个普通的 JavaScript 对象转换成响应式对象。
 
 返回的对象可以直接用于渲染函数和计算属性内，并且会在发生变更时触发相应的更新。也可以作为最小化的跨组件状态存储器
 ```js
@@ -6252,9 +6461,6 @@ export default {
 }
 </script>
 ```
-::: tip 原理分析
-https://www.cnblogs.com/qfy0411/articles/15816523.html
-:::
 
 
 ## 187、你知道style加scoped属性的用途和原理吗？

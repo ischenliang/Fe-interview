@@ -1,10 +1,3 @@
-参考：
-- 算法：https://github.com/yisainan/web-interview/blob/master/content/js/%E7%AE%97%E6%B3%95.md
-- https://github.com/yisainan/web-interview/blob/master/content/js/Ajax.md
-
-说明fetch
-
-
 # Ajax面试题汇总
 ## 1、Ajax 是什么? 如何创建一个 Ajax？
 Ajax 全称是 asychronous javascript and xml，可以说是已有技术的组合，主要用来实现客户端与服务器端的异步交互，实现页面的局部刷新。

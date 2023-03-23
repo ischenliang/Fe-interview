@@ -609,7 +609,10 @@ console.log(son instanceof Son) // true
 ## 12、`prototype`、`__proto__`与`constructor`的关系
 - `__proto__`被称为隐式原型
 - `prototype`被称为显式原型
-
+- **实例属性**: 指的是在构造函数方法中定义的属性和方法，每一个实例对象都独立开辟一块内存空间用于保存属性和方法。
+- **原型属性**: 指的是用于创建实例对象的构造函数的原型的属性，每一个创建的实例对象都共享原型属性。
+- **实例对象**: 通过构造函数的`new`操作创建的对象是实例对象。
+- **原型对象**: 构造函数有一个`prototype`属性，指向实例对象的原型对象。
 
 ::: tip 1. 构造函数
 <span style="color: red">构造函数: 用来初始化新创建的对象的函数。</span>
@@ -635,7 +638,7 @@ console.log(f1 === f2);//false
 
 ::: tip 3. 原型对象及prototype
 <span style="color: red">构造函数有一个<code>prototype</code>属性，指向实例对象的原型对象。</span>
-> **通过同一个构造函数实例化的多个对象具有相同的原型对象**。经常使用原型对象来实现继承
+> **通过同一个构造函数实例化的多个对象具有相同的原型对象**。经常使用原型对象来实现继承。
 
 ```js
 function Foo(){};
@@ -2606,7 +2609,7 @@ p.__proto__ === Person.prototype
 ```
 
 
-## 42、new 操作符具体干了什么呢?
+## 42、new 操作符具体干了什么呢? new 一个对象的过程中发生了什么？
 ```js
 var Fn = function () {
 
@@ -4136,9 +4139,34 @@ document.body.appendChild(df);
 
 
 ## 73、说说你对作用域链的理解
-一般情况使用的变量取值是在当前执行环境的作用域中查找，如果当前作用域没有查到这个值，就会向上级作用域查找，直到查找到全局作用域，这么一个查找的过程我们叫做**作用域链**，又称**变量查找的机制**。
+作用域链，用于解释代码中变量的访问规则。
+> 当代码在作用域内访问一个变量时，JavaScript 引擎会先在当前作用域内查找该变量，如果找不到，就会逐级向上查找直到全局作用域，这个查找的过程就是**作用域链**，又称**变量查找的机制**。
 
 作用域链的作用: 保证执行环境里有权访问的变量和函数是有序的，作用域链的变量只能向上访问，变量访问到`window`对象即被终止，作用域链向下访问变量是不被允许的。
+```js
+var a = 11
+function demo () {
+  let a = 1
+  console.log(a)
+}
+demo() // 1
+```
+上面例子中，在`demo`中输出了变量`a`，首先会在`demo`的函数作用域找是否存在变量`a`，找到了就返回了变量`a`的值`1`。
+```js
+var a = 11
+function demo () {
+  console.log(a)
+}
+demo() // 11
+```
+上面例子中，在`demo`中输出了变量`a`，首先会在`demo`的函数作用域找是否存在变量`a`，没有找到，就向上级作用域(此处为全局作用域)查找，找到了就反悔了变量`a`的值`11`。
+```js
+function demo () {
+  console.log(a)
+}
+demo() // Uncaught ReferenceError: a is not defined
+```
+上面例子中，同样首先在`demo`函数作用域查找变量`a`，没有找到，然后向上级作用域(全局作用域)查找没有找到，就会报`Uncaught ReferenceError: a is not defined`错。
 
 
 ## 74、offsetWidth/offsetHeight, clientWidth/clientHeight 与 scrollWidth/scrollHeight 的区别？
@@ -4158,124 +4186,59 @@ scroll系列
 - `scrollLeft`属性返回的是元素滚动条到元素左边的距离。
 
 
-## 75、谈谈你对CommonJS、AMD、CMD和ES模块化的理解
-参考: https://dandelioncloud.cn/article/details/1592185365433888770
-### CommonJS
-Node应用由模块组成，采用`CommonJS`模块规范。每个文件就是一个模块，有自己的作用域。在一个文件里面定义的变量、函数、类，都是私有的，对其他文件不可见。
-- 在服务器端，模块的加载是运行时同步加载的；
-- 在浏览器端，模块需要提前编译打包处理。
-```js
-// 暴露模块
-module.exports = value
-// 或者
-exports.xxx = value
-
-// 引入模块：如果是第三方模块，xxx为模块名；如果是自定义模块，xxx为模块文件路径
-require(xxx)
+## 75、layerX/layerY、offsetX/offsetY、pageX/pageY、clientX/clientY、screenX/screenY、x/y区别
+- **layerX/layerY**
+  > 如果触发元素没有设置定位，则以页面左上角为参考点；如果触发元素有设置定位，则以触发元素左上角为参考点；
+- **offsetX/offsetY**
+  > 鼠标相对于触发事件的元素位置内容区左上角的坐标；
+- **pageX/pageY**
+  > 鼠标相对于文档左上角的坐标，`pageY = clientY + scrollY`
+- **clientX/clientY**
+  > 鼠标相对于当前浏览器窗口左上角的坐标；
+- **screenX/screenY**
+  > 鼠标相对于用户显示器屏幕左上角的坐标；
+- **x/y**
+  > 和clientX、clientY一样；
+```html
+<style>
+  .father {
+    width: 200px;
+    height: 200px;
+    background: #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+  .child {
+    width: 50px;
+    height: 50px;
+    background: blue;
+    color: #fff;
+  }
+</style>
+<div class="father">
+  <div class="child">child</div>
+</div>
+<script>
+  document.querySelector('.child').addEventListener('click', (event) => {
+    console.log(event)
+  })
+</script>
 ```
-每个模块内部，`module`对象代表当前模块，它的`exports`属性(即`module.exports`)是对外的接口(暴露出去)。
-
-### AMD
-> CommonJS规范加载模块是同步的，也就是说，只有加载完成，才能执行后面的操作。
-
-**AMD(Asynchronous Module Definition)规范则是非同步加载模块，允许指定回调函数**。**AMD依赖于`requirejs`，是异步加载的，是提前加载，立即加载**。
-> 由于Node.js主要用于服务器编程，模块文件一般都已经存在于本地硬盘，所以加载起来比较快，不用考虑非同步加载的方式，所以CommonJS规范比较适用。但是，如果是浏览器环境，要从服务器端加载模块，这时就必须采用非同步模式，因此浏览器端一般采用AMD规范。此外AMD规范比CommonJS规范在浏览器端实现要来着早。代表产物: `require.js`和`curl.js`
-
-> `require.js`核心原理：核心是`js`的加载模(通过动态创建`script`脚本来异步引入模块，然后对每个脚本的`load`事件进行监听，如果每个脚本都加载完成了，再调用回调函数)，通过正则匹配模块以及模块的依赖关系，保证文件加载的先后顺序，根据文件的路径对加载过的文件做了缓存。
-- （1）实现 js 文件的异步加载，避免网页失去响应；
-- （2）管理模块之间的依赖性，便于代码的编写和维护;
-
+点击`child`盒子的任何地方，然后看控制台输出结果
+![2023032111290710.png](http://img.itchenliang.club/img/2023032111290710.png)
+从上面结果看到:
 ```js
-/**
- * 暴露模块
- */
-//定义没有依赖的模块
-define(function(){
-   return 模块
-})
-//定义有依赖的模块
-define(['module1', 'module2'], function(m1, m2){
-   return 模块
-})
-
-/**
- * 引入使用模块
- */
-require(['module1', 'module2'], function(m1, m2){
-  // 使用m1/m2
-})
+layerX: 87
+layerY: 92
+clientX: 98 = layerX + 8px(浏览器默认间距)
+clientY: 100 = layerY + 8px(浏览器默认间距)
+offsetX: 12
+offsetY: 17
+pageX: 95
+pageY: 100
 ```
-
-### CMD
-CMD规范专门用于浏览器端，**模块的加载是异步的，模块使用时才会加载执行**。**`CMD`依赖于`sea.js`，是异步加载，延后加载，就近加载，用时加载**
-> CMD规范整合了CommonJS和AMD规范的特点。代表产物`sea.js`
-```js
-/**
- * 暴露模块
- */
-//定义没有依赖的模块
-define(function(require, exports, module){
-  exports.xxx = value
-  module.exports = value
-})
-//定义有依赖的模块
-define(function(require, exports, module){
-  //引入依赖模块(同步)
-  var module2 = require('./module2')
-  //引入依赖模块(异步)
-    require.async('./module3', function (m3) {
-    })
-  //暴露模块
-  exports.xxx = value
-})
-
-/**
- * 引入使用模块
- */
-define(function (require) {
-  var m1 = require('./module1')
-  var m4 = require('./module4')
-  m1.show()
-  m4.show()
-})
-```
-
-### ES6模块化
-ES6模块的设计思想是尽量的静态化，使得编译时就能确定模块的依赖关系，以及输入和输出的变量。CommonJS 和 AMD 模块，都只能在运行时确定这些东西。比如，CommonJS 模块就是对象，输入时必须查找对象属性。**模块支持异步加载，同一个模块如果加载多次，将只执行一次。**
-
-`export`命令用于规定模块的对外接口，`import`命令用于输入其他模块提供的功能。
-```js
-/**
- * 定义模块 math.js
- */
-var basicNum = 0;
-var add = function (a, b) {
-  return a + b;
-};
-export { basicNum, add };
-
-/**
- * 引用模块
- */
-import { basicNum, add } from './math';
-function test(ele) {
-  ele.textContent = add(99 + basicNum);
-}
-```
-使用`import`命令的时候，用户需要知道所要加载的变量名或函数名，否则无法加载。为了给用户提供方便，让他们不用阅读文档就能加载模块，就要用到`export default`命令，为模块指定默认输出。
-```js
-// export-default.js
-export default function () {
-  console.log('foo');
-}
-```
-模块默认输出, 其他模块加载该模块时，`import`命令可以为该匿名函数指定任意名字。
-```js
-// import-default.js
-import customName from './export-default';
-customName(); // 'foo'
-```
-**对于带有`type=”module”`的`script`，浏览器都是异步加载的，不会造成浏览器堵塞，即等到整个页面渲染完再执行模块脚本，等同于打开了`script`标签的`defer`属性。**
 
 
 ## 76、web 开发中会话跟踪的方法有哪些
@@ -4316,7 +4279,8 @@ customName(); // 'foo'
 
 区别: 两大类存储位置不同。
 - 原始数据类型直接存储在栈(stack)中的简单数据段，占据空间小、大小固定，属于被频繁使用数据，所以放入栈中存储；
-- 引用数据类型存储在堆(heap)中的对象,占据空间大、大小不固定,如果存储在栈中，将会影响程序运行的性能；引用数据类型在栈中存储了指针，该指针指向堆中该实体的起始地址。当解释器寻找引用值时，会首先检索其在栈中的地址，取得地址后从堆中获得实体。
+- 引用数据类型存储在堆(heap)中的对象，占据空间大、大小不固定，引用数据类型在栈中存储了指针，该指针指向堆中该实体的起始地址。当解释器寻找引用值时，会首先检索其在栈中的地址，取得地址后从堆中获得实体。
+  > 如果存储在栈中，将会影响程序运行的性能；
 
 内存图如下所示: 
 ![202303021647274.png](http://img.itchenliang.club/img/202303021647274.png)
@@ -4442,15 +4406,70 @@ Object.prototype.toString.call(str)  // '[object String]'
 ```
 
 
-## 90、❓对象浅拷贝和深拷贝有什么区别
-深拷贝和浅拷贝是只针对Object和Array这样的引用数据类型的。
-> 参考：https://www.cnblogs.com/yizhilin/p/13458738.html
+## 90、对象浅拷贝和深拷贝有什么区别
+对象拷贝是指将一个对象的值复制到另一个对象中，以实现数据的共享或备份。常见的对象拷贝方式包括浅拷贝和深拷贝。
 
-**浅拷贝**
-> 浅拷贝只复制指向某个对象的指针，而不复制对象本身，新旧对象还是共享同一块内存。浅拷贝可以使用`Object.assign`和`扩展运算符`来实现。
+::: tip 浅拷贝
+浅拷贝指复制一个对象时，只复制其基本类型的属性值，而不复制其引用类型的属性。换句话说，新对象中的引用类型属性仍然与原对象中的引用类型属性指向同一个内存地址。因此，在修改新对象中的引用类型属性时，会影响到原对象中的相应属性。
 
-**深拷贝**
-> 深拷贝会另外创造一个一模一样的对象，新对象跟原对象不共享内存，修改新对象不会改到原对象。深拷贝对于一些对象可以使用`JSON`的`stringify`和`parse`两个函数来实现，但是由于 JSON 的对象格式比js的对象格式更加严格，所以如果属性值里边出现函数或者 Symbol 类型的值时，会转换失败。
+浅拷贝可以使用`直接赋值`、`Object.assign`、`for···in只循环一层`、`扩展运算符`来实现。
+```js
+// 直接赋值
+var obj1 = { a: 1, b: { c: 2 } };
+var obj2 = obj1;
+obj2.a = 3;
+obj2.b.c = 4;
+console.log(obj1); // {a: 3, b: {c: 4}}
+console.log(obj2); // {a: 3, b: {c: 4}}
+
+// Object.assign
+var obj1 = {a: 1, b: {c: 2}};
+var obj2 = Object.assign({}, obj1);
+obj2.a = 3;
+obj2.b.c = 4;
+console.log(obj1); // {a: 1, b: {c: 4}}
+console.log(obj2); // {a: 3, b: {c: 4}}
+
+// 扩展运算符
+var obj1 = { a: 1, b: { c: 2 } };
+var obj2 = { ...obj1 };
+obj2.a = 3;
+obj2.b.c = 4;
+console.log(obj1); // {a: 1, b: {c: 4}}
+console.log(obj2); // {a: 3, b: {c: 4}}
+```
+在上述代码中，使用`Object.assign`方法实现了浅拷贝。当修改`obj2`的属性时，也会对`obj1`产生影响，因为它们共享了同一个 b 属性对象。
+:::
+
+::: tip 深拷贝
+深拷贝指复制一个对象时，同时复制其引用类型的属性，使得新对象中的引用类型属性与原对象中的引用类型属性完全独立。因此，在修改新对象中的引用类型属性时，不会影响到原对象中的相应属性。
+
+常见的深拷贝方法可以使用`JSON`的`stringify和parse`两个函数来实现以及手写深拷贝
+```js
+// JSON实现
+var obj1 = {a: 1, b: {c: 2}};
+var obj2 = JSON.parse(JSON.stringify(obj1));
+obj2.a = 3;
+obj2.b.c = 4;
+console.log(obj1); // {a: 1, b: {c: 2}}
+console.log(obj2); // {a: 3, b: {c: 4}}
+
+// 手写实现
+function deepClone (target) {
+  let res = {}
+  for (let key in target) {
+    res[key] = target[key]
+  }
+  return res
+}
+let obj1 = { name: '张三', age: 23 }
+const obj2 = deepClone(obj1)
+obj1.name = '王二'
+obj2.name = '李四'
+console.log(obj1) // {name: '王二', age: 23}
+console.log(obj2) // {name: '李四', age: 23}
+```
+:::
 
 
 ## 91、如何编写高性能的 Javascript？
@@ -4746,29 +4765,38 @@ function completeLoad(){
 简化版的requireJs源码分析完了.
 
 
-## 94、什么是Generator 函数
-如果某个方法之前加上星号（`*`），就表示该方法是一个`Generator`函数。`Generator`函数是ES6提供的一种异步编程解决方案，语法行为与传统函数完全不同。
-> `Generator`函数有多种理解角度。语法上，首先可以把它理解成，`Generator`函数是一个状态机，封装了多个内部状态。执行`Generator`函数会返回一个遍历器对象，也就是说，`Generator`函数除了状态机，还是一个遍历器对象生成函数。返回的遍历器对象，可以依次遍历`Generator`函数内部的每一个状态。形式上，`Generator`函数是一个普通函数，但是有两个特征：
-- `function`关键字与函数名之间有一个星号；
-- 函数体内部使用`yield`表达式，定义不同的内部状态（`yield`在英语里的意思就是“产出”）。
-
-ES6 没有规定，`function`关键字与函数名之间的星号，写在哪个位置。这导致下面的写法都能通过。
-```js
-function * foo(x, y) { ··· }
-function *foo(x, y) { ··· }
-function* foo(x, y) { ··· }
-function*foo(x, y) { ··· }
-```
-由于`Generator`函数仍然是普通函数，所以一般的写法是上面的第三种，即星号紧跟在`function`关键字后面。本书也采用这种写法。
-
-
-## 95、Javascript中，有一个函数，执行时对象查找时，永远不会去查找原型的函数?
-`Object.hasOwnProperty(proName)`：是用来判断一个对象是否有你给出名称的属性。
-> 此方法无法检查该对象的原型链中是否具有该属性，该属性必须是对象本身的一个成员。
-
-
-## 96、❓用原生 JavaScript 的实现过什么功能吗？
+## 94、用原生 JavaScript 的实现过什么功能吗？
 轮播图、手风琴、放大镜、3D动画效果等，切记，所答的一定要知道实现原理！，不知道还不如不说！
+
+
+## 95、轮播图实现原理
+1. 图片移动实现原理：<br>
+  利用浮动将所有所有照片依次排成一行，给这一长串图片添加一个父级的遮罩，每次只显示一张图，其余的都隐藏起来。对图片添加绝对定位，通过控制left属性，实现照片的移动。
+2. 图片移动动画原理：<br>
+  从a位置移动到b位置，需要先计算两点之间的差值，通过差值和时间间隔，计算出每次移动的步长，通过添加定时器，每次移动相同的步长，实现动画效果。
+3. 图片定位停止原理：<br>
+  每一张照片都有相同的宽度，每张照片都有一个绝对的定位数值，通过检测定每次移动后，照片当前位置和需要到达位置之间的距离是否小于步长，如果小于，说明已经移动到位，可以将定时器清除，来停止动画。
+4. 图片切换原理：<br>
+  在全局设置一个变量，记录当前图片的位置，每次切换或跳转时，只需要将数值修改，并调用图片页数转像素位置函数，再调用像素运动函数即可。
+5. 自动轮播原理：<br>
+  设置定时器，一定时间间隔后，将照片标记加1，然后开始切换。
+6. 左右点击切换原理：<br>
+  修改当前位置标记，开始切换。这里需要注意与自动轮播之间的冲突。当点击事件触发之后，停止自动轮播计时器，开始切换。当动画结束后再次添加自动轮播计时器。
+7. 无缝衔接原理：<br>
+  需要无缝衔接，难度在于最后一页向后翻到第一页，和第一页向前翻到最后一页。由于图片的基本移动原理。要想实现无缝衔接，两张图片就必须紧贴在一起。所以在第一张的前面需要添加最后一张，最后一张的后面需要添加第一张。
+8. 预防鬼畜原理：<br>
+  始终保证轮播图的运动动画只有一个，从底层杜绝鬼畜。需要在每次动画开始之前，尝试停止动画定时器，然后开始为新的动画添加定时器。
+9. 预防暴力点击原理：<br>
+  如果用户快速点击触发事件，会在短时间内多次调用切换函数，虽然动画函数可以保证，不会发生鬼畜，但在照片从最后一张到第一张的切换过程，不会按照正常的轮播，而是实现了跳转。所以需要通过添加口令的方式来，限制用户的点击。当用户点击完成后，口令销毁，动画结束后恢复口令。
+10. 小圆点的位置显示原理：<br>
+  每次触发动画时，通过全局变量标记，获取当前页数，操作清除所有小圆点，然后指定一页添加样式。
+11. 点击触发跳转的原理：<br>
+  类似于左右点击触发，只是这是将全局页面标记，直接修改，后执行动画。需要避免与自动轮播定时器的冲突。
+
+
+## 96、❓如何设计一个轮播图组件
+1. 轮播图功能实现
+2. 抽出需要传入的变量，如：背景图，文案描述等
 
 
 ## 97、简述创建函数的几种方式
@@ -4937,7 +4965,7 @@ console.log(addCurry(1)(2, 3)); // 6
 对于浏览器的调试工具要熟练使用，主要是页面结构分析，后台请求信息查看，js调试工具使用，熟练使用这些工具可以快速提高解决问题的效率。
 
 
-## 107、❓如何测试前端代码? 知道 BDD, TDD, Unit Test 么? 知道怎么测试你的前端工程么(mocha, sinon, jasmin, qUnit..)?
+## 107、如何测试前端代码? 知道 BDD, TDD, Unit Test 么? 知道怎么测试你的前端工程么(mocha, sinon, jasmin, qUnit..)?
 ### BDD, TDD, Unit Test
 **TDD**
 > `TDD`英文全称为：`Test Driven Development`表示测试驱动开发，它是一种测试驱动开发，它是一种测试先于编写代码的思想用于指导软件开发。简单地说就是先根据需求写测试用例，再代码实现，接着测试，循环此过程直到产品的实现。
@@ -4953,6 +4981,29 @@ console.log(addCurry(1)(2, 3)); // 6
 > `unit test`为单元测试，主要用于测试开发人员编写的代码是否正确，这部分工作都是由开发人员自己来做的。
 
 ### mocha
+Mocha.js是一个流行的 JavaScript 测试框架，它提供了一组简单易用的 API 用于编写和运行测试。下面是一个简单的 Mocha.js 测试用例示例：
+```js
+const assert = require('assert');
+
+describe('Array', function() {
+  describe('#indexOf()', function() {
+    it('should return -1 when the value is not present', function() {
+      assert.equal(-1, [1,2,3].indexOf(4));
+    });
+  });
+});
+```
+该示例定义了描述测试套件的`describe`函数，其中包含一个或多个描述测试用例的`it`函数。在该示例中，我们编写了一个测试用例来测试数组中的元素是否存在并返回其索引值。使用`assert`模块进行断言。
+
+要运行此测试用例，你需要先安装 Mocha.js：
+```sh
+npm install --global mocha
+```
+然后，在命令行中进入测试文件所在目录，运行以下命令：
+```sh
+mocha test.js
+```
+其中`test.js`是包含测试用例的文件名。执行完毕后，将显示测试结果。
 
 
 
@@ -5050,6 +5101,8 @@ console.log(addCurry(1)(2, 3)); // 6
 - `event.target`：返回触发事件的元素
 - `event.currentTarget`：返回绑定事件的元素
 
+<p style="color: red;"><code>currentTarget</code>始终是监听事件者，而<code>target</code>是事件的真正发出者。</p>
+
 两者在没有冒泡的情况下，是一样的值，但在用了事件委托的情况下，就不一样了；
 ```html
 <ul id="ulT">
@@ -5059,22 +5112,33 @@ console.log(addCurry(1)(2, 3)); // 6
   <li class="item4">xvc</li>
   <li class="item5">134</li>
 </ul>
-<script type="text/javascript">
-document.getElementById("ulT").onclick = function (event) {
-  console.log(event.target);
-  console.log(event.currentTarget);
-}
+<script>
+const ul = document.getElementById("ulT")
+ul.addEventListener('click', (event) => {
+  console.log(event.target, event.currentTarget);
+})
 </script>
 ```
-`currentTarget`始终是监听事件者，而`target`是事件的真正发出者。
-
-
-## 111、什么是原型属性？
-从构造函数的`prototype`属性出发，找到原型，这时候就把原型称之为构造函数的原型属性。
-
-
-## 112、什么是原型对象？
-从实例的`__proto__`属性出发，找到原型，这时候就把原型称之为实例的原型对象。
+![202303211052231.png](http://img.itchenliang.club/img/202303211052231.png)
+可以通过设置事件在捕获过程触发，如下例子
+```html
+<div class="father">
+  <div class="child">child</div>
+</div>
+<script>
+  const father = document.querySelector('.father')
+  const child = document.querySelector('.child')
+  child.addEventListener('click', (event) => {
+    // 阻止冒泡
+    console.log(event.target, event.currentTarget)
+  }, true)
+  father.addEventListener('click', (event) => {
+    console.log(event.target, event.currentTarget)
+  }, true)
+</script>
+```
+点击`child`会发现控制台输出结果如下图所示，是因为我们在father的事件监听上设置了`useCapture: true`，即代表在捕获阶段触发，而事件查找是有外向内查找即`html -> 目标元素`的过程，所以就先触发了`father`的`click`事件。
+![202303211054585.png](http://img.itchenliang.club/img/202303211054585.png)
 
 
 ## 113、JSON 的了解
@@ -5107,21 +5171,26 @@ document.getElementById("ulT").onclick = function (event) {
 
 
 ## 116、如何避免重绘或者重排？
-> 参考：https://blog.csdn.net/sinat_37328421/article/details/54575638
-1. 分离读写操作
+重绘: ``、重排``
+- 减少直接操作`dom`元素，改用`className`用于控制或者使用`cssText`统一设置样式
+  > 可以添加一个类，样式都集中在类中改变
   ```js
-  var curLeft = div.offsetLeft;
-  var curTop = div.offsetTop;
-  div.style.left = curLeft + 1 + 'px';
-  div.style.top = curTop + 1 + 'px';
+  // 使用cssText
+  const el = document.getElementById('test');
+  el.style.cssText += 'border-left: 1px; border-right: 2px; padding: 5px;';
+
+  // 修改CSS的class
+  const el = document.getElementById('test');
+  el.className += ' active'; 
   ```
-2. 样式集中改变
-  ```js
-  可以添加一个类，样式都在类中改变
-  ```
-3. 可以使用absolute脱离文档流
-4. 使用 display:none ，不使用 visibility，也不要改变 它的 z-index
-5. 能用css3实现的就用css3实现
+- 尽量减少`table`使用，`table`属性变化使用会直接导致布局重排或者重绘
+- 当`dom`元素`position`属性为`fixed`或者`absolute`，脱离文档流，可以通过css形变触发动画效果，此时是不会出发`reflow`的
+- 不要把`DOM`结点的属性值放在一个循环里当成循环里的变量
+- 如果需要创建多个`DOM`节点，可以使用`DocumentFragment`创建完后一次性的加入`document`
+- 能用css3实现的就用css3实现
+  > 比起考虑如何减少回流重绘，我们更期望的是，根本不要回流重绘。这个时候，**css3硬件加速**就闪亮登场啦！！
+  - 使用css3硬件加速，可以让`transform、opacity、filters`这些动画不会引起回流重绘
+  - 对于动画的其它属性，比如`background-color`这些，还是会引起回流重绘的，不过它还是可以提升这些动画的性能。
 
 
 ## 117、delete 数组的 item，数组的 length 是否会 -1
@@ -5137,19 +5206,29 @@ console.log(arr[1]); // undefined
 使用`delete`删除元素，返回`true`和`false`, `true`表示删除成功，`false`表示删除失败。使用`delete`删除数组元素并不会改变原数组的长度，只是把被删除元素的值变为`undefined`。
 
 
-## 118、给出`['1', '3', '10', '4'].map(parseInt)`执行结果
+## 118、给出`['1', '3', '10', '4', 112].map(parseInt)`执行结果
+结果是: `[1, NaN, 2, NaN, 22]`
+
+**`map`使用语法**
 ```js
-[1, NaN, 2, NaN]
+[1, 2, 3].map(function(current, index, arr) {
+})
 ```
-因为map的参数是
+参数解析:
+- **current**: 当前元素值
+- **index**: 当前元素索引值
+- **arr**: 数组本身
+
+**`parseInt`使用语法**
 ```js
-function(current, index, arr) { // 当前元素值，当前元素索引值，数组本身
-}
+parseInt(str, radix)
 ```
-parseInt的参数是：
-```js
-parseInt(str, radix) // 解析的字符串，⼏进制（若省略或为0，则以10进⾏解析，若⼩于2或者⼤于36，则返回NaN）
-```
+参数解析:
+- **str**: 需要解析的字符串
+- **radix**: ⼏进制
+  - 若省略或为0，则以10进⾏解析
+  - 若⼩于2或者⼤于36，则返回`NaN`
+
 所以该题展开来写：
 ```js
 const result = ['1', '3', '10'].map(function(cur, index, arr) {
@@ -5157,76 +5236,50 @@ return parseInt(cur, index);
 });
 // 执⾏过程：
 // parseInt('1', 0) -> 1
-// parseInt('3', 1) -> 由于基数radix是1，不在2~36之间，则返回NaN
-// parseInt('10', 2) -> 2 ==> 1 * 2 ^ 1 + 0 * 2 ^ 0 = 2
-// parseInt('4', 3) -> 由于基数radix是3，则返回是(0-2)，此处为4，故NaN
+// parseInt('3', 1) -> 由于基数为1，不在2~36之间，则返回NaN
+// parseInt('10', 2) -> // 基数为2，故结果为 1 * 2 ^ 1 + 0 * 2 ^ 0 = 2
+// parseInt('4', 3) -> 由于基数为3，而三进制的取值范围是0、1、2，此处为4，不在三进制取值范围，故NaN
+// parseInt('112', 4) -> 由于基数为4，故结果为 1 * 4 ^ 2 + 1 * 4 ^ 1 + 2 * 4 ^ 0 = 22
 ```
 
 
 ## 119、JavaScript中执行上下文和执行栈是什么？
 ### 执行上下文
-简单来说，执行上下文是对JavaScript代码执行环境的一种抽象概念，只要JavaScript代码运行，那么它就一定是运行在执行上下文中，执行上下文的类型分为三种：
-- **全局执行上下文**：只有一个，浏览器中的全局对象就是`window`对象，`this`指向这个全局对象；
-- **函数执行上下文**：存在无数个，只有在函数被调用的时候才会被创建，每次调用函数都会创建一个新的执行上下文；
-- **Eval 函数执行上下文**：指的是运行在`eval`函数中的代码，很少用而且不建议使用；
-全局上下文和函数上下文的例子：
-![2023030414225210.png](http://img.itchenliang.club/img/2023030414225210.png)
-紫色框住的部分为全局上下文，蓝色和橘色框起来的是不同的函数上下文。只有全局上下文（的变量）能被其他任何上下文访问。
+在 JavaScript 中，执行上下文是指代码执行时的环境，包括变量、函数、对象等信息。执行上下文可以分为三种类型：
+- 全局执行上下文：当进入全局代码时，会创建一个全局执行上下文（Global Execution Context），它在整个程序生命周期中只存在一次。例如，在浏览器中打开一个页面时，就会创建一个全局执行上下文。
+- 函数执行上下文：每当调用函数时，都会创建一个函数执行上下文（Function Execution Context）。每个函数都有自己的执行上下文，保存了该函数的变量、参数和函数内部定义的其他函数等信息。
+- Eval执行上下文：使用`eval()`函数时，也会创建一个执行上下文（Eval Execution Context）。Eval 执行上下文可以访问当前作用域中的变量，但其本身不被视为一个作用域。
 
-### 生命周期
-执行上下文的生命周期包括三个阶段：`创建阶段 → 执行阶段 → 回收阶段`。
-- **1、创建阶段**<br>
-  创建阶段即当函数被调用，但未执行任何其内部代码之前，创建阶段做了三件事：
-  - 确定`this`的值，也被称为`This Binding`
-  - `LexicalEnvironment`（词法环境） 组件被创建
-  - `VariableEnvironment`（变量环境） 组件被创建
-  伪代码如下：
-  ```js
-  ExecutionContext = {  
-    ThisBinding = <this value>,     // 确定this 
-    LexicalEnvironment = { ... },   // 词法环境
-    VariableEnvironment = { ... },  // 变量环境
-  }
-  ```
-- **2、执行阶段**<br>
-  在这阶段，执行`变量赋值、代码执行`。如果 Javascript 引擎在源代码中声明的实际位置找不到变量的值，那么将为其分配`undefined`值。
-- **3、回收阶段**<br>
-  执行上下文出栈等待虚拟机回收执行上下文。
+**执行上下文包含以下三个重要的属性：**
+- 变量对象（Variable Object）：存储变量、函数声明和函数参数等信息。
+- 作用域链（Scope Chain）：由当前执行上下文的变量对象和所有父级执行上下文变量对象的链式结构，用于实现词法作用域。
+- this指向：表示当前函数执行的上下文对象。
+
+注意: 执行上下文是按照执行顺序逐层压入执行栈中的，栈顶的执行上下文表示当前正在执行的代码块。当代码块执行完成后，该执行上下文将从栈中弹出，控制权返回到上一级执行上下文。
 
 ### 执行栈
-`执行栈`，也叫`调用栈`，具有`LIFO（后进先出）结构`，用于存储在代码执行期间创建的所有执行上下文。
-![202303041429189.png](http://img.itchenliang.club/img/202303041429189.png)
-- 当Javascript引擎开始执行你第一行脚本代码的时候，它就会创建一个全局执行上下文然后将它压到执行栈中
-- 每当引擎碰到一个函数的时候，它就会创建一个函数执行上下文，然后将这个执行上下文压到执行栈中
-- 引擎会执行位于执行栈栈顶的执行上下文(一般是函数执行上下文)，当该函数执行结束后，对应的执行上下文就会被弹出，然后控制流程到达执行栈的下一个执行上下文
+执行栈（Execution Stack），也称为调用栈（Call Stack），是一种后进先出（LIFO）的数据结构，用于存储代码执行时创建的所有执行上下文。
+> 每当一个函数被调用时，都会创建一个新的执行上下文，并将其压入执行栈的顶部。当该函数执行完成后，其对应的执行上下文将从栈中弹出，控制权返回到当前执行上下文的下一个语句。
 
-**例子**
+例如，以下代码示例演示了执行栈中的执行顺序：
 ```js
-let a = 'Hello World!';
-function first() {
-  console.log('Inside first function');
-  second();
-  console.log('Again inside first function');
+function add(a, b) {
+  return a + b;
 }
-function second() {
-  console.log('Inside second function');
+function multiply(a, b) {
+  return a * b;
 }
-first();
-console.log('Inside Global Execution Context');
+const result = multiply(3, add(2, 4));
+console.log(result); // 输出 18
 ```
-转化成图的形式
-![202303041430315.png](http://img.itchenliang.club/img/202303041430315.png)
-简单分析一下流程：
-- 创建全局上下文请压入执行栈
-- `first`函数被调用，创建函数执行上下文并压入栈
-- 执行`first`函数过程遇到`second`函数，再创建一个函数执行上下文并压入栈
-- `second`函数执行完毕，对应的函数执行上下文被推出执行栈，执行下一个执行上下文`first`函数
-- `first`函数执行完毕，对应的函数执行上下文也被推出栈中，然后执行全局上下文
-- 所有代码执行完毕，全局上下文也会被推出栈中，程序结束
+- 在上述代码中，当`multiply`函数被调用时，会创建一个新的执行上下文并压入执行栈的顶部；接着，当`add`函数被调用时，也会创建一个新的执行上下文并压入执行栈的顶部。
+- 当`add`函数执行完成后，其对应的执行上下文将从栈中弹出，控制权返回到`multiply`函数，继续执行剩余的代码。当`multiply`函数执行完成后，其对应的执行上下文也将从栈中弹出，最终代码执行完毕，执行栈为空。
 
 
-## 120、❓微任务和宏任务
-js是一门单线程语言，所以它本身是不可能异步的，但是js的宿主环境（比如浏览器、node）是多线程，宿主环境通过某种方式（事件驱动）使得js具备了异步的属性。而在js中，我们一般将所有的任务都分成两类，一种是**同步任务**，另外一种是**。而在异步任务中，又有着更加细致的分类，那就是`微任务`和`宏任务`。
+## 120、微任务和宏任务
+js是一门单线程语言，所以它本身是不可能异步的，但是js的宿主环境（比如浏览器、node）是多线程，宿主环境通过某种方式（事件驱动）使得js具备了异步的属性。而在js中，我们一般将所有的任务都分成两类，一种是**同步任务**，另外一种是**异步**。
+> 而在异步任务中，又有着更加细致的分类，那就是`微任务`和`宏任务`。
+
 ### 宏任务macrotask
 主要有`script(整体代码)`、`setTimeout`、`setInterval`、`I/O`、`UI交互事件(DOM事件)`、`AJAX请求`、`postMessage`、`MessageChannel`、`setImmediate(Node.js 环境)`。
 > 浏览器为了能够使得JS内部`task`与`DOM任务`能够有序的执行，会在一个`task`执行结束后，在`下一个task`执行开始前，对页面进行重新渲染（`task->渲染->task->…`）
@@ -5264,7 +5317,7 @@ console.log('end');
 
 
 ## 121、数组降维
-1. **数组字符串化**
+- 1、**数组字符串化**
   ```js
   let arr = [
     [222, 333, 444],
@@ -5277,7 +5330,7 @@ console.log('end');
   console.log(arr); // ["222", "333", "444", "55", "66", "77", "[object Object]"]
   ```
   这也是比较简单的一种方式，从以上例子中也能看到问题，所有的元素会转换为字符串，且元素为对象类型会被转换为 "[object Object]" ，对于同一种类型数字或字符串还是可以的。
-2. **利用`apply`和`concat`转换**
+- 2、**利用`apply`和`concat`转换**
   ```js
   function reduceDimension(arr) {
     return Array.prototype.concat.apply([], arr);
@@ -5288,7 +5341,7 @@ console.log('end');
     [9, [111]]
   ])); // [123, 4, 7, 8, 9, Array(1)]
   ```
-3. **递归**
+- 3、**递归**
   ```js
   function reduceDimension(arr) {
     let ret = [];
@@ -5301,7 +5354,7 @@ console.log('end');
     return ret;
   }
   ```
-4. **`Array​.prototype​.flat()`**
+- 4、**`Array​.prototype​.flat()`**
   ```js
   var arr1 = [1, 2, [3, 4]];
   arr1.flat();
@@ -5319,7 +5372,7 @@ console.log('end');
   arr3.flat(Infinity);
   // [1, 2, 3, 4, 5, 6]
   ```
-5. **使用`reduce`、`concat`和递归无限反嵌套多层嵌套的数组**
+- 5、**使用`reduce`、`concat`和递归无限反嵌套多层嵌套的数组**
   ```js
   var arr1 = [1, 2, 3, [1, 2, 3, 4, [2, 3, 4]]];
   function flattenDeep(arr1) {
@@ -5370,46 +5423,57 @@ console.log('two time', t3 - t2)
 | k | 1000 * 100 | 1000 * 100 | 1000 * 100 * 10 | 1000 * 100 * 10 |
 
 
-## 123、❓轮播图实现原理
-1. 图片移动实现原理：<br>
-  利用浮动将所有所有照片依次排成一行，给这一长串图片添加一个父级的遮罩，每次只显示一张图，其余的都隐藏起来。对图片添加绝对定位，通过控制left属性，实现照片的移动。
-2. 图片移动动画原理：<br>
-  从a位置移动到b位置，需要先计算两点之间的差值，通过差值和时间间隔，计算出每次移动的步长，通过添加定时器，每次移动相同的步长，实现动画效果。
-3. 图片定位停止原理：<br>
-  每一张照片都有相同的宽度，每张照片都有一个绝对的定位数值，通过检测定每次移动后，照片当前位置和需要到达位置之间的距离是否小于步长，如果小于，说明已经移动到位，可以将定时器清除，来停止动画。
-4. 图片切换原理：<br>
-  在全局设置一个变量，记录当前图片的位置，每次切换或跳转时，只需要将数值修改，并调用图片页数转像素位置函数，再调用像素运动函数即可。
-5. 自动轮播原理：<br>
-  设置定时器，一定时间间隔后，将照片标记加1，然后开始切换。
-6. 左右点击切换原理：<br>
-  修改当前位置标记，开始切换。这里需要注意与自动轮播之间的冲突。当点击事件触发之后，停止自动轮播计时器，开始切换。当动画结束后再次添加自动轮播计时器。
-7. 无缝衔接原理：<br>
-  需要无缝衔接，难度在于最后一页向后翻到第一页，和第一页向前翻到最后一页。由于图片的基本移动原理。要想实现无缝衔接，两张图片就必须紧贴在一起。所以在第一张的前面需要添加最后一张，最后一张的后面需要添加第一张。
-8. 预防鬼畜原理：<br>
-  始终保证轮播图的运动动画只有一个，从底层杜绝鬼畜。需要在每次动画开始之前，尝试停止动画定时器，然后开始为新的动画添加定时器。
-9. 预防暴力点击原理：<br>
-  如果用户快速点击触发事件，会在短时间内多次调用切换函数，虽然动画函数可以保证，不会发生鬼畜，但在照片从最后一张到第一张的切换过程，不会按照正常的轮播，而是实现了跳转。所以需要通过添加口令的方式来，限制用户的点击。当用户点击完成后，口令销毁，动画结束后恢复口令。
-10. 小圆点的位置显示原理：<br>
-  每次触发动画时，通过全局变量标记，获取当前页数，操作清除所有小圆点，然后指定一页添加样式。
-11. 点击触发跳转的原理：<br>
-  类似于左右点击触发，只是这是将全局页面标记，直接修改，后执行动画。需要避免与自动轮播定时器的冲突。
+## 123、什么是Generator 函数
+如果某个方法之前加上星号（`*`），就表示该方法是一个`Generator`函数。`Generator`函数是ES6提供的一种异步编程解决方案，语法行为与传统函数完全不同。
+> `Generator`函数有多种理解角度。语法上，首先可以把它理解成，`Generator`函数是一个状态机，封装了多个内部状态。执行`Generator`函数会返回一个遍历器对象，也就是说，`Generator`函数除了状态机，还是一个遍历器对象生成函数。返回的遍历器对象，可以依次遍历`Generator`函数内部的每一个状态。形式上，`Generator`函数是一个普通函数，但是有两个特征：
+- `function`关键字与函数名之间有一个星号；
+- 函数体内部使用`yield`表达式，定义不同的内部状态（`yield`在英语里的意思就是“产出”）。
+
+ES6 没有规定，`function`关键字与函数名之间的星号，写在哪个位置。这导致下面的写法都能通过。
+```js
+function * foo(x, y) { ··· }
+function *foo(x, y) { ··· }
+function* foo(x, y) { ··· }
+function*foo(x, y) { ··· }
+```
+由于`Generator`函数仍然是普通函数，所以一般的写法是上面的第三种，即星号紧跟在`function`关键字后面。本书也采用这种写法。
 
 
-## 124、❓如何设计一个轮播图组件
-1. 轮播图功能实现
-2. 抽出需要传入的变量，如：背景图，文案描述等
+## 124、Javascript中，有一个函数，执行时对象查找时，永远不会去查找原型的函数?
+`Object.hasOwnProperty(proName)`：是用来判断一个对象是否有你给出名称的属性。
+> 此方法无法检查该对象的原型链中是否具有该属性，该属性必须是对象本身的一个成员。
 
 
 ## 125、怎样理解setTimeout执行误差
-定时器是属于`宏任务(macrotask)`。如果当前`执行栈`所花费的时间大于`定时器`时间，那么定时器的回调在`宏任务(macrotask)`里，来不及去调用，所有这个时间会有误差。
-```js
-setTimeout(function () {
-  console.log('biubiu');
-}, 1000);
+在 JavaScript 中，`setTimeout`函数是用来延迟指定时间后执行一段代码的方法。但是，由于 JavaScript 是单线程执行的语言，`setTimeout`函数并不能保证精确地在指定时间后立即执行回调函数，而是会有一定的误差。
 
-某个执行时间很长的函数();
+这种误差主要是由以下两个方面造成的：
+- JS引擎中的事件循环机制：JavaScript 引擎需要在执行代码的同时，处理其他任务，比如用户输入、网络请求等。在这些任务的处理过程中，会影响到 setTimeout 函数的回调函数的执行时间。
+- 定时器的实现方式：不同的浏览器对`setTimeout`函数的实现方式可能存在差异，导致回调函数执行的精度也不同。
+
+另外，需要注意的是，如果在一个宏任务中运行了耗时较长的操作，那么在该任务结束前，任何通过`setTimeout`延迟执行的代码都将被阻塞。这意味着，定时器的实际执行时间可能会比预期时间晚很多。
+```js
+setTimeout(() => {
+  console.log('阻塞输出', new Date().getSeconds())
+}, 2000)
+
+const startTime = new Date().getSeconds()
+console.log('正常时间', new Date().getSeconds())
+while (true) {
+  const endTime = new Date().getSeconds()
+  if (endTime - startTime >= 3) {
+    console.log('正常输出', new Date().getSeconds())
+    break
+  }
+}
+// 输出
+// 正常时间 8
+// 正常输出 11
+// 阻塞输出 11
 ```
-如果定时器下面的函数执行要`5秒钟`，那么定时器里的`log`则需要`5秒`之后再执行，函数占用了当前`执行栈`，要等执行栈执行完毕后再去读取`微任务(microtask)`，等`微任务(microtask)`完成，这个时候才会去读取`宏任务(macrotask)`里面的`setTimeout`回调函数执行。`setInterval`同理。
+从上面输出结果来看，我们定的`setTimeout`延迟时间是`2秒`，正常情况下，应该在`正常时间 8`后的两秒即`10秒`时输出，由于我们写了一个`while`语句，使宏任务执行了`3秒`，按照上面的逻辑，所以我们的`setTimeout`实际是延迟了`3秒`。
+
+为了避免`setTimeout`的误差，可以使用`requestAnimationFrame`或`setImmediate`等其他替代性方案。此外，在编写代码时，应尽量减少在`setTimeout`回调函数中执行大量计算或重复性操作的情况，以提高代码执行的效率和精度。
 
 **特殊情况**: 在最新的规范里有这么一句`If nesting level is greater than 5, and timeout is less than 4, then increase timeout to 4.`(意思就是如果`timeout`嵌套`大于5层`，而时间间隔`小于4ms`，则时间间隔增加到`4ms`。)
 ```js
@@ -5437,31 +5501,25 @@ setTimeout(function() {
 ## 127、在JavaScript中创建一个真正的`private`方法有什么缺点？
 每一个对象都会创建一个`private`方法的方法，这样很耗费内存。
 ```js
-var Employee = function(name, company, salary) {
-  this.name = name || "";
-  this.company = company || "";
-  this.salary = salary || 5000;
-
-  // Private method
+var Employee = function(salary) {
+  this.salary = salary;
+  // 私有方法
   var increaseSalary = function() {
-    this.salary = this.salary + 1000;
+    this.salary = this.salary + 100;
   };
-
-  // Public method
-  this.dispalyIncreasedSalary = function() {
+  // 公共方法
+  this.printIncreaseSalary = function() {
     increaseSlary();
     console.log(this.salary);
   };
 };
 
 // Create Employee class object
-var emp1 = new Employee("John", "Pluto", 3000);
+var emp1 = new Employee(3000);
 // Create Employee class object
-var emp2 = new Employee("Merry", "Pluto", 2000);
-// Create Employee class object
-var emp3 = new Employee("Ren", "Pluto", 2500);
+var emp2 = new Employee(2000);
 ```
-在这里`emp1`, `emp2`, `emp3`都有一个`increaseSalary`私有方法的副本。所以我们除非必要，非常不推荐使用私有方法。
+在这里`emp1`, `emp2`都有一个`increaseSalary`私有方法的副本。所以我们除非必要，非常不推荐使用私有方法。
 
 
 ## 128、JavaScript怎么清空数组？
@@ -5779,10 +5837,13 @@ function findMostWord(article) {
 
 
 ## 140、什么是堆？什么是栈？它们之间有什么区别和联系？
-可以参考：[78、javascript有几种类型的值,你能画一下他们的内存图吗](#_78、javascript-有几种类型的值-你能画一下他们的内存图吗)<br>
-堆和栈的概念存在于数据结构中和操作系统内存中。在数据结构中，栈中数据的存取方式为先进后出。而堆是一个优先队列，是按优先级来进行排序的，优先级可以按照大小来规定。完全二叉树是堆的一种实现方式。在操作系统中，内存被分为栈区和堆区。
-- 栈区内存由编译器自动分配释放，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈。
-- 堆区内存一般由程序员分配释放，若程序员不释放，程序结束时可能由垃圾回收机制回收。
+堆和栈都是计算机内存中的一种数据结构，它们之间有以下区别和联系：
+- 定义：栈是一种后进先出（LIFO）的数据结构，用于存储函数调用、局部变量等；堆是一种动态分配的数据结构，用于存储程序运行时动态生成的对象。
+- 存储方式：栈采用顺序存储结构，所有元素在同一块连续的内存空间中；堆采用链式存储结构，元素可以分布在不同的内存区域，并通过指针相互连接。
+- 内存管理：栈的内存分配和回收由系统自动完成，无需手动干预；堆的内存分配和回收需要手动进行操作，否则会导致内存泄漏或内存溢出等问题。
+- 访问速度：由于栈采用顺序存储结构，其访问速度比堆更快；而堆采用链式存储结构，访问速度较慢。
+- 适用场景：栈适用于多层函数调用、递归等场景，堆适用于存储动态数据结构，如对象、数组等。
+- 联系：栈和堆都是内存中的数据结构，程序在运行时使用栈和堆来存储数据。在某些情况下，栈和堆可能同时被使用，例如函数中创建一个对象时，对象的引用存储在栈上，而对象本身存储在堆中。
 
 
 ## 141、undefined 与 undeclared 的区别？
@@ -5847,45 +5908,13 @@ const p = new Person()
 - 判断一个数是不是有穷的，可以使用`isFinite`函数来判断。
 
 
-## 146、❓栈、堆、队列和哈希表的区别?
-> https://blog.csdn.net/weixin_50757957/article/details/124616956
-https://blog.csdn.net/qq_19446965/article/details/102982047
+## 146、栈、堆、队列和哈希表的区别?
+栈(Stack)、堆(Heap)、队列(Queue)和哈希表(Hash Table)是常见的数据结构，它们之间的主要区别如下：
+- 栈(Stack)：栈是一种后进先出(LIFO)的数据结构。只允许在栈顶进行插入和删除操作。常用于处理递归函数、表达式求值、内存分配等场景。
+- 堆(Heap)：堆是一种可以动态分配内存的数据结构。堆中的元素没有特定的顺序，但是在堆中每个节点的键值都不大于或不小于其子节点的键值。常用于实现优先队列、动态存储等场景。
+- 队列(Queue)：队列是一种先进先出(FIFO)的数据结构。只允许在队尾进行插入操作，在队头进行删除操作。常用于操作系统任务调度、消息传递等场景。
+- 哈希表(Hash Table)：哈希表是一种通过散列函数将键映射到值的数据结构。哈希表通常具有快速的查找、插入和删除操作，并且可以通过合理的设置散列函数来减少冲突。常用于实现字典、缓存等场景。
 
-- 栈的插入和删除操作都是在一端进行的，而队列的操作却是在两端进行的。
-- 队列先进先出，栈先进后出。
-- 栈只允许在表尾一端进行插入和删除，而队列只允许在表尾一端进行插入，在表头一端进行删除
-
-栈和堆的区别？
-- 栈区（stack）：由编译器自动分配释放，存放函数的参数值，局部变量的值等。
-- 堆区（heap）：一般由程序员分配释放，若程序员不释放，程序结束时可能由 OS 回收。
-- 堆（数据结构）：堆可以被看成是一棵树，如：堆排序；
-- 栈（数据结构）：一种先进后出的数据结构。
-
-
-
-## 147、new 一个对象的过程中发生了什么
-```js
-function Person(name) {
-  this.name = name;
-}
-var person = new Person("qilei");
-```
-new一个对象的四个过程：
-```js
-// 1.创建空对象；
-var obj = {};
-// 2.设置原型链: 设置新对象的 constructor 属性为构造函数的名称，设置新对象的__proto__属性指向构造函数的 prototype 对象；
-obj.constructor = Person;
-obj.__proto__ = Person.prototype;
-// 3.改变this指向：使用新对象调用函数，函数中的 this 指向新实例对象obj：
-var result = Person.call(obj); //{}.构造函数();
-// 4.返回值：如果无返回值或者返回一个非对象值，则将新对象返回；如果返回值是一个新对象的话那么直接返回该对象。
-if (typeof(result) == "object") {
-  person = result;
-} else {
-  person = obj;
-}
-```
 
 
 ## 148、Array 构造函数只有一个参数值时的表现？
@@ -5898,12 +5927,13 @@ arr1[1] = 'b'
 arr1[2] = 'c'
 
 // 简洁方式
-var arr2 = new Array('a', 'b', 'c')
+var arr2 = new Array('a', 'b', 'c') // ['a', 'b', 'c']
+var arr3 = new Array('aa') // ['aa']
+var arr3 = new Array(false) // [false]
 
 // 字面方式
-var arr3 = ['a', 'b', 'c']
+var arr4 = ['a', 'b', 'c']
 ```
-
 构造函数`Array(..)`不要求必须带`new`关键字。不带时，它会被自动补上。
 ```js
 Array(4) // [empty x 4]
@@ -6157,7 +6187,15 @@ b1.toString() // 1, 2
 ```
 
 ## 153、什么是假值对象？
-浏览器在某些特定情况下，在常规 JavaScript 语法基础上自己创建了一些外来值，这些就是“假值对象”。假值对象看起来和普通对象并无二致（都有属性，等等），但将它们强制类型转换为布尔值时结果为`false`最常见的例子是 `document.all`，它是一个类数组对象，包含了页面上的所有元素，由 DOM（而不是 JavaScript 引擎）提供给 JavaScript 程序使用。
+在JavaScript中，以下6个值被认为是假值(`false value`)对象：
+- `false`：布尔值false
+- `0`：数字零
+- `''`：空字符串
+- `null`：空对象引用
+- `undefined`：未定义的变量或属性
+- `NaN`：非数值（Not a Number）
+
+这些值在条件语句中会被自动转换为`false`。例如，在if语句中，如果条件表达式的结果为假值对象，则执行if语句块之外的代码。而其他所有值都被视为真值(`true value`)对象。
 
 
 ## 154、`~`操作符的作用？
@@ -6182,14 +6220,6 @@ b1.toString() // 1, 2
 1 + '1' = 11
 +'90' = 90
 ```
-
-
-## 157、什么情况下会发生布尔值的隐式强制类型转换？
-- （1） `if (..)` 语句中的条件判断表达式。
-- （2） `for ( ..; ..; ..)` 语句中的条件判断表达式（第二个）。
-- （3） `while (..)` 和 `do..while(..)` 循环中的条件判断表达式。
-- （4） `? : `中的条件判断表达式。
-- （5） `逻辑运算符 ||（逻辑或）和 &&（逻辑与）` 左边的操作数（作为条件判断表达式）。
 
 
 ## 158、`||(或)`和`&&(与)`操作符的返回值？
@@ -6254,7 +6284,7 @@ console.log(0 && 2);//0
 ```js
 // 方法一
 function format(number) {
-  return number && number.replace(/(?!^)(?=(\d{3})+\.)/g, ",");
+  return number && (number + '').replace(/(?!^)(?=(\d{3})+\.)/g, ",");
 }
 // 方法二
 function format1(number) {
@@ -6403,57 +6433,57 @@ xhr.send(null);
 
 
 ## 168、谈一谈浏览器的缓存机制？
-浏览器缓存是浏览器对之前请求过的文件进行缓存，以便下一次访问时重复使用，**节省带宽**，**提高访问速度**，**降低服务器压力**。
-> 浏览器缓存其实就是浏览器保存通过HTTP获取的所有资源,是浏览器将网络资源存储在本地的一种行为。浏览器的缓存机制是根据HTTP报文的缓存标识进行的。
+浏览器缓存机制是指浏览器在访问网站时，将一些数据（如HTML、CSS、JS、图片等）缓存在本地，以减少网络传输和提高用户体验。
 
-通常浏览器缓存策略分为两种：**强缓存（Expires，cache-control）**和**协商缓存（Last-modified ，Etag）**，并且缓存策略都是通过设置 HTTP Header 来实现的。
-- 强缓存
-  - Expires: response header里的过期时间，浏览器再次加载资源时，如果在这个过期时间内，则命中强制缓存。
-  - Cache-Control: 当值设为`max-age=300`时，则代表在这个请求正确返回时间（浏览器也会记录下来）的5分钟内再次加载资源，就会命中强缓存。
-  - Expires和Cache-Control的区别
-    - Expires是http1.0的产物，Cache-Control是http1.1的产物
-    - 两者同时存在的话，Cache-Control优先级高于Expires；
-    - 在某些不支持HTTP1.1的环境下，Expires就会发挥用处。所以Expires其实是过时的产物，现阶段它的存在只是一种兼容性的写法
-    - Expires是一个具体的服务器时间，这就导致一个问题，如果客户端时间和服务器时间相差较大，缓存命中与否就不是开发者所期望的。Cache-Control是一个时间段，控制就比较容易
-- 协商缓存
-  > https://www.cnblogs.com/suihang/p/12855345.html
+常见的浏览器缓存机制包括以下几种：
+1. 强缓存(HTTP Cache-Control、Expires)：当浏览器第一次请求资源时，服务器可以通过设置 HTTP 的 Cache-Control 和 Expires 头部来告诉浏览器该资源是否可以被缓存，以及缓存有效期。在过期时间内，浏览器可以直接从缓存中获取资源，不必再向服务器发送请求。
+2. 协商缓存(HTTP ETag、Last-Modified)：当强缓存失效后，浏览器可以通过发送带有 If-Modified-Since 或 If-None-Match 头部的请求，让服务器判断资源是否有更新。如果资源未更改，则服务器返回 304 状态码，告诉浏览器继续使用缓存中的资源，否则返回新的资源。
+3. Service Worker缓存：Service Worker 是运行在浏览器后台的一种 JavaScript 脚本，可以在离线状态下缓存网页内容、API 数据等，提供更好的离线体验。Service Worker 可以通过监听 fetch 事件来拦截网络请求，并根据缓存策略返回结果。
+
+注意: 虽然浏览器缓存可以提高性能和用户体验，但也可能出现缓存过期、缓存劫持等问题，导致用户看到旧的或错误的数据。因此，在开发中应该合理使用缓存，并对缓存进行有效的管理和更新。可以使用版本号控制、缓存清除等方式来确保页面和资源的正确性和可用性。
 
 
 ## 169、Ajax解决浏览器缓存问题？
-1. 在`ajax`发送请求前加上 `anyAjaxObj.setRequestHeader("If-Modified-Since", "0")`。
-2. 在`ajax`发送请求前加上 `anyAjaxObj.setRequestHeader("Cache-Control", "no-cache")`。
-3. 在`URL`后面加上一个随机数：`"fresh=" + Math.random();`。
-4. 在`URL`后面加上时间戳：`"nowtime=" + new Date().getTime();`。
-5. 如果是使用`jQuery`，直接这样就可以了`$.ajaxSetup({cache:false})`。这样页面的所有`ajax`都会执行这条语句就是不需要保存缓存记录。
+在使用 Ajax 请求时，由于浏览器的缓存机制，可能会导致请求结果被缓存下来，从而出现数据错误或不更新的问题。为了解决这个问题，可以采用以下几种方法：
+1. **禁用浏览器缓存**: 在发送 AJAX 请求时，可以通过设置 HTTP 头部或参数来告诉服务器不要缓存该请求。
+  > 例如，在 jQuery Ajax 中，可以设置 cache 参数为 false，如下所示：
+  ```js
+  $.ajax({
+    url: 'example.com/api/data',
+    cache: false,
+    success: function(data) {
+      // 处理返回数据
+    }
+  });
+  ```
+2. **使用随机数或时间戳**：将时间戳或随机数添加到请求 URL 后面，保证每次请求的 URL 不同，从而避免被缓存。例如：
+  ```js
+  var timestamp = new Date().getTime();
+  $.ajax({
+    url: 'example.com/api/data?timestamp=' + timestamp,
+    success: function(data) {
+      // 处理返回数据
+    }
+  });
+  ```
+3. **修改请求方式**：将 HTTP 请求方式从 GET 改为 POST 或其他方式，以防止浏览器缓存数据。
+4. **服务端配置**：在服务器端，可以根据请求头信息判断是否需要缓存响应结果，如果需要缓存，则可以设置合适的缓存头部和缓存时间，否则不进行缓存。
 
 
 ## 170、同步和异步的区别？
-- **同步**：指的是当一个进程在执行某个请求的时候，如果这个请求需要等待一段时间才能返回，那么这个进程会一直等待下去，直到消息返回为止再继续向下执行。
-- **异步**：指的是当一个进程在执行某个请求的时候，如果这个请求需要等待一段时间才能返回，这个时候进程会继续往下执行，不会阻塞等待消息的返回，当消息返回时系统再通知进程进行处理。
+同步和异步是指程序的执行方式和处理方式，主要区别在于是否阻塞程序的执行。
+- **同步**：指程序按照顺序依次执行，当前一个操作没有完成时，下一个操作必须等待。同步操作会阻塞程序的执行，直到前一个操作完成才能执行下一个操作。
+- **异步**：指程序不会按照顺序依次执行，而是通过回调函数、事件触发等方式来实现。异步操作不会阻塞程序的执行，当某个异步操作完成后，系统会通知相应的处理程序进行后续处理，从而可以同时执行其他操作。
 
 
 ## 171、如何解决跨域问题？
-1. 通过 jsonp 跨域
-2. document.domain + iframe 跨域
-3. location.hash + iframe
-4. window.name + iframe 跨域
-5. postMessage 跨域
-6. nginx 代理跨域
-7. nodejs 中间件代理跨域
-8. WebSocket 协议跨
-9. 跨域资源共享（CORS)
+跨域问题是指当一个Web页面向不同源的服务器请求资源时（例如向其他域名、端口或协议发送XMLHttpRequest请求），浏览器会阻止这种行为，因为它可能会引起安全漏洞。
 
-解决跨域的方法我们可以根据我们想要实现的目的来划分。
-
-首先我们如果只是想要实现主域名下的不同子域名的跨域操作，我们可以使用设置 document.domain 来解决。
-- （1）将 document.domain 设置为主域名，来实现相同子域名的跨域操作，这个时候主域名下的 cookie 就能够被子域名所访问。同时如果文档中含有主域名相同，子域名不同的 iframe 的话，我们也可以对这个 iframe 进行操作。如果是想要解决不同跨域窗口间的通信问题，比如说一个页面想要和页面的中的不同源的 iframe 进行通信的问题，我们可以使用 location.hash 或者 window.name 或者 postMessage 来解决。
-- （2）使用 location.hash 的方法，我们可以在主页面动态的修改 iframe 窗口的 hash 值，然后在 iframe 窗口里实现监听函数来实现这样一个单向的通信。因为在 iframe 是没有办法访问到不同源的父级窗口的，所以我们不能直接修改父级窗口的 hash 值来实现通信，我们可以在 iframe 中再加入一个iframe ，这个 iframe 的内容是和父级页面同源的，所以我们可以 window.parent.parent 来修改最顶级页面的 src，以此来实现双向通信。
-- （3）使用 window.name 的方法，主要是基于同一个窗口中设置了 window.name 后不同源的页面也可以访问，所以不同源的子页面可以首先在 window.name 中写入数据，然后跳转到一个和父级同源的页面。这个时候级页面就可以访问同源的子页面中 window.name 中的数据了，这种方式的好处是可以传输的数据量大。
-- （4）使用 postMessage 来解决的方法，这是一个 h5 中新增的一个 api。通过它我们可以实现多窗口间的信息传递，通过获取到指定窗口的引用，然后调用 postMessage 来发送信息，在窗口中我们通过对 message 信息的监听来接收信息，以此来实现不同源间的信息交换。如果是像解决 ajax 无法提交跨域请求的问题，我们可以使用 jsonp、cors、websocket 协议、服务器代理来解决问题。
-- （5）使用 jsonp 来实现跨域请求，它的主要原理是通过动态构建 script  标签来实现跨域请求，因为浏览器对 script 标签的引入没有跨域的访问限制 。通过在请求的 url 后指定一个回调函数，然后服务器在返回数据的时候，构建一个 json 数据的包装，这个包装就是回调函数，然后返回给前端，前端接收到数据后，因为请求的是脚本文件，所以会直接执行，这样我们先前定义好的回调函数就可以被调用，从而实现了跨域请求的处理。这种方式只能用于get 请求。
-- （6）使用 CORS 的方式，CORS 是一个 W3C 标准，全称是"跨域资源共享"。CORS 需要浏览器和服务器同时支持。目前，所有浏览器都支持该功能，因此我们只需要在服务器端配置就行。浏览器将 CORS 请求分成两类：简单请求和非简单请求。对于简单请求，浏览器直接发出 CORS 请求。具体来说，就是会在头信息之中，增加一个 Origin 字段。Origin 字段用来说明本次请求来自哪个源。服务器根据这个值，决定是否同意这次请求。对于如果 Origin 指定的源，不在许可范围内，服务器会返回一个正常的 HTTP 回应。浏览器发现，这个回应的头信息没有包含 Access-Control-Allow-Origin 字段，就知道出错了，从而抛出一个错误，ajax 不会收到响应信息。如果成功的话会包含一些以 Access-Control- 开头的字段。非简单请求，浏览器会先发出一次预检请求，来判断该域名是否在服务器的白名单中，如果收到肯定回复后才会发起请求。
-- （7）使用 websocket 协议，这个协议没有同源限制。
-- （8）使用服务器来代理跨域的访问请求，就是有跨域的请求操作时发送请求给后端，让后端代为请求，然后最后将获取的结果发返回。
+以下是常用的解决跨域问题的方法：
+1. 使用JSONP。JSONP利用script标签没有跨域限制的特性，通过`callback`函数来实现跨域数据的传输。
+2. CORS（跨域资源共享）。CORS是一种机制，允许Web应用服务器进行跨域访问控制，从而使跨域数据传输得以安全进行。在服务端设置Access-Control-Allow-Origin响应头即可开启CORS。
+3. 代理。在同一域名下，可以通过后端代理，将跨域请求先发送到本地服务端，再由服务端转发到目标服务器。
+4. WebSocket。WebSocket是一种基于TCP协议的新型网络传输协议，支持双向通信。由于WebSocket协议定义了与HTTP不同的握手方式，因此也不存在同源限制。使用WebSocket可以实现跨域数据传输。
 
 
 ## 172、简单谈一下 cookie ？
@@ -6462,13 +6492,54 @@ cookie 是服务器提供的一种用于维护会话状态信息的数据，通�
 在发生 xhr 的跨域请求的时候，即使是同源下的 cookie，也不会被自动添加到请求头部，除非显示地规定。
 
 
-## 173、❓模块化开发怎么做？
-我对模块的理解是，一个模块是实现一个特定功能的一组方法。在最开始的时候，js 只实现一些简单的功能，所以并没有模块的概念，但随着程序越来越复杂，代码的模块化开发变得越来越重要。<br>
-由于函数具有独立作用域的特点，最原始的写法是使用函数来作为模块，几个函数作为一个模块，但是这种方式容易造成全局变量的污染，并且模块间没有联系。<br>
-后面提出了对象写法，通过将函数作为一个对象的方法来实现，这样解决了直接使用函数作为模块的一些缺点，但是这种办法会暴露所有的所有的模块成员，外部代码可以修改内部属性的值。<br>
-现在最常用的是立即执行函数的写法，通过利用闭包来实现模块私有作用域的建立，同时不会对全局作用域造成污染。
-> https://juejin.cn/post/6844903897937494030
-> https://www.cnblogs.com/fengyuqing/p/javascript_module_1.html，或者更多的看[jquery](https://unpkg.com/jquery@3.6.3/dist/jquery.js)或者[vue](https://unpkg.com/vue@2.7.14/dist/vue.js)的源码。
+## 173、模块化开发怎么做？
+JavaScript 模块化是一种用于组织和管理代码的方式，它可以将代码分解为独立的模块，每个模块都具有明确的接口和功能。以下是在 JavaScript 中实现模块化开发的几种常见方式：
+1. **CommonJS**：Node.js 使用 CommonJS 规范实现模块化。使用`module.exports`导出模块，使用`require()`导入模块。
+  ```js
+  // math.js
+  module.exports = {
+    add: function(num1, num2) {
+      return num1 + num2;
+    },
+    subtract: function(num1, num2) {
+      return num1 - num2;
+    }
+  };
+  // index.js
+  const math = require('./math');
+  console.log(math.add(2, 3)); // 输出 5
+  ```
+2. **ES6 模块化**：使用`export`导出模块，使用`import`导入模块。
+  ```js
+  // math.js
+  export function add(num1, num2) {
+    return num1 + num2;
+  }
+  export function subtract(num1, num2) {
+    return num1 - num2;
+  }
+  // index.js
+  import { add } from './math';
+  console.log(add(2, 3)); // 输出 5
+  ```
+3. **AMD模块化**：用于浏览器端异步加载模块。使用`define()`定义模块，使用`require()`加载模块。
+  ```js
+  // math.js
+  define(function() {
+    return {
+      add: function(num1, num2) {
+        return num1 + num2;
+      },
+      subtract: function(num1, num2) {
+        return num1 - num2;
+      }
+    };
+  });
+  // index.js
+  require(['math'], function(math) {
+    console.log(math.add(2, 3)); // 输出 5
+  });
+  ```
 
 
 ## 174、js的几种模块规范？
@@ -6486,11 +6557,82 @@ cookie 是服务器提供的一种用于维护会话状态信息的数据，通�
 
 
 ## 175、什么是yield 表达式
-由于`Generator`函数返回的遍历器对象，只有调用`next`方法才会遍历下一个内部状态，所以其实提供了一种可以暂停执行的函数。`yield`表达式就是暂停标志。
+在 JavaScript 中，`yield`关键字通常用于生成器函数(Generator)中，它可以暂停函数的执行并返回一个值，然后再次恢复函数的执行。`yield`表达式可以看作是生成器函数的一个断点，用于控制函数的执行流程。
+> `yield`是一种强大的特性，它使得生成器函数可以创建一个迭代器，并允许我们以更加直观和灵活的方式控制函数的执行流程。
+```js
+function* generator() {
+  console.log('step 1');
+  yield 'yield value';
+  console.log('step 2');
+}
+const gen = generator();
+console.log(gen.next()); // 输出 step 1 和 { value: 'yield value', done: false }
+console.log(gen.next()); // 输出 step 2 和 { value: undefined, done: true }
+```
+`yield`表达式可与`for...of`循环一起使用，以便逐一迭代生成器的返回值（即生成器中使用`yield`表达式返回的值）。
+```js
+function* generator() {
+  yield 'apple';
+  yield 'banana';
+  yield 'cherry';
+}
+for (const fruit of generator()) {
+  console.log(fruit);
+}
+// 输出 apple、banana 和 cherry
+```
 
 
-## 176、❓JS 模块加载器的轮子怎么造，也就是如何实现一个模块加载器？
-https://www.zhihu.com/question/21157540
+## 176、JS 模块加载器的轮子怎么造，也就是如何实现一个模块加载器？
+实现一个模块加载器可以让我们更深入地理解 JavaScript 模块化的实现原理。以下是一个简单的模块加载器示例，它可以动态地从指定 URL 加载模块。
+```js
+function loadModule(url) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.onload = () => resolve(xhr.responseText);
+    xhr.onerror = () => reject(new Error(`Could not load module at ${url}`));
+    xhr.send();
+  });
+}
+
+class Module {
+  constructor(name, deps, fn) {
+    this.name = name;
+    this.deps = deps;
+    this.fn = fn;
+    this.exports = {};
+  }
+  async load() {
+    const args = await Promise.all(this.deps.map(dep => import(dep)));
+    this.fn(...args);
+  }
+}
+
+class ModuleManager {
+  constructor() {
+    this.modules = new Map();
+  }
+  async import(name, deps, fn) {
+    if (!this.modules.has(name)) {
+      const module = new Module(name, deps, fn);
+      this.modules.set(name, module);
+      await module.load();
+    }
+    return this.modules.get(name).exports;
+  }
+}
+
+const moduleManager = new ModuleManager();
+
+// 使用示例
+await moduleManager.import('math', ['https://unpkg.com/lodash'], async (_) => {
+  const add = (a, b) => console.log(_.add(a, b));
+  module.exports = { add };
+});
+const math = await moduleManager.import('math');
+math.add(1, 2); // 输出 3
+```
 
 
 ## 177、ECMAScript6怎么写`class`，为什么会出现`class`这种东西?
@@ -6519,100 +6661,24 @@ Person.prototype.printName = function () {
 
 
 ## 178、innerHTML 与 outerHTML 的区别？
+- innerHTML: 包含HTML元素的子元素、文本节点以及它们的属性
+  > 可以用于动态地添加或更改 DOM 元素的内容，也可以用于获取元素的 HTML 内容作为字符串。
+- outerHTML: 包含HTML元素本身以及它的子元素、文本节点以及它们的属性
+  > 可以用于动态地替换整个 DOM 元素，也可以用于获取元素的 HTML 内容作为字符串。
+ 
 对于这样一个 HTML 元素：
 ```html
-<div id="box">content<br/></div>
+<div id="box">content<span>span</span></div>
 ```
-- **innerHTML**：内部 HTML，`content<br/>`；
-- **outerHTML**：外部 HTML，`<div id="box">content<br/></div>`；
-- **innerText**：内部文本，`content`；
-- **outerText**：内部文本，`content`；
+- **innerHTML**：内部HTML，`content<span>span</span>`；
+- **outerHTML**：外部 HTML，`<div id="box">content<span>span</span></div>`；
 
 
 ## 179、❓JavaScript 类数组对象的定义？
-js中类数组对象很多，概念简单的讲就是看上去像数组，又不是数组，可以使用数字下标方式访问又没有数组方法。例：`arguments`，`NodeList`，`HTMLCollection`，`jQuery`等。
+JavaScript类数组对象是一个`拥有数字索引`和`length`属性的对象，它类似于一个数组，但并不具备完全的数组特性。
+> 例如，它没有数组原型上的方法，如`push()`和`pop()`，但可以通过下标访问元素。
 
-**类数组对象特性**：
-```html
-<!-- 基本结构 -->
-<ul>
-  <li>1</li>
-  <li>2</li>
-  <li>3</li>
-</ul>
-```
-1. 拥有`length`属性
-  ```js
-  const lis = document.querySelectorAll('li')
-  console.log(lis.__proto__) // NodeList {}
-  console.log(lis.length) // 3
-  ```
-2. 可以使用数字下标的方式访问对象
-  ```js
-  console.log(lis[0].innerText) // 1
-  ```
-3. 不能使用数组原型的方法(`push`、`pop`、`slice`等)
-  ```js
-  console.log(lis.pop) // undefined
-
-  // 正常数组
-  const a = ['a']
-  console.log(a.pop) // ƒ pop() { [native code] }
-  ```
-4. 使用`instanceof`操作不属于`Array`
-  ```js
-  lis instanceof Array // false
-
-  const a = ['a']
-  a instanceof Array // true
-  ```
-5. 可以转换为真数组对象
-  ```js
-  var arr = Array.prototype.slice.call(lis);
-  arr instanceof Array;//true
-  ```
-6. 通常可定义有其他自定义属性
-  ```js
-  console.log(lis.item) // ƒ item() { [native code] }
-  ```
-
-回归主题，如何手动创建类数组对象。
-1. 首先创建一个空对象
-  ```js
-  var array_like = {};//创建一个空对象
-  ```
-2. 为对象直接定义数字下标的属性，这在其他语言里是绝对不允许的，对象属性不能使用数字开头，但JS里是可以的，甚至使用中文都可以
-  ```js
-  array_like[ 0 ] = "test 0";
-  array_like[ 1 ] = "test 1";
-  array_like[ 2 ] = "test 2";
-  array_like[ 3 ] = "test 3";
-  ```
-3. 关键点，为对象设置`length`属性和`splice`属性为数字和函数
-  ```js
-  array_like.length = 4;
-  array_like.splice = [].splice;
-  // 设定splice属性其实是为了欺骗浏览器的控制台，另其显示出数组的模样。
-  ```
-4. 测试
-  ```js
-  // 设定自定义属性
-  array_like.test0 = array_like[0];
-  array_like.test1 = array_like[1];
-  // 直接输出
-  console.log(array_like); // ['test 0','test 1'...]
-  // 类型
-  console.log(typeof array_like); // "object"
-  //数字下标访问
-  console.log(array_like[0]); // "test 0"
-  //自定义属性访问
-  array_like.test0; // "test 0"
-  //不是数组对象
-  array_like instanceof Array;// false
-  //转换为真数组对象
-  var Arr = Array.prototype.slice.call(array_like);
-  Arr instanceof Array; // true
-  ```
+常见的类数组对象包括`函数参数arguments`、`DOM元素列表HTMLCollection`和属性集合等。
 
 
 ## 180、实现一个页面操作不会整页刷新的网站，并且能在浏览器前进、后退时正确响应
@@ -6753,24 +6819,12 @@ npm i babel-polyfill
 - 所以在兼容的时候一般是`babel + polyfill`都用到，所以`babel-polyfill`一步到位
 
 
-## 183、❓介绍一下 js 的节流与防抖？
-> 前言: 我们在做页面事件绑定的时候，经常要进行节流处理，比如**鼠标异步点击**，去执行一个异步请求时，需要让它在上一次没执行完时不能再点击，又或者**绑定滚动事件，这种持续触发进行dom判断的时候，就要按一定频率的执行**。
-例子: 模拟在输入框输入后做ajax查询请求，没有加入防抖和节流的效果
-```html
-没有防抖的input <input type="text" id="undebounce"><br/>
-<script>
-  let inputA = document.getElementById('undebounce');
-  function ajax(content) {
-    console.log('ajax request' + content);
-  }
-  // 没有防抖的input
-  inputA.addEventListener('keyup',function(e) {
-    ajax(e.target.value);
-  })
-</script>
-```
-效果: 在输入框里输入一个，就会触发一次“ajax请求”（此处是console）。
-> **缺点**: 浪费请求资源，可以加入防抖和节流来优化一下。
+## 183、介绍一下 js 的节流与防抖？
+JS 的节流(`throttling`)和防抖(`debouncing`)是两种常见的性能优化技术，用于控制某些频繁执行的操作以减少资源消耗和提高响应速度。
+- 节流: 原理是设置一个时间间隔，在该时间间隔内只能执行一次操作
+  > 例如: 当用户不断地滚动页面时，我们可以设置一个滚动事件的节流函数，使得在每个固定时间间隔内只执行一次滚动处理函数，而不是每滚动一下就执行一次。
+- 防抖: 原理是在某个操作连续触发时，只有最后一次操作完成时才执行相应的处理函数。
+  > 例如: 当用户不断地输入搜索关键字时，我们可以设置一个输入框的防抖函数，只有用户停止输入一段时间后才触发搜索操作，而不是在每次输入时都进行搜索。
 
 ### 防抖
 在事件被触发n秒后再执行回调函数，如果在这n秒内又被触发，则重新计时。
@@ -6781,7 +6835,8 @@ npm i babel-polyfill
 
 **实现**
 ```html
-防抖的input <input type="text" id="debounce"><br/>
+防抖的input
+<input type="text" id="debounce"><br/>
 <script>
   function ajax(content) {
     console.log(new Date() + 'ajax request' + content);
@@ -6819,7 +6874,8 @@ npm i babel-polyfill
 
 **实现**
 ```html
-节流的input<input type="text" id="throttle">
+节流的input
+<input type="text" id="throttle">
 <script>
   function ajax(content) {
     console.log(new Date() + 'ajax request' + content);
@@ -7270,9 +7326,6 @@ http://www.baidu.com/a.html  ==> 既是URL，又是URI
 总结: **`mouseenter`和`mouseleave`没有冒泡效果(推荐)**，而`mouseover`和`mouseout`会有冒泡效果
 
 
-## 204、❓js 拖拽功能的实现
-
-
 ## 205、为什么使用`setTimeout`实现`setInterval`？怎么模拟？
 **setInterval的时间误差**
 ```js
@@ -7570,7 +7623,7 @@ for (let i = 0; i < 5; i++) {
 ```
 
 
-## 224、❓一道常被人轻视的前端 JS 面试题
+## 224、一道常被人轻视的前端 JS 面试题
 ```js
 function Foo() {
   getName = function() {
