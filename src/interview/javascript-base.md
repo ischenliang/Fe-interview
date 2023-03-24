@@ -6674,7 +6674,7 @@ Person.prototype.printName = function () {
 - **outerHTML**：外部 HTML，`<div id="box">content<span>span</span></div>`；
 
 
-## 179、❓JavaScript 类数组对象的定义？
+## 179、JavaScript 类数组对象的定义？
 JavaScript类数组对象是一个`拥有数字索引`和`length`属性的对象，它类似于一个数组，但并不具备完全的数组特性。
 > 例如，它没有数组原型上的方法，如`push()`和`pop()`，但可以通过下标访问元素。
 

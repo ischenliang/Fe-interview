@@ -1,58 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>DOMContentLoaded和load事件演示</title>
 <style>
-.slideshow-container {
-  position: relative;
-  width: 100%;
-  height: 300px;
-}
-
-.slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  border: 1px solid #ddd;
-  transition: opacity 1s ease-in-out;
-}
-
-.slide.active {
-  opacity: 1;
-}
+  div {
+    width: 100px;
+    visibility: collapse;
+  }
 </style>
 </head>
 <body>
-  <div class="slideshow-container">
-    <div class="slide">aa</div>
-    <div class="slide">bb</div>
-    <div class="slide">cc</div>
-  </div>
-  <script>
-    // 获取轮播图容器和轮播图元素
-    const slideContainer = document.querySelector('.slideshow-container');
-    const slides = slideContainer.querySelectorAll('.slide');
-    // 初始化轮播图状态
-    let currentSlideIndex = 0;
-    slides[currentSlideIndex].classList.add('active');
-    // 自动轮播定时器
-    let timer = setInterval(() => {
-      // 移除当前轮播图的 active 类名
-      slides[currentSlideIndex].classList.remove('active');
-      // 计算下一个轮播图的索引
-      currentSlideIndex++;
-      if (currentSlideIndex >= slides.length) {
-        currentSlideIndex = 0;
-      }
-      // 添加下一个轮播图的 active 类名
-      slides[currentSlideIndex].classList.add('active');
-    }, 1000);
-  </script>
+  <div>哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈</div>
 </body>
 </html>

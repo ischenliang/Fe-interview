@@ -1145,6 +1145,25 @@ css阻塞文档解析的方式有如下两种:
 2. 意义不同：`DOMContentLoaded`事件表示`DOM树`已经构建完成，可以进行操作，而`Load`事件则表示整个页面及其所有资源都已经完全加载完成，可以进行一些需要所有资源都准备就绪的操作，例如图像尺寸计算等。
 3. 响应速度不同：`DOMContentLoaded`事件响应速度较快，因为它只需要等待`HTML文档`加载和解析完毕即可触发，而`Load`事件需要等待整个页面及其所有资源加载完成后才能触发，因此响应速度较慢。
 4. 兼容性不同：`DOMContentLoaded`事件在大多数现代浏览器中都得到支持，而`Load`事件也具有广泛的兼容性，但在某些旧版本浏览器中可能存在兼容性问题。
+```html
+<h1>DOMContentLoaded和load事件演示</h1>
+<p>这是一个简单的演示，展示了在DOM树构建完成和所有资源加载完成时DOMContentLoaded和load事件的触发时间。</p>
+<img src="https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_960_720.jpg" alt="一棵树">
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOMContentLoaded事件: DOMContentLoaded事件触发时间为 " + new Date().getTime());
+  });
+
+  window.addEventListener("load", function() {
+    console.log("load事件: load事件触发时间为 " + new Date().getTime());
+  });
+</script>
+```
+输出结果如下：
+```
+DOMContentLoaded事件: DOMContentLoaded事件触发时间为 1679649014340
+load事件: load事件触发时间为 1679649024547
+```
 
 
 ## 77、如何实现浏览器内多个标签页之间的通信?
@@ -1270,6 +1289,7 @@ navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options
 ## 91、Chrome 中的 Waterfall？
 Chrome中的Waterfall是指网络面板(Network Panel)中的一个图形化展示工具，用于显示页面上所有资源的加载时间和顺序。它以时间轴为横轴，以请求开始时间和结束时间为纵轴，将每个资源的请求和响应过程以条形图的形式展示出来。
 > 通过Waterfall，开发人员可以很容易地了解到每个资源在页面加载过程中所需的时间、是否存在阻塞问题以及如何进一步优化页面的性能。例如，在Waterfall中，可以看到浏览器请求HTML文档后需要等待服务器返回后才能继续请求其他资源，这可能会导致网页加载时间延长。开发人员可以通过Waterfall找到这些瓶颈并进行优化，从而提高页面的性能和用户体验。
+![202303241708088.png](http://img.itchenliang.club/img/202303241708088.png)
  
 
 ## 92、扫描二维码登录网页是什么原理，前后两个事件是如何联系的？

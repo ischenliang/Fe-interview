@@ -1915,17 +1915,7 @@ transition 有四个属性:
 
 
 ## 71、base64 的原理及优缺点
-- 什么是 Base64
-  Base64 是一种基于 64 个可打印字符来表示二进制数据的编码方式，是从二进制数据到字符的过程。 原则上，计算机中所有内容都是二进制形式存储的，所以所有内容（包括文本、影音、图片等）都可以用 base64 来表示。
-- 适用场景
-  1. Base64一般用于在HTTP协议下传输二进制数据，由于HTTP协议是文本协议，所以在HTTP写一下传输二进制数据需要将二进制数据转化为字符数据，网络传输只能传输可打印字符，在ASCII码中规定，0-31、128这33个字符属于控制字符，32~127这95个字符属于可打印字符，那么其它字符怎么传输呢，Base64就是其中一种方式，
-  2. 将图片等资源文件以Base64编码形式直接放于代码中，使用的时候反Base64后转换成Image对象使用。
-  3. 偶尔需要用这条纯文本通道传一张图片之类的情况发生的时候，就会用到Base64，比如多功能Internet 邮件扩充服务（MIME）就是用Base64对邮件的附件进行编码的。
-- Base64 编码原理
-  Base64 编码之所以称为 Base64，是因为其使用 64 个字符来对任意数据进行编码，同理有 Base32、Base16 编码。标准 Base64 编码使用的 64 个字符为：
-- 优缺点
-  - 优点: 可以将二进制数据转化为可打印字符，方便传输数据，对数据进行简单的加密，肉眼安全。
-  - 缺点：内容编码后体积变大，编码和解码需要额外工作量。
+Base64是一种将二进制数据编码成ASCII字符的编码方式。它由64个字符组成，包括`A-Z、a-z、0-9`和`两个额外的字符（通常是“+”和“/”）`。Base64编码通过将3个字节的二进制数据划分为四组6位，并将每组6位转换为相应的Base64字符来实现。
 
 
 ## 72、position 的值， relative 和 absolute 分别是相对于谁进行定位的？
@@ -1950,48 +1940,105 @@ transition 有四个属性:
 注意: 上面所说的只是基于标准盒模型情况，如果是怪异盒模型时，则需要去除`padding`的宽高。
 ```html
 <style>
-  .box {
-    width: 40px;
-    height: 40px;
+  .father {
+    width: 300px;
+    height: 300px;
     padding: 20px;
     border: 2px solid #ddd;
     overflow: auto;
   }
+  .child {
+    width: 100px;
+    height: 300px;
+    background: red;
+    padding: 10px;
+    overflow: auto;
+    border: 1px solid #ddd;
+  }
 </style>
-<div class="box">
-  <div style="height: 100px;"></div>
+<div class="father">
+  <div class="child">
+    <div style="height: 500px;background: #ccc;"></div>
+  </div>
 </div>
 <script>
-  const box = document.querySelector('.box')
-  console.log('offset:', box.offsetHeight) // 84 = 40 + 20 * 2 + 2 * 2
-  console.log('client:', box.clientHeight) // 80 = 40 + 20 * 2
-  console.log('scroll:', box.scrollHeight) // 140 = 100 + 20 * 2
+const box = document.querySelector('.father')
+console.log('offset:', box.offsetHeight) // 344 = 300 + 20*2 + 2*2
+console.log('client:', box.clientHeight) // 340 = 300 + 20*2
+console.log('scroll:', box.scrollHeight) // 362 = 300 + 20*2 + 10*2 + 1*2
+
+const child = document.querySelector('.child')
+console.log('offset:', child.offsetHeight) // 322 = 300 + 20*2 + 1*2
+console.log('client:', child.clientHeight) // 320 = 300 + 20*2
+console.log('scroll:', child.scrollHeight) // 520 = 500 + 10*2
 </script>
 ```
 
 
 ## 74、如果设计中使用了非标准的字体，你该如何去实现？
 使用 `@font-face` 并为不同的 `font-weight` 定义 `font-family` 。
+```css
+@font-face {
+  font-family: 'CustomFont';
+  src: url('path/to/custom-font.woff2') format('woff2'),
+       url('path/to/custom-font.woff') format('woff');
+}
+
+h1 {
+  font-family: 'CustomFont', sans-serif;
+}
+```
 
 
 ## 75、知道 css 有个 content 属性吗？有什么作用？有什么应用？
-css 的 content 属性专门应用在 `before/after` 伪元素上，用来插入生成内容。最常见的应用是利用伪类清除浮动。
-```css
-/** 一种常见利用伪类清除浮动的代码 */
-.clearfix:after {
-  content: "."; /** 这里利用到了content属性 */
-  display: block;
-  height: 0;
-  visibility: hidden;
-  clear: both;
-}
+`content`属性用于在文档中插入生成的内容或样式化标记。该属性通常与`:before`和`:after`伪元素一起使用，这两个伪元素可以添加在选定元素的前面和后面，并允许开发人员通过 CSS 将样式添加到这些虚拟的元素上。
 
-.clearfix {
-  zoom: 1;
-}
-```
-after 伪元素通过 content 在元素的后面生成了内容为一个点的块级素，再利用 clear:both 清除浮动。那么问题继续还有，知道 css 计数器（序列数字字符自动递增）吗？如何通过 css content 属性实现 css 计数器？
-- css 计数器是通过设置 `counter-reset` 、`counter-increment` 两个属性 、及 `counter()/counters()`一个方法配合 after / before 伪类实现。
+`content`属性可以设置如下值：
+- 字符串：将一个字符串作为元素内容插入文档中，需要用双引号或单引号括起来。
+- URL：指向要插入的资源，例如图像。
+- 普通计数器：可以用于自动生成序列号。
+- 特殊字符：可以用于插入 Unicode 编码字符。
+
+使用场景:
+1. `:before`伪元素插入文本
+  ```html
+  <style>
+  p:before {
+    content: "注意：";
+    font-weight: bold;
+    color: red;
+  }
+  </style>
+  <p>哈哈哈哈</p>
+  ```
+  ![202303241728367.png](http://img.itchenliang.club/img/202303241728367.png)
+2. `attr()`函数：用于将 HTML 元素的属性值映射到CSS属性的值上
+  ```html
+  <style>
+    div:before {
+      content: attr(data-tooltip);
+    }
+  </style>
+  <div data-tooltip="这里是提示信息">Hover me</div>
+  ```
+  ![202303241729533.png](http://img.itchenliang.club/img/202303241729533.png)
+3. `counter()`, `counters()`函数：用于生成自动编号的序列。
+  ```html
+  <style>
+    body {
+      counter-reset: section; /* 设置计数器初始值 */
+    }
+
+    h2:before {
+      content: counter(section) ". "; /* 显示当前计数器的值 */
+      counter-increment: section; /* 计数器自增1 */
+    }
+  </style>
+  <body>
+    <h2>第一章</h2>
+    <h2>第二章</h2>
+  </body>
+  ```
 
 
 ## 76、请阐述 float 定位的工作原理
@@ -2399,9 +2446,11 @@ html {
 - `font-smoothing`属性则用于控制字体的平滑度，即是否启用反锯齿技术来使字体显示更加平滑。不同浏览器支持的取值可能有所差异，常见的取值包括“antialiased”（启用反锯齿，Webkit浏览器），“subpixel-antialiased”（启用亚像素级反锯齿，Webkit浏览器）、“grayscale”（启用灰阶反锯齿，Firefox浏览器）等。
 
 
-## 94、font-style属性可以让它赋值为“oblique”，oblique是什么意思？
-- Italic会显示一个`斜体`的字体样式，不是我们强加给字体的属性，而是字体自身的一种状态；
-- Oblique会显示一个`倾斜`的字体样式，自身没有斜体效果的字体，强制向右倾斜文字；
+## 94、font-style属性的Oblique和Italic的区别
+`font-style`属性用于设置字体的风格，可以取值为`normal`、`italic`和`oblique`。
+- `normal`表示正常的字体风格，没有任何倾斜或扭曲。
+- `italic`表示斜体字(英文)，通常是对原始字体进行倾斜变形以产生视觉上的斜体效果。Italic字体通常具有一些特殊设计，如较窄的字母间距和弯曲的字母形状等，以使其在斜体状态下更加易读。
+- `oblique`也是表示斜体字，但它是通过向右倾斜原始字体来实现，而非使用专门设计的斜体字体。因此，Oblique 字体通常与 Normal 字体相比略微变形，并且可能会导致一些字母看起来不太自然。
 
 
 ## 95、position:fixed; 在 android 下无效怎么处理？
@@ -2557,27 +2606,21 @@ animation:mymove 5s infinite;
 
 
 ## 103、什么是包含块，对于包含块的理解?
-包含块（containing block）就是元素用来计算和定位的一个框。
-- （1）根元素（很多场景下可以看成是`<html>`）被称为“初始包含块”，其尺寸等同于浏览器可视窗口的大小。
-- （2）对于其他元素，如果该元素的position是relative或者static，则“包含块”由其最近的块容器祖先盒的content box
-边界形成。
-- （3）如果元素position:fixed，则“包含块”是“初始包含块”。
-- （4）如果元素position:absolute，则“包含块”由最近的position不为static的祖先元素建立，具体方式如下：
-  如果该祖先元素是纯inline元素，则规则略复杂：
-  - 假设给内联元素的前后各生成一个宽度为0的内联盒子（inline box），则这两个内联盒子的padding box外面的包
-  围盒就是内联元素的“包含块”；
-  - 如果该内联元素被跨行分割了，那么“包含块”是未定义的，也就是CSS2.1规范并没有明确定义，浏览器自行发挥
-  否则，“包含块”由该祖先的padding box边界形成。
-  - 如果没有符合条件的祖先元素，则“包含块”是“初始包含块”。
+在CSS中，每个元素都会被放置在一个“包含块”（containing block）内。包含块是一个元素的位置和大小计算基础，用于确定该元素的布局和定位。
+- 祖先元素的内容区域：如果一个元素没有指定`position`属性，则其包含块通常为最近的祖先元素的内容区域，也就是祖先元素的`padding box`。
+- 祖先元素的定位元素：如果一个元素的`position`属性为`absolute`或`fixed`，则其包含块为最近的祖先元素的定位元素，即满足下列条件之一的元素：
+  - `position`属性为`absolute`或`fixed`。
+  - `transform`, `perspective`, `filter`不是`none`的元素。
+  - `overflow`不是`visible`的元素。
+- 初始包含块：根元素（HTML文档中的`<html>`元素）的大小就是初始包含块，它是浏览器窗口的大小（viewport），并且不能通过CSS修改。
 
 
 ## 104、CSS 里的 visibility 属性有个 collapse 属性值是干嘛用的？在不同浏览器下以后什么区别？
-- （1）对于一般的元素，它的表现跟visibility：hidden;是一样的。元素是不可见的，但此时仍占用页面空间。
-- （2）但例外的是，如果这个元素是table相关的元素，例如table行，table group，table列，table column group，它的
-表现却跟display:none一样，也就是说，它们占用的空间也会释放。
+- （1）对于一般的元素，它的表现跟`visibility：hidden;`是一样的。元素是不可见的，但此时仍占用页面空间。
+- （2）但例外的是，如果这个元素是`table`相关的元素，例如`table行，table group，table列，table column group`，它的表现却跟`display:none`一样，也就是说，它们占用的空间也会释放。
 
 在不同浏览器下的区别：
-- 在谷歌浏览器里，使用collapse值和使用hidden值没有什么区别。
+- 在谷歌浏览器里，使用`collapse`值和使用`hidden`值没有什么区别。
 - 在火狐浏览器、Opera和IE11里，使用collapse值的效果就如它的字面意思：table的行会消失，它的下面一行会补充它的位
 置。
 
@@ -2589,43 +2632,17 @@ animation:mymove 5s infinite;
 
 
 ## 106、使用 clear 属性清除浮动的原理？
-使用clear属性清除浮动，其语法如下：
+在 CSS 中，`clear`属性用于控制一个元素如何清除其上方浮动元素的影响。当一个元素设置了`clear`属性时，它将会被移动至浮动元素下方，并且不允许出现在浮动元素旁边。
+
+通常，在一个元素内部包含浮动元素时，该元素的高度无法正确计算，从而导致布局混乱。这时候可以用`clear`属性来清除浮动，确保父容器能够正确包裹所有子元素。
+
+例如，想要清除某个`div`元素上方的所有浮动元素的影响，可以使用以下 CSS 代码：
 ```css
-clear: none|left|right|both
-```
-如果单看字面意思，clear:left应该是“清除左浮动”，clear:right应该是“清除右浮动”的意思，实际上，这种解释是有问
-题的，因为浮动一直还在，并没有清除。
-
-官方对clear属性的解释是：“元素盒子的边不能和前面的浮动元素相邻。”，我们对元素设置clear属性是为了避免浮动元素
-对该元素的影响，而不是清除掉浮动。
-
-还需要注意的一点是clear属性指的是元素盒子的边不能和前面的浮动元素相邻，注意这里“前面的”3个字，也就是clear属
-性对“后面的”浮动元素是不闻不问的。考虑到float属性要么是left，要么是right，不可能同时存在，同时由于clear
-属性对“后面的”浮动元素不闻不问，因此，当clear:left有效的时候，clear:right必定无效，也就是此时clear:left
-等同于设置clear:both；同样地，clear:right如果有效也是等同于设置clear:both。由此可见，clear:left和cle
-ar:right这两个声明就没有任何使用的价值，至少在CSS世界中是如此，直接使用clear:both吧。
-
-一般使用伪元素的方式清除浮动
-```css
-.clear::after{
-  content:'';
-  display:table;//也可以是'block'，或者是'list-item'
-  clear:both;
+div {
+  clear: both;
 }
 ```
-clear属性只有块级元素才有效的，而::after等伪元素默认都是内联水平，这就是借助伪元素清除浮动影响时需要设置disp
-lay属性值的原因。
-
-
-## 107、zoom:1 的清除浮动原理?
-清除浮动，触发hasLayout；zoom属性是IE浏览器的专有属性，它可以设置或检索对象的缩放比例。解决ie下比较奇葩的bug。譬如外边距（margin）的重叠，浮动清除，触发ie的haslayout属性等。
-
-来龙去脉大概如下：
-当设置了zoom的值之后，所设置的元素就会就会扩大或者缩小，高度宽度就会重新计算了，这里一旦改变zoom值时其实也会发生重新渲染，运用这个原理，也就解决了ie下子元素浮动时候父元素不随着自动扩大的问题。
-
-zoom属性是IE浏览器的专有属性，火狐和老版本的webkit核心的浏览器都不支持这个属性。然而，zoom现在已经被逐步标准化，出现在CSS3.0规范草案中。
-
-目前非ie由于不支持这个属性，它们又是通过什么属性来实现元素的缩放呢？可以通过css3里面的动画属性scale进行缩放。
+这样设置之后，该`div`元素就会被移动至浮动元素的下方，并且不再受到浮动元素的影响。
 
 
 ## 108、简单说一下 css3 的 all 属性。
@@ -2643,29 +2660,27 @@ all属性实际上是所有CSS属性的缩写，表示，所有的CSS属性都�
 - （3）边界是padding box而不是content box。
 
 
-## 110、对于 hasLayout 的理解？
-hasLayout是IE特有的一个属性。很多的IE下的css bug都与其息息相关。在IE中，一个元素要么自己对自身的内容进行计算大小和组织，要么依赖于父元素来计算尺寸和组织内容。当一个元素的hasLayout属性值为true时，它负责对自己和可能的子孙元素进行尺寸计算和定位。虽然这意味着这个元素需要花更多的代价来维护自身和里面的内容，而不是依赖于祖先元素来完成这些工作。
-
-
 ## 111、视差滚动效果，如何给每页做不同的动画？（回到顶部，向下滑动要再次出现，和只出现一次分别怎么做？
 视差滚动是指多层背景以不同的速度移动，形成立体的运动效果，带来非常出色的视觉体验。
 
 
 ## 112、layout viewport、visual viewport 和 ideal viewport 的区别？
-如果把移动设备上浏览器的可视区域设为viewport的话，某些网站就会因为viewport太窄而显示错乱，所以这些浏览器就决定。
-默认情况下把viewport设为一个较宽的值，比如980px，这样的话即使是那些为桌面设计的网站也能在移动浏览器上正常显示了。
-ppk把这个浏览器默认的viewport叫做layout viewport。
+- Layout viewport（布局视口）是网页在移动设备上默认的视口大小，它通常等于设备的物理分辨率。在 Layout viewport 中，网页中的元素按照默认的布局和尺寸进行排列和显示。
+- Visual viewport（视觉视口）是用户实际看到的网页区域，也就是屏幕上实际可见的部分。Visual viewport 的大小可以根据用户缩放或旋转设备等操作而改变。
+- Ideal viewport（理想视口）是为了适应移动设备而提出的一个概念，它是指网页在移动设备上最佳的视口大小。Ideal viewport 能够确保在各种不同尺寸的移动设备上都能够以最佳的显示效果呈现。通常情况下，Ideal viewport 的大小会大于 Layout viewport 的大小，以便在 Visual viewport 中正确显示网页内容。
 
-layout viewport的宽度是大于浏览器可视区域的宽度的，所以我们还需要一个viewport来代表浏览器可视区域的大小，ppk把这个viewport叫做visual viewport。
-
-ideal viewport是最适合移动设备的viewport，ideal viewport的宽度等于移动设备的屏幕宽度，只要在css中把某一元素的宽度设为ideal viewport的宽度（单位用px），那么这个元素的宽度就是设备屏幕的宽度了，也就是宽度为100%的效果。
-
-ideal viewport的意义在于，无论在何种分辨率的屏幕下，那些针对ideal viewport而设计的网站，不需要用户手动缩放，也不需要出现横向滚动条，都可以完美的呈现给用户。
+为了实现 Ideal viewport，可以使用 meta 标签来设置 Viewport，例如：
+``html
+<meta name="viewport" content="width=device-width, initial-scale=1">
+```
+这个 meta 标签将视口的宽度设置为设备的宽度，同时把初始缩放比例设置为 1，从而让 Ideal viewport 等于设备的宽度。
 
 
 ## 113、浏览器如何判断是否支持 webp 格式图片
-- （1）宽高判断法。通过创建image对象，将其src属性设置为webp格式的图片，然后在onload事件中获取图片的宽高，如果能够获取，则说明浏览器支持webp格式图片。如果不能获取或者触发了onerror函数，那么就说明浏览器不支持webp格式的图片。
-- （2）canvas判断方法。我们可以动态的创建一个canvas对象，通过canvas的toDataURL将设置为webp格式，然后判断返回值中是否含有image/webp字段，如果包含则说明支持WebP，反之则不支持。
+- （1）宽高判断法。
+  > 通过创建image对象，将其src属性设置为webp格式的图片，然后在onload事件中获取图片的宽高，如果能够获取，则说明浏览器支持webp格式图片。如果不能获取或者触发了onerror函数，那么就说明浏览器不支持webp格式的图片。
+- （2）canvas判断方法。
+  > 我们可以动态的创建一个canvas对象，通过canvas的toDataURL将设置为webp格式，然后判断返回值中是否含有image/webp字段，如果包含则说明支持WebP，反之则不支持。
 
 
 ## 114、什么是CSS后处理器？
@@ -2748,13 +2763,9 @@ CSS后处理器是对CSS进行处理，并最终生成CSS的预处理器，它�
 
 
 ## 121、什么是替换元素？
-通过修改某个属性值呈现的内容就可以被替换的元素就称为“替换元素”。因此，`<img>`、`<object>`、`<video>`、`<iframe>`或者表单元素`<textarea>`和`<input>`和`<select>`都是典型的替换元素。
+在 HTML 中，替换元素指的是浏览器根据元素的标签和属性值，自行决定如何渲染该元素内容的元素。替换元素通常具有内在尺寸、基于其标记及属性而确定的外观、以及浏览器中预定义的默认尺寸等特征。
 
-替换元素除了内容可替换这一特性以外，还有以下一些特性。
-- （1）内容的外观不受页面上的CSS的影响。用专业的话讲就是在样式表现在CSS作用域之外。如何更改替换元素本身的外观需要类似appearance属性，或者浏览器自身暴露的一些样式接口，
-- （2）有自己的尺寸。在Web中，很多替换元素在没有明确尺寸设定的情况下，其默认的尺寸（不包括边框）是300像素×150像素，如`<video>`、`<iframe>`或者`<canvas>`等，也有少部分替换元素为0像素，如`<img>`图片，而表单元素的替换元素的尺寸则和浏览器有关，没有明显的规律。
-- （3）在很多CSS属性上有自己的一套表现规则。比较具有代表性的就是vertical-align属性，对于替换元素和非替换元素，vertical-align属性值的解释是不一样的。比方说vertical-align的默认值的baseline，很简单的属性值，基线之意，被定义为字符x的下边缘，而替换元素的基线却被硬生生定义成了元素的下边缘。
-- （4）所有的替换元素都是内联水平元素，也就是替换元素和替换元素、替换元素和文字都是可以在一行显示的。但是，替换元素默认的display值却是不一样的，有的是inline，有的是inline-block。
+常见的替换元素包括`img、input、video、audio、canvas 和 object`等。这些元素都有一个占位符，用来显示元素在文档流中的位置，并且元素本身的内容会被浏览器根据元素的属性值进行替换。
 
 
 ## 122、替换元素的计算规则？
