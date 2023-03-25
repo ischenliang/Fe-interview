@@ -1,37 +1,28 @@
 # JavaScript基础面试题汇总
-## 1、document load 和 document ready 的区别
-DOM文档解析：
-1. 解析html结构
-2. 加载脚本和样式文件
-3. 解析并执行脚本
-4. 构造html的DOM模型 `ready`
-5. 加载图片等外部资源文件
-6. 页面加载完毕`load`
+## 1、## DOMContentLoaded 事件和 Load 事件的区别？
+1. 触发时间不同：`DOMContentLoaded`事件在`HTML文档`被完全加载和解析后触发，而`Load`事件在`整个页面及其所有资源`（如图片、样式表、脚本等）都加载完成后触发。
+2. 意义不同：`DOMContentLoaded`事件表示`DOM树`已经构建完成，可以进行操作，而`Load`事件则表示整个页面及其所有资源都已经完全加载完成，可以进行一些需要所有资源都准备就绪的操作，例如图像尺寸计算等。
+3. 响应速度不同：`DOMContentLoaded`事件响应速度较快，因为它只需要等待`HTML文档`加载和解析完毕即可触发，而`Load`事件需要等待整个页面及其所有资源加载完成后才能触发，因此响应速度较慢。
+4. 兼容性不同：`DOMContentLoaded`事件在大多数现代浏览器中都得到支持，而`Load`事件也具有广泛的兼容性，但在某些旧版本浏览器中可能存在兼容性问题。
+```html
+<h1>DOMContentLoaded和load事件演示</h1>
+<p>这是一个简单的演示，展示了在DOM树构建完成和所有资源加载完成时DOMContentLoaded和load事件的触发时间。</p>
+<img src="https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_960_720.jpg" alt="一棵树">
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOMContentLoaded事件: DOMContentLoaded事件触发时间为 " + new Date().getTime());
+  });
 
-页面加载完成有两种事件
-- `load`是当页面所有资源全部加载完成后（包括DOM文档树，css文件，js文件，图片资源等），执行一个函数，load方法就是`onload`事件。<br>
-    缺点：如果图片资源较多，加载时间较长，onload后等待执行的函数需要等待较长时间，所以一些效果可能受到影响<br>
-    代码形式：
-    ```js
-    //document load
-    $(document).load(function(){
-      ...code...
-    })
-    ```
-- `$(document).ready()`是当DOM文档树加载完成后执行一个函数 （不包含图片，css等）所以会比load较快执行，在原生的jS中不包括`ready()`这个方法，Jquery才有，jquery中有`$().ready(function)`。
-    代码形式：
-    ```js
-    //document ready
-    $(document).ready(function(){
-        ...code...
-    })
-    //document ready 简写
-    $(function(){
-        ...code...
-    })
-    ```
-
-**总结**：如果页面中要是没有图片之类的媒体文件的话ready与load是差不多的，但是页面中有文件就不一样了，所以还是推荐大家在工作中用ready。
+  window.addEventListener("load", function() {
+    console.log("load事件: load事件触发时间为 " + new Date().getTime());
+  });
+</script>
+```
+输出结果如下：
+```
+DOMContentLoaded事件: DOMContentLoaded事件触发时间为 1679649014340
+load事件: load事件触发时间为 1679649024547
+```
  
 
 
