@@ -529,7 +529,7 @@ add(1, 2, 3) // [1, 2, 3]
 
 ## 25、什么是三斜线指令？有哪些三斜杠指令？
 三斜线指令是一种特殊的注释语法，可以在 TypeScript 文件中向编译器提供一些额外的指令和信息。它们以三个斜杠`///`开头，并且只能出现在文件的顶部或在其它注释之前。
-1. **引入模块**
+- 1、**引入模块**
   ```ts
   /// <reference path="path/to/other/file.ts" />
   ```
@@ -548,7 +548,7 @@ add(1, 2, 3) // [1, 2, 3]
   }
   ```
   在上述示例中，`fileA.ts`文件引入了`fileB.ts`文件，并调用了其内部定义的函数`log()`。在编译时，TypeScript 会按照引入模块的顺序对文件进行排序，并将它们合并成一个单独的输出文件。
-2. **设置模块选项**
+- 2、**设置模块选项**
   ```ts
   /// <amd-module name="someModule" />
   ```
@@ -560,7 +560,7 @@ add(1, 2, 3) // [1, 2, 3]
   $("h1").text("Hello, TypeScript!");
   ```
   在上述示例中，`app.ts`文件设置了`AMD`模块的名称为`myApp`，并导入了`jQuery`库。如果不设置该选项，则可能会导致生成的代码出现错误或无法加载模块。
-3. **预处理文件**
+- 3、**预处理文件**
   ```ts
   /// <reference lib="es6" />
   ```
@@ -1080,6 +1080,24 @@ console.log(Gender[1]); // : Female
 
 声明合并适用于以下情况：
 1. 函数声明和函数表达式
+  > TypeScript中的函数声明合并允许我们为同名的函数提供多个函数类型定义，从而实现函数重载。
+  ```ts
+  function add(x: number, y: number): number;
+  function add(x: string, y: string): string;
+  function add(x: number | string, y: number | string): number | string {
+    if (typeof x === "number" && typeof y === "number") {
+      return x + y;
+    }
+    if (typeof x === "string" && typeof y === "string") {
+      return x.concat(y);
+    }
+    throw new Error("Parameters must be of the same type.");
+  }
+
+  const result1 = add(3, 4); // 返回数字 7
+  const result2 = add("hello", "world"); // 返回字符串 "helloworld"
+  const result3 = add("hello", 4); // 抛出异常 "Parameters must be of the same type."
+  ```
 2. 同名接口
   ```ts
   // 同名接口合并
@@ -1114,8 +1132,6 @@ console.log(Gender[1]); // : Female
   }
   MyNamespace.greet(); // 输出：Hello from MyNamespace!
   ```
-
-注意: **声明合并仅限于类型和命名空间，不适用于变量、函数等其他实体**。
 
 
 ## 42、TypeScript中?. , ?? , !： , _ , ** 等符号的含义？

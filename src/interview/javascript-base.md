@@ -1,5 +1,5 @@
 # JavaScript基础面试题汇总
-## 1、## DOMContentLoaded 事件和 Load 事件的区别？
+## 1、DOMContentLoaded 事件和 Load 事件的区别？
 1. 触发时间不同：`DOMContentLoaded`事件在`HTML文档`被完全加载和解析后触发，而`Load`事件在`整个页面及其所有资源`（如图片、样式表、脚本等）都加载完成后触发。
 2. 意义不同：`DOMContentLoaded`事件表示`DOM树`已经构建完成，可以进行操作，而`Load`事件则表示整个页面及其所有资源都已经完全加载完成，可以进行一些需要所有资源都准备就绪的操作，例如图像尺寸计算等。
 3. 响应速度不同：`DOMContentLoaded`事件响应速度较快，因为它只需要等待`HTML文档`加载和解析完毕即可触发，而`Load`事件需要等待整个页面及其所有资源加载完成后才能触发，因此响应速度较慢。
@@ -168,10 +168,10 @@ Object.prototype.toString.call('123') === '[object String]' // true
 
 
 ## 8、事件捕获、事件冒泡、事件委托
-DOM事件流（event  flow ）存在三个阶段：**事件捕获阶段**、**处于目标阶段**、**事件冒泡阶段**。
-- 事件捕获: window将事件派发到目标的这一过程
-- 目标阶段: 事件派发到目标元素的阶段，如果事件被处理成不进行冒泡，那么后续的冒泡将终止
-- 冒泡阶段: 从目标元素开始，逐层向上传递事件，直到document
+DOM事件流指的是事件在DOM结构中传播的过程。当一个元素发生事件时，它的祖先和后代元素也可能会响应同样的事件。事件传播的过程中，有三个阶段：捕获阶段、目标阶段和冒泡阶段。
+- 事件捕获: 事件从祖先元素向下传播直到目标元素之前触发。在这一阶段中，事件从顶层元素开始逐级向下，依次经过每个父级元素，直到达到目标元素的父元素为止。
+- 目标阶段: 事件到达目标元素，通过执行目标元素上的监听器函数响应事件。
+- 冒泡阶段: 事件从目标元素开始向上传播直到顶层元素触发。在这一阶段中，事件从目标元素的父元素开始逐级向上传递至顶层元素，同时依次经过每个父级元素，直到达到顶层元素为止。
 ![202302272001442.png](http://img.itchenliang.club/img/202302272001442.png)
 
 dom标准事件流的触发的先后顺序为：**先捕获再冒泡**，即当触发dom事件时，会先进行事件捕获，捕获到事件源之后通过事件传播进行事件冒泡。
@@ -240,11 +240,12 @@ window.onload = function(){
 
 
 
-## 9、setTimeout、Promise、Async/Await 的区别
-主要是考察这三者在事件循环中的区别，事件循环中分为宏任务队列和微任务队列。
-- 其中`setTimeout`的回调函数放到宏任务队列里，等到执行栈清空以后执行；
-- `promise.then`里的回调函数会放到相应宏任务的微任务队列里，等宏任务里面的同步代码执行完再执行；
-- `async`函数表示函数里面可能会有异步方法，`await`后面跟一个表达式，`async`方法执行时，遇到`await`会立即执行表达式，然后把表达式后面的代码放到微任务队列里，让出执行栈让同步代码先执行。
+## 9、setTimeout、Promise、async/await 的区别
+`setTimeout`、`Promise`、`async/await`是 JavaScript 中常用的异步编程方式，它们之间有以下区别：
+- `setTimeout`可以延迟一段时间执行某段函数，是最原始的异步编程方式。而`Promise`和`async/await`则更加高级，允许我们更方便地处理多个异步事件。
+- `Promise`是对回调函数的改进，通过`Promise`对象可以更好地控制异步执行状态，避免层层嵌套的回调函数带来的代码难以维护和理解的问题。当 `Promise`对象的状态发生变化时，会触发链式的`then`方法或`catch`方法，便于维护和扩展。
+- `async/await`进一步简化了`Promise`的使用，使异步编程更加直观易懂。使用`async/await`，我们可以在函数中以同步的方式编写异步函数，便于代码的编写和阅读。
+- 在执行顺序方面，`setTimeout`会将计时器事件放入任务队列的末尾，等待`JavaScript`执行栈上的所有任务完成后才开始执行。而`Promise`和`async/await`在有了结果之后，会在当前事件循环的下一个任务队列上执行。
 
 ### setTimeout
 ```js
@@ -263,10 +264,13 @@ console.log('script end') //3. 打印 script start
 ```
 
 ### Promise
-Promise本身是同步的立即执行函数， 当在executor中执行resolve或者reject的时候, 此时是异步操作， 会先执行then/catch等，当主栈完成后，才会去调用resolve/reject中存放的方法执行，打印p的时候，是打印的返回结果，一个Promise实例。
+`Promise`本身是同步的立即执行函数， 当在`executor`中执行`resolve`或者`reject`的时候, 此时是异步操作，会先执行`then/catch`等，当主栈完成后，才会去调用`resolve/reject`中存放的方法执行，打印p的时候，是打印的返回结果，一个Promise实例。
 ```js
-console.log('script start')
-let promise1 = new Promise(function(resolve) {
+console.log('normal')
+setTimeout(() => {
+  console.log('setTimeout1')
+})
+let promise1 = new Promise((resolve) => {
   console.log('promise1')
   resolve()
   console.log('promise1 end')
@@ -274,59 +278,71 @@ let promise1 = new Promise(function(resolve) {
   console.log('promise2')
 })
 setTimeout(function() {
-  console.log('settimeout')
+  console.log('settimeout2')
 })
-console.log('script end')
-
+console.log('normal end')
 // 输出顺序: 
-// ->script start
-// ->promise1
-// ->promise1 end
-// ->script end
-// ->promise2
-// ->settimeout
+// normal
+// promise1
+// promise1 end
+// normal end
+// promise2
+// settimeout1
+// settimeout2
 ```
-当JS主线程执行到Promise对象时，
-  - `promise1. then()`的回调就是一个 task
-  - `promise1` 是 resolved或rejected: 那这个 task 就会放入当前事件循环回合的 microtask queue
-  - `promise1` 是 pending: 这个 task 就会放入 事件循环的未来的某个(可能下一个)回合的 microtask queue 中
-  - `setTimeout` 的回调也是个 task ，它会被放入 macrotask queue 即使是 0ms 的情况
+原因解释:
+1. 第一步输出`normal`，表示首先执行了同步代码中的`console.log('normal')`。
+2. 接着执行`console.log('promise1')`，输出`promise1`，然后紧接着执行`resolve()`，再输出`promise1 end`。此处的`Promise`是同步代码，因此是立即执行的。
+3. 由于`Promise.then`方法是`微任务(microtasks)`，因此不会马上执行，等到`main`函数中的同步代码执行完毕，会先把`Promise`中的回调函数取出来执行，输出`promise2`。
+4. 紧接着`Promise`的回调函数执行完毕，执行`setTimeout1`，输出`setTimeout1`。因为`setTimeout`中的回调函数属于`宏任务(macrotasks)`，所以会在主线程的同步任务和`Promise`的微任务执行完之后，在下一个事件循环中执行。
+5. 执行完`setTimeout1`，马上执行`setTimeout`中的回调函数，输出`settimeout2`。
+
+总结：**`Promise`中的`then`方法中的回调函数是微任务，在主线程同步任务执行完后依次执行。`setTimeout`属于宏任务，会在主线程的同步任务和 `Promise`的微任务执行完之后，在下一个事件循环中执行，并且`setTimeout`队列里面的回调函数也是按照先后顺序执行的。**
 
 ### async/await
 ```js
 async function async1() {
   console.log('async1 start');
-  await async2();
+  await async2(); // 等待async2()完成，此时会继续执行主程序，输出script end，等async2()完成后，再回到async1()中继续执行剩下的代码
   console.log('async1 end')
 }
 async function async2() {
   console.log('async2')
 }
-
 console.log('script start');
 async1();
 console.log('script end')
 
 // 输出顺序：
-// ->script start
-// ->async1 start
-// ->async2
-// ->script end
-// ->async1 end
-async 函数返回一个 Promise 对象，当函数执行的时候，一旦遇到 await 就会先返回，等到触发的异步操作完成，再执行函数体内后面的语句。可以理解为，是让出了线程，跳出了 async 函数体。
-举个例子：
+// script start
+// async1 start
+// async2
+// script end
+// async1 end
+```
+解释如下:
+1. 首先，打印`"script start"`。
+2. 然后，调用`async1()`函数并执行其中的代码。打印`"async1 start"`。
+3. 在`async1()`函数中，遇到了一个`await`表达式，暂停当前函数的执行，等待`async2()`函数的完成。于是进入`async2()`函数，打印`"async2"`。
+4. 回到主程序中，打印`"script end"`。
+5. `async1()`函数执行完毕，继续执行主程序，打印`"async1 end"`。
+
+`async`函数返回一个`Promise`对象，当函数执行的时候，一旦遇到`await`就会先返回，等到触发的异步操作完成，再执行函数体内后面的语句。
+> 可以理解为，是让出了线程，跳出了`async`函数体。
+```js
+// 举个例子
 async function func1() {
   return 1
 }
 console.log(func1())
 ```
-控制台查看打印，很显然，func1的运行结果其实就是一个Promise对象。因此我们也可以使用then来处理后续逻辑。
+控制台查看打印，很显然，`func1`的运行结果其实就是一个`Promise`对象。因此我们也可以使用`then`来处理后续逻辑。
 ```js
 func1().then(res => {
   console.log(res); // 30
 })
 ```
-await的含义为等待，也就是 async 函数需要等待await后的函数执行完成并且有了返回结果（Promise对象）之后，才能继续执行下面的代码。await通过返回一个Promise对象来实现同步的效果。
+`await`的含义为等待，也就是`async`函数需要等待`await`后的函数执行完成并且有了返回结果（Promise对象）之后，才能继续执行下面的代码。`await`通过返回一个`Promise`对象来实现同步的效果。
 
 
 ## 10、JavaScript 继承的方式和优缺点
@@ -898,8 +914,8 @@ for (var i = 0; i < arr.length; i++) {
 
 
 ## 16、你对闭包的理解？优缺点？
-概念：闭包就是能够读取其他函数内部变量的函数。
-> 所谓闭包，要拆成闭和包，闭指代不想暴露给外部的数据，包指代将数据打包出去暴露给外部。
+闭包是指在一个函数内部定义的函数，它可以访问外部函数作用域中的变量和参数，并保持对这些变量和参数的引用，即使外部函数已经返回。
+> **闭包就是能够读取其他函数内部变量的函数**。所谓闭包，要拆成闭和包，闭指代不想暴露给外部的数据，包指代将数据打包出去暴露给外部。
 
 在javascript中，只有函数内部的子函数才能读取局部变量，所以闭包可以理解成“**定义在一个函数内部的函数**”。
 
@@ -1408,104 +1424,67 @@ jsBridge
 ## 25、`<script>`标签的 defer 和 asnyc 属性的作用以及二者的区别？
 a.js文件内容
 ```js
-console.log(123)
+console.log('aaa')
 ```
 b.js文件内容
 ```js
-console.log(234)
+const obj = {
+  name: '张三',
+  age: 23
+}
+console.log('bbb')
 ```
-### 只有一个脚本的情况
-```html
-<script>
-  console.log('aaa')
-</script>
-<script src="./a.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-没有 defer 或 async 属性，浏览器会立即下载并执行相应的脚本，并且在下载和执行时页面的处理会停止，即输出结果如下: `aaa 123 bbb`
-```html
-<script>
-  console.log('aaa')
-</script>
-<script defer src="./a.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-有了 defer 属性，浏览器会立即下载相应的脚本，在下载的过程中页面的处理不会停止，等到文档解析完成脚本才会执行，即输出结果如下：`aaa bbb 123`
-```html
-<script>
-  console.log('aaa')
-</script>
-<script async src="./a.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-有了 async 属性，浏览器会立即下载相应的脚本，在下载的过程中页面的处理不会停止，下载完成后立即执行，执行过程中页面处理会停止，即输出结果如下：`aaa bbb 123`
-```html
-<script>
-  console.log('aaa')
-</script>
-<script defer async src="./a.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-如果同时指定了两个属性, 则会**遵从 async 属性而忽略 defer 属性**。
-
-下图可以直观的看出三者之间的区别:
-![2023021415000410.png](http://img.itchenliang.club/img/2023021415000410.png)
-其中蓝色代表 js 脚本网络下载时间，红色代表 js 脚本执行，绿色代表 html 解析。
-
-### 多个脚本的情况
-```html
-<script>
-  console.log('aaa')
-</script>
-<script src="./a.js"></script>
-<script src="./b.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-没有 defer 或 async 属性，浏览器会立即下载并执行脚本 a.js，在 a.js 脚本执行完成后才会下载并执行脚本 b.js，在脚本下载和执行时页面的处理会停止，即输出结果如下：`aaa 123 234 bbb`
-```html
-<script>
-  console.log('aaa')
-</script>
-<script defer src="./a.js"></script>
-<script defer src="./b.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-有了 defer 属性，浏览器会立即下载相应的脚本 a.js 和 b.js，在下载的过程中页面的处理不会停止，等到文档解析完成才会执行这两个脚本。即输出结果如下：`aaa bbb 123 234`
-```html
-<script>
-  console.log('aaa')
-</script>
-<script async src="./a.js"></script>
-<script async src="./b.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-有了 async 属性，浏览器会立即下载相应的脚本 a.js 和 b.js，在下载的过程中页面的处理不会停止，a.js 和 b.js 哪个先下载完成哪个就立即执行，执行过程中页面处理会停止，但是其他脚本的下载不会停止，输出结果如下：`aaa 123 234 bbb`
-```html
-<script>
-  console.log('aaa')
-</script>
-<script defer src="./a.js"></script>
-<script async src="./b.js"></script>
-<script defer src="./a.js"></script>
-<script>
-  console.log('bbb')
-</script>
-```
-有了 async 或 defer 属性，浏览器会立即下载相应的脚本 a.js 和 b.js，在下载过程中页面的处理不会停止，在 a.js 和 b.js 中有 defer 属性的会先被执行，即输出结果如下：`aaa bbb 123 123 234`
+**演示案例**
+- 案例一: 没有`defer`或`async`属性，浏览器会立即下载并执行相应的脚本，并且在下载和执行时页面的处理会停止
+  ```html
+  <script>
+    console.log('111')
+  </script>
+  <script src="./a.js"></script>
+  <script>
+    console.log('222')
+  </script>
+  ```
+  输出结果如下: `111 aaa 222`
+- 案例二: 有了`defer`属性，浏览器会在HTML页面解析完毕后按照文件在文档中出现的顺序依次下载JavaScript文件，并等到所有文件下载完成后再按照出现的顺序依次执行这些文件中的代码。
+  > `defer`属性保证了JavaScript代码的执行顺序与HTML文档中的顺序一致。
+  ```html
+  <script>
+    console.log('111')
+  </script>
+  <script src="./b.js" defer></script>
+  <script>
+    console.log('222')
+  </script>
+  <script src="./a.js" defer></script>
+  ```
+  即输出结果如下：`111 222 bbb aaa`
+- 案例三: 有了`async`属性，浏览器将尽可能快地下载JavaScript文件，下载完成后立即执行其中的代码，不考虑这些文件在文档中的顺序。
+  > 因此，使用`async`属性时无法保证JavaScript代码的执行顺序与HTML文档中的顺序一致。
+  ```html
+  <script>
+    console.log('111')
+  </script>
+  <script src="./b.js" async></script>
+  <script>
+    console.log('222')
+  </script>
+  <script src="./a.js" async></script>
+  ```
+  输出结果如下：`111 222 aaa bbb`或者`111 222 bbb aaa`，因为是不考虑顺序的，所以输出结果可能会错乱。
+- 案例四: 如果同时指定了`async`和`defer`两个属性, 则会**遵从`async`属性而忽略`defer`属性**。
+  > 
+  ```html
+  <script>
+    console.log('111')
+  </script>
+  <script src="./b.js" defer async></script>
+  <script>
+    console.log('222')
+  </script>
+  <script src="./a.js" async></script>
+  ```
+  输出结果如下：`111 222 aaa bbb`或者`111 222 bbb aaa`，因为同时使用`async`和`defer`会采用`async`的特性，即输出结果没有顺序，可能会错乱。
 
 
 ## 26、什么是面向对象OOP？
@@ -2297,14 +2276,23 @@ JS在执行之前，会先进行预编译，主要做两个工作(这就是变�
 
 
 ## 34、JS 哪些操作会造成内存泄露/内存泄漏
-内存泄露是指一块被分配的内存既不能使用，又不能回收，直到浏览器进程结束。C#和Java等语言采用了自动垃圾回收方法管理内存，几乎不会发生内存泄露。我们知道，浏览器中也是采用自动垃圾回收方法管理内存，但由于浏览器垃圾回收方法有bug，会产生内存泄露。
-1. <span style="color: red;">意外的全局变量引起的内存泄露</span>
+内存泄漏是指在代码执行期间，分配给对象的内存空间无法被垃圾回收机制释放，从而导致程序使用的内存不断增加，最终可能导致程序崩溃或性能下降的问题。
+
+常见的引起内存泄露的原因: 
+- 1、<span style="color: red;">全局变量</span>
+  > 当全局变量中保存了对某个对象的引用时，这个对象就无法被垃圾回收机制释放。
+  ```js
+  var obj = {
+    name: '张三'
+  }
+  ```
+- 2、<span style="color: red;">意外的全局变量引起的内存泄露</span>
   ```js
   function leak() {
     leak = "xxx"; //leak成为一个全局变量，不会被回收
   }
   ```
-2. <span style="color: red;">闭包引起的内存泄露</span>
+- 3、<span style="color: red;">闭包引起的内存泄露</span>
   ```js
   function bindEvent() {
     var obj = document.createElement("XXX");
@@ -2321,20 +2309,19 @@ JS在执行之前，会先进行预编译，主要做两个工作(这就是变�
   }
 
   function bindEvent() {
-      var obj = document.createElement("XXX");
-      obj.οnclick = onclickHandler;
+    var obj = document.createElement("XXX");
+    obj.οnclick = onclickHandler;
   }
-
   //在定义事件处理函数的外部函数中，删除对dom的引用
   function bindEvent() {
-      var obj = document.createElement("XXX");
-      obj.οnclick = function() {
-          //Even if it's a empty function
-      };
-      obj = null;
+    var obj = document.createElement("XXX");
+    obj.οnclick = function() {
+        //Even if it's a empty function
+    };
+    obj = null;
   }
   ```
-3. <span style="color: red;">没有清理的 DOM 元素引用</span>
+- 4、<span style="color: red;">没有清理的 DOM 元素引用</span>
   ```js
   var elements = {
     button: document.getElementById("button"),
@@ -2352,7 +2339,7 @@ JS在执行之前，会先进行预编译，主要做两个工作(这就是变�
       document.body.removeChild(document.getElementById('button'))
   }
   ```
-4. <span style="color: red;">被遗忘的定时器或者回调</span>
+- 5、<span style="color: red;">被遗忘的定时器或者回调</span>
   ```js
   var someResouce = getData();
   setInterval(function() {
@@ -2363,43 +2350,12 @@ JS在执行之前，会先进行预编译，主要做两个工作(这就是变�
   }, 1000);
   ```
   这样的代码很常见, 如果 id 为 Node 的元素从 DOM 中移除, 该定时器仍会存在, 同时, 因为回调函数中包含对 someResource 的引用, 定时器外面的 someResource 也不会被释放。
-5. <span style="color: red;">子元素存在引起的内存泄露</span>
+- 6、<span style="color: red;">子元素存在引起的内存泄露</span>
   ![202302141601126.png](http://img.itchenliang.club/img/202302141601126.png)
   黄色是指直接被 js 变量所引用，在内存里，红色是指间接被 js 变量所引用，如上图，refB 被 refA 间接引用，导致即使 refB 变量被清空，也是不会被回收的子元素 refB 由于 parentNode 的间接引用，只要它不被删除，它所有的父元素（图中红色部分）都不会被删除。
 
 ### JS 的回收机制
 JavaScript 垃圾回收的机制很简单：找出不再使用的变量，然后释放掉其占用的内存，但是这个过程不是实时的，因为其开销比较大，所以垃圾回收系统（GC）会按照固定的时间间隔, 周期性的执行。
-
-到底哪个变量是没有用的？所以垃圾收集器必须跟踪到底哪个变量没用，对于不再有用的变量打上标记，以备将来收回其内存。用于标记的无用变量的策略可能因实现而有所区别，通常情况下有两种实现方式：标记清除和引用计数。引用计数不太常用，标记清除较为常用。
-
-### 标记清除（mark and sweep）
-js 中最常用的垃圾回收方式就是标记清除。当变量进入环境时，例如，在函数中声明一个变量，就将这个变量标记为“进入环境”。从逻辑上讲，永远不能释放进入环境的变量所占用的内存，因为只要执行流进入相应的环境，就可能会用到它们。而当变量离开环境时，则将其标记为“离开环境”。
-```js
-function test() {
-  var a = 10; //被标记，进入环境
-  var b = 20; //被标记，进入环境
-}
-test(); //执行完毕之后a、b又被标记离开环境，被回收
-```
-
-### 引用计数(reference counting)
-引用计数的含义是跟踪记录每个值被引用的次数。当声明了一个变量并将一个引用类型值（function object array）赋给该变量时，则这个值的引用次数就是 1。如果同一个值又被赋给另一个变量，则该值的引用次数加 1。相反，如果包含对这个值引用的变量又取得了另外一个值，则这个值的引用次数减 1。当这个值的引用次数变成 0 时，则说明没有办法再访问这个值了，因而就可以将其占用的内存空间回收回来。这样，当垃圾回收器下次再运行时，它就会释放那些引用次数为 0 的值所占用的内存。
-```js
-function test() {
-  var a = {}; //a的引用次数为0
-  var b = a; //a的引用次数加1，为1
-  var c = a; //a的引用次数加1，为2
-  var b = {}; //a的引用次数减1，为1
-}
-```
-
-### 如何分析内存的使用情况
-Google Chrome 浏览器提供了非常强大的 JS 调试工具，Memory 视图 profiles 视图让你可以对 JavaScript 代码运行时的内存进行快照，并且可以比较这些内存快照。它还让你可以记录一段时间内的内存分配情况。在每一个结果视图中都可以展示不同类型的列表，但是对我们最有用的是 summary 列表和 comparison 列表。 summary 视图提供了不同类型的分配对象以及它们的合计大小：shallow size （一个特定类型的所有对象的总和）和 retained size （shallow size 加上保留此对象的其它对象的大小）。distance 显示了对象到达 GC 根（校者注：最初引用的那块内存，具体内容可自行搜索该术语）的最短距离。 comparison 视图提供了同样的信息但是允许对比不同的快照。这对于找到泄漏很有帮助。
-
-### 怎样避免内存泄露
-- 减少不必要的全局变量，或者生命周期较长的对象，及时对无用的数据进行垃圾回收；
-- 注意程序逻辑，避免“死循环”之类的 ；
-- 避免创建过多的对象 原则：不用了的东西要及时归还。
 
 
 ## 35、观察者模式和发布订阅者模式
@@ -3146,121 +3102,50 @@ for (var i = 0; i < 5; i++) {
 
 
 ## 54、多个页面之间如何进行通信
-- 1、**使用cookie + setInterval**
-  ```html
-  <!-- pageA -->
-  <script>
-    setInterval(() => {
-      //加入定时器，让函数每一秒就调用一次，实现页面刷新
-      console.log("cookie",document.cookie)
-    }, 1000);
-  </script>
+1. **使用`Cookies`**：可以在一个页面中设置 Cookie 值，在其他页面中读取该值来实现通信。
+2. **使用`Web Storage API`**：可以使用 LocalStorage 或 SessionStorage 来在不同的页面之间存储和共享数据。
+3. **使用`postMessage()`方法**：可以在一个页面发送消息到另一个页面，并在那个页面中接收消息。
+4. **使用`Broadcast Channel API`**：可以创建一个广播频道，在多个页面之间广播消息。
+5. **使用`WebSocket`**：可以使用 WebSocket 连接在不同的页面之间建立实时通信。
+6. **使用`web worker(SharedWorker)`**: 可以使用SharedWorker的`onmessage`和`postMessage`进行通信。
+  - 新建`worker.js`
+    ```js
+    // worker.js
+    const set = new Set()
+    onconnect = event => {
+      const port = event.ports[0]
+      set.add(port)
+      // 接收信息
+      port.onmessage = e => {
+        // 广播信息
+        set.forEach(p => {
+          p.postMessage(e.data)
+        })
+      }
+      // 发送信息
+      port.postMessage("worker广播信息")
+    }
+    ```
+  - 页面中使用
+    ```html
+    <!-- pageA -->
+    <script>
+      const worker = new SharedWorker('./worker.js')
+      worker.port.onmessage = e => {
+        console.info("pageA收到消息", e.data)
+      }
+    </script>
 
-  <!-- pageB -->
-  <script>
-    let btnB = document.getElementById("btnB");
-    let num = 0;
-    btnB.addEventListener("click", () => {
-      document.cookie = `客户端B发送的消息:${num++}`
-    })
-  </script>
-  ```
-- 2、**web worker（SharedWorker）**<br>
-  新建一个`worker.js`，编写代码
-  ```js
-  // worker.js
-  const set = new Set()
-  onconnect = event => {
-    const port = event.ports[0]
-    set.add(port)
-    // 接收信息
-    port.onmessage = e => {
-      // 广播信息
-      set.forEach(p => {
-        p.postMessage(e.data)
+    <!-- pageB -->
+    <script>
+      const worker = new SharedWorker('./worker.js')
+      let btnB = document.getElementById("btnB");
+      let num = 0;
+      btnB.addEventListener("click", () => {
+        worker.port.postMessage(`客户端B发送的消息:${num++}`)
       })
-    }
-    // 发送信息
-    port.postMessage("worker广播信息")
-  }
-  ```
-  ```html
-  <!-- pageA -->
-  <script>
-    const worker = new SharedWorker('./worker.js')
-    worker.port.onmessage = e => {
-      console.info("pageA收到消息", e.data)
-    }
-  </script>
-
-  <!-- pageB -->
-  <script>
-    const worker = new SharedWorker('./worker.js')
-    let btnB = document.getElementById("btnB");
-    let num = 0;
-    btnB.addEventListener("click", () => {
-      worker.port.postMessage(`客户端B发送的消息:${num++}`)
-    })
-  </script>
-  ```
-- 3、**websocket**
-  ```html
-  // A页面
-  <script>
-    // 创建一个websocket连接
-    var ws = new WebSocket('ws://localhost:3000/');
-    // WebSocket连接成功回调
-    ws.onopen = function () {
-      console.log("websocket连接成功")
-    }
-    // 这里接受服务器端发过来的消息
-    ws.onmessage = function (e) {
-      console.log("服务端发送的消息", e.data)
-    }
-  </script>
-
-  // B页面
-  <script>
-    let btnB = document.getElementById("btnB");
-    let num = 0;
-    btnB.addEventListener("click", () => {
-      ws.send(`客户端B发送的消息:${num++}`);
-    })
-    // 创建一个websocket连接
-    var ws = new WebSocket('ws://localhost:3000/');
-    // WebSocket连接成功回调
-    ws.onopen = function () {
-      console.log("websocket连接成功")
-    }
-  </script>
-  ```
-  当我们点击pageB中的按钮时，会通过websocket向服务端发送一条消息，服务端接收到这条消息之后，会将消息转发给pageA，这样pageA就得到了pageB传来的数据。
-- 4、**localeStorage 和 sessionStorage**
-  ```html
-  // A页面监听storage变化
-  <script>
-    window.addEventListener('storage', () => {
-      console.log('改变了')
-    })
-  </script>
-
-  // B页面修改storage数据
-  <button id="btn">按钮</button>
-  <script>
-    document.querySelector('#btn').addEventListener('click', () => {
-      localStorage.setItem('demo', 'abc')
-    })
-  </script>
-  ```
-
-对比：
-| 实现方式 | 优缺点 |
-| :------ | :---- |
-| localStorage | **优点**：操作简单，易于理解。<br>**缺点**：存储大小限制只能监听非己页面跨域不共享（**总体来说较为推荐**） |
-| websocket | **优点**：理论上可是实现任何数据共享跨域共享。<br>**缺点**：需要服务端配合增加服务器压力上手不易（**总体不推荐**） |
-| sharedWorker | **优点**：理论上可以实现任何数据共享性能较好。<br>**缺点**：跨域不共享调试不方便兼容性不好 （**总体推荐一般**） |
-| cookie | **优点**：兼容性好易于上手和理解。<br>**缺点**：有存储大小限制轮询消耗性能发请求会携带cookie （**总体不推荐**） |
-
+    </script>
+    ```
 
 
 ## 55、css 动画和 js 动画的差异
@@ -3438,7 +3323,7 @@ function stopDefault(e) {
 
 ### 宿主对象
 宿主对象(host object)由 ECMAScript 实现的宿主环境（如某浏览器）提供的对象（如由浏览器提供的`Window`和`Document`），包含两大类，一个是宿主提供，一个是自定义类对象。所有非本地对象都属于宿主对象。
-> 包含：`Window`和`Document`、以及所有的`DOM`和`BOM`对象。
+> 包含：`Window`和`Document`、以及所有的`DOM`和`BOM`对象以及`localStorage`等等。
 
 **什么是宿主？**
 > 宿主就是指JavaScript运行环境，js可以在浏览器中运行，也可以在服务器上运行(nodejs)，对于嵌入到网页中的js来说，其宿主对象就是浏览器，所以宿主对象就是浏览器提供的对象。
@@ -3519,10 +3404,24 @@ node编程中最重要的思想就是模块化，import 和 require 都是被模
 - <span style="color: red"><code>require</code>是运行时加载；</span>
 - <span style="color: red"><code>import</code>是编译时加载，由于编译时加载，所以<code>import</code>会提升到整个模块的头部；</span>
 
+### 调用位置不同
+- <span style="color: red"><code>require</code>可以在代码的任意位置调用；</span>
+- <span style="color: red"><code>import</code>必须放在代码的顶部</span>
+
 ### 本质不同
 - <span style="color: red"><code>require</code>是赋值过程</span>。module.exports后面的内容是什么，require的结果就是什么，比如对象、数字、字符串、函数等，然后再把require的结果赋值给某个变量，它相当于module.exports的传送门；
 - <span style="color: red"><code>import</code>是解构过程</span>，但是目前所有的引擎都还没有实现import，我们在node中使用babel支持ES6，也仅仅是将ES6转码为ES5再执行，import语法会被转码为require
 
+注意: `import()`是一种异步加载模块的方式，它是 ES6 中新增的一个特性。相比于常规的`import`语句，`import()`允许在运行时动态地加载模块，从而实现按需加载和延迟加载的效果。`import()`返回一个`Promise`对象，可以使用`then()`方法获取导入的模块。
+```js
+import('./foo.js')
+  .then(module => {
+    // 处理 module
+  })
+  .catch(error => {
+    // 处理 error
+  });
+```
 
 
 ## 64、JavaScript全局属性和全局函数有哪些?
