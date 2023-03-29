@@ -1134,7 +1134,7 @@ console.log(Gender[1]); // : Female
   ```
 
 
-## 42、TypeScript中?. , ?? , !： , _ , ** 等符号的含义？
+## 42、TypeScript中?. , ?? , !: , _ , ** 等符号的含义？
 - `?.`: 可选链操作符
   > 可选链操作符是一种用于简化访问深层嵌套对象或数组的语法。它使用`?.`符号表示，在访问对象属性或方法时可以避免因为空值或未定义而导致的错误。
   ```ts
@@ -1164,11 +1164,13 @@ console.log(Gender[1]); // : Female
   console.log(message); // 抛出异常：Cannot read property 'toUpperCase' of undefined
   ```
 - `!:` 非空断言操作符
-  > 非空断言操作符是一种用于告诉 TypeScript 编译器某个变量不会为空值或未定义的语法。它使用`!:`符号表示，可以在变量名称后面加上一个感叹号来标记。
+  > 在TypeScript 中，`!:`符号被称为非空断言操作符，它可以用来告诉编译器一个变量一定不为`null`或`undefined`。这个操作符在 TypeScript 2.0 中被引入，它的语法是在变量名后面添加`!:`符号。例如：
   ```ts
-  let name: string | undefined;
-  let message = `Hello, ${name!}`;
-  console.log(message); // 输出 "Hello, undefined"
+  let myString!: string;
+  ```
+  在这个例子中，我们声明了一个字符串类型的变量`myString`，但是并没有对它进行初始化。如果直接使用`myString`变量，TypeScript编译器会提示错误，因为它并不知道`myString`是否已经被正确地赋值。此时就可以使用`!`符号来告诉编译器，我保证这个变量不为`null`或`undefined`，可以安全地使用它。例如：
+  ```ts
+  console.log(myString.toUpperCase()); // 不会报错
   ```
 - `_`: 占位符
   > 下划线符号`_`可以作为占位符使用，表示暂时不需要使用的变量或参数。
@@ -1559,15 +1561,34 @@ printer.doInkJetPrint();
 
 
 ## 64、TypeScript 类中属性/方法的默认可见性是什么？
-`public` 是 TypeScript 类中属性/方法的默认可见性。
+`public` 是TypeScript类中属性/方法的默认可见性。如果没有显式指定属性或方法的可见性修饰符，那么它们将被视为公共的，可以在类的实例以及子类中访问。
 
 
 ## 65、什么是 .map 文件，为什么/如何使用它？
-TypeScript Map 文件是一个源映射文件，其中包含有关原始文件的信息。`.map`文件是源映射文件，它允许工具在发出的 JavaScript 代码和创建它的 TypeScript 源文件之间进行映射。许多调试器可以使用这些文件，因此可以调试 TypeScript 文件而不是 JavaScript 文件。
+`.map`文件是 TypeScript 编译器生成的一种辅助文件，它包含了编译后 JavaScript 代码与 TypeScript 源码之间的映射关系。通过`.map`文件，可以在调试 TypeScript 代码时，将编译后的 JavaScript 代码映射回原始的 TypeScript 代码行数和位置，从而更轻松地进行调试。
+
+在开发过程中，可以使用 TypeScript 编译器的`--sourceMap`选项来生成`.map`文件。这个选项告诉编译器生成`.map`文件，并将其与编译后的 JavaScript 文件放在同一个目录下。在浏览器中调试 TypeScript 代码时，只需要将浏览器的开发者工具设置为使用`.map`文件即可。
 
 
 ## 66、原生 Javascript 是否支持模块？
-不支持。目前，原生 JavaScript 不支持模块。要在 Javascript 中创建和使用模块，需要像 CommonJS 这样的外部模块。
+在ES6（ECMAScript 2015）中，JavaScript原生支持模块化。它提供了一种标准化的方式来定义和导出模块，使得 JavaScript 开发人员能够更加方便地创建、组织和重用代码。
+
+在ES6模块系统中，每个模块都是一个独立的文件，可以通过`export`关键字将函数、类、变量等声明导出，使其可以被其他模块使用。同时，模块也可以通过`import`关键字引入其他模块导出的功能。
+```js
+// data.js
+export default {
+  name: 'oss plugin',
+  version: '1.0.0'
+}
+```
+```html
+<script type="module">
+  import plugin from './data.js'
+  console.log(plugin)
+</script>
+```
+
+然而，在ES6之前的JavaScript版本中，并没有原生支持模块化，开发人员通常使用命名空间和立即执行函数等技术来实现模块化。这些方法虽然可以达到一定的模块化效果，但仍然存在各种问题，如全局命名冲突、依赖管理等。
 
 
 ## 67、TypeScript有哪些组件？
@@ -1616,35 +1637,180 @@ class Clock implements ClockInterface {
 
 
 ## 69、TypeScript可以使用String,Number,Boolean,Symbol,Object等类型做声明吗？
+在 TypeScript 中，可以使用`String、Number、Boolean、Symbol 和 Object`等类型来进行声明，这些类型是 TypeScript 的预定义类型。例如，下面的代码展示了如何使用这些类型来声明变量和函数参数：
+> 在实践中，通常更推荐使用 JavaScript 的原始类型（如`string、number、boolean`）而不是对应的包装类型（如`String、Number、Boolean`）。因为原始类型更符合 JavaScript 的语法和习惯用法，并且性能更好。
+```ts
+const str: String = "hello"; // 声明一个字符串类型的变量
+const num: Number = 42; // 声明一个数字类型的变量
+const bool: Boolean = true; // 声明一个布尔类型的变量
+const sym: Symbol = Symbol("key"); // 声明一个符号类型的变量
+const obj: Object = { prop: "value" }; // 声明一个对象类型的变量
+
+function concatStrings(str1: String, str2: String): String { // 函数参数和返回值都是字符串类型
+  return str1 + str2;
+}
+```
 
 
-## 70、TypeScript中this和JavaScript中的this有什么差异？
-参考：https://zhuanlan.zhihu.com/p/104565681
+## 71、TypeScript什么是Unions Types？
+TypeScript中的`Unions Types`，即联合类型可以用`|`符号将多个类型合并成一个联合类型。以下是一些 TypeScript 联合类型的示例：
+1. 数字或字符串类型的联合类型：
+  ```ts
+  let id: number | string;
+  id = 123; // 合法
+  id = "abc"; // 合法
+  id = true; // 不合法，因为布尔类型不在联合类型内
+  ```
+2. 具有不同字段的对象类型的联合类型:
+  ```ts
+  interface Circle {
+    kind: "circle";
+    radius: number;
+  }
+  interface Square {
+    kind: "square";
+    size: number;
+  }
+  type Shape = Circle | Square;
 
+  function getArea(shape: Shape): number {
+    switch (shape.kind) {
+      case "circle":
+        return Math.PI * shape.radius ** 2;
+      case "square":
+        return shape.size ** 2;
+    }
+  }
 
-## 71、TypeScript中使用Unions时有哪些注意事项？
-https://blog.csdn.net/Her_smile/article/details/111503754
+  const circle: Circle = { kind: "circle", radius: 3 };
+  const square: Square = { kind: "square", size: 4 };
+  console.log(getArea(circle)); // 输出 28.274333882308138
+  console.log(getArea(square)); // 输出 16
+  ```
+3. 函数类型的联合类型：
+  ```ts
+  type Func = () => string | (() => number);
 
+  const func1: Func = () => "hello";
+  const func2: Func = () => 42;
 
-## 72、TypeScript中如何设计Class的声明？
-https://www.cnblogs.com/zjh-study/p/10650648.html
+  console.log(func1()); // 输出 "hello"
+  console.log(func2()); // 输出 42
+  ```
 
 
 ## 73、TypeScript中如何联合枚举/联合类型类型Key?
-https://www.cnblogs.com/wjaaron/p/11672764.html
+可以使用联合类型操作符`"|"`来组合多个枚举/类型的 Key，创建一个新的联合类型。
 ```ts
-type Name = { name: string }
-type Age = { age: number }
-type Union = Name | Age
+enum Fruit {
+  APPLE = "apple",
+  ORANGE = "orange"
+}
 
-type UnionKey<P> = P extends infer P ? keyof P : never
+enum Color {
+  RED = "red",
+  GREEN = "green"
+}
 
-type T = UnionKey<Union>
+type FruitOrColor = Fruit | Color;
+
+function getColorOrFruit(key: FruitOrColor): string {
+  return key === Fruit.APPLE || key === Fruit.ORANGE ? "fruit" : "color";
+}
+```
+
+**keyof**关键字
+> `keyof`是 TypeScript 中的一个关键字，用于获取一个类型的所有属性名作为联合类型。
+```ts
+type Keys = keyof T;
+```
+使用`keyof`可以方便地进行类型检查和类型推导。例如，可以使用`keyof`来编写类型安全的函数操作对象的属性：
+```ts
+function getProperty<T, K extends keyof T>(obj: T, key: K) {
+  return obj[key];
+}
+
+const person = { name: "Alice", age: 30 };
+getProperty(person, "name"); // 返回 "Alice"
+getProperty(person, "age"); // 返回 30
+getProperty(person, "gender"); // 编译时会产生一个错误：Argument of type '"gender"' is not assignable to parameter of type 'keyof typeof person'.
+```
+除此之外，还可以使用`keyof`来实现一些高级的类型操作，例如从一个对象类型中排除某些属性：
+```ts
+type ExcludeKeys<T, U> = Exclude<keyof T, keyof U>;
 ```
 
 
 ## 74、TypeScript中预定义的有条件类型有哪些？
-https://www.jianshu.com/p/612b9e25e427
+1. `Exclude<T, U>`：从类型T中排除可以赋值给类型U的部分。
+2. `Extract<T, U>`：从类型T中提取可以赋值给类型U的部分。
+  ```ts
+  type MyType = string | number | boolean;
+  type MyStringType = Exclude<MyType, number | boolean>; // MyStringType 的值为 string。
+  type MyNumberType = Extract<MyType, number | Object>; // MyNumberType 的值为 number。
+  ```
+3. `NonNullable<T>`：从类型T中排除null和undefined类型。
+  ```ts
+  type MyNullableType = string | null | undefined;
+  type MyNonNullType = NonNullable<MyNullableType>; // MyNonNullType 的值为 string。
+  ```
+4. `ReturnType<T>`：获取函数类型T的返回类型。
+  ```ts
+  function myFunction(arg: string): number {
+    return arg.length;
+  }
+  type MyReturnType = ReturnType<typeof myFunction>; // MyReturnType 的值为 number。
+  ```
+5. `InstanceType<T>`：获取构造函数类型T的实例类型。
+  ```ts
+  class MyClass {
+    name: string;
+    constructor(name: string) {
+      this.name = name;
+    }
+  }
+  type MyInstanceType = InstanceType<typeof MyClass>; // MyInstanceType 的值为 MyClass 类型本身。
+  const myInstance: MyInstanceType = new MyClass("foo"); // 此时 myInstance 是一个 MyClass 的实例。
+  ```
+6. `Parameters<T>`：获取函数类型T的参数类型的元组。
+  ```ts
+  function myFunction(arg1: string, arg2: number) {
+    // ...
+  }
+  type MyParameters = Parameters<typeof myFunction>; // MyParameters 的值为元组 [string, number]。
+  ```
+7. `Required<T>`：将类型T中所有属性设为必需属性，即去除所有可选修饰符(?)。
+8. `Partial<T>`：将类型T中所有属性设为可选属性，即加上所有可选修饰符(?)。
+9. `Readonly<T>`：将类型T中所有属性设为只读属性，即加上所有只读修饰符(readonly)。
+  ```ts
+  interface MyObject {
+    name?: string;
+    age?: number;
+  }
+
+  type MyRequiredObject = Required<MyObject>; // 所有属性都变成必选属性，即 { name: string; age: number; }。
+  type MyPartialObject = Partial<MyObject>; // 所有属性都变成可选属性，即 { name?: string; age?: number; }。
+  type MyReadonlyObject = Readonly<MyObject>; // 所有属性都变成只读属性，即 { readonly name?: string; readonly age?: number; }。
+  ```
+10. `Record<K, T>`：生成一个键为K类型，值为T类型的对象类型。
+  ```ts
+  type MyRecordType = Record<string, number>; // 表示键为字符串类型，值为数字类型的对象。
+  const myRecord: MyRecordType = {
+    foo: 123,
+    bar: 456,
+  };
+  ```
+11. `Pick<T, K>`：从类型T中挑选出属性K的类型。
+12. `Omit<T, K>`：从类型T中删除属性K的类型。
+  ```ts
+  interface MyObject {
+    name: string;
+    age: number;
+    gender: string;
+  }
+  type MyPickedObject = Pick<MyObject, "name" | "age">; // 只保留 name 和 age 属性，即 { name: string; age: number; }。
+  type MyOmittedObject = Omit<MyObject, "gender">; // 删除 gender 属性，即 { name: string; age: number; }。
+  ```
 
 
 ## 75、简单介绍TypeScript类型兼容的理解？抗变，双变，协作，和逆变的简单理解？
@@ -1654,13 +1820,18 @@ https://www.jianshu.com/p/612b9e25e427
 
 
 ## 76、简单介绍一下TypeScript模块的加载机制？
-https://zhuanlan.zhihu.com/p/133344957<br>
-http://www.ayqy.net/blog/%E6%A8%A1%E5%9D%97%E8%A7%A3%E6%9E%90%E6%9C%BA%E5%88%B6_typescript%E7%AC%94%E8%AE%B014/<br>
-https://www.tslang.cn/docs/handbook/module-resolution.html
+TypeScript模块的加载机制是指如何在TypeScript代码中引入和使用其他模块。
+1. 模块定义：模块可以被定义为一个或多个文件，其中每个文件都包含一个`export`声明。这些文件可以按照需要组合成一个模块。
+2. 导出声明：在模块内部，可以使用关键字`export`标记任何声明（函数、类、接口、变量等），使其能够从模块外访问。
+3. 导入声明：在模块外部，可以使用关键字`import`来导入另一个模块里导出的声明。导入的声明可以是命名导入、默认导入，也可以是混合导入。
+4. 解析策略：当编译器解析模块导入时，将根据以下几种模块解析策略来确定模块的位置： 
+  - 相对导入：相对导入是相对于导入文件所在的目录来解析的。
+  - 非相对导入：非相对导入是根据`“baseUrl”、“paths”`等配置来解析的。
+  - Node.js 模块导入：这是一种特殊的导入方式，用于加载 Node.js 模块。
+5. 发布模块：如果要发布 TypeScript 模块，应该在`package.json`文件中设置`"module"`属性为`"esnext"`或`"commonjs"`（取决于你的目标平台），并使用 npm 发布你的模块。
 
 
 ## 77、如何使用TypeScript项目引入并编译为JavaScript的npm库包？
-https://www.jianshu.com/p/8fa2c50720e4
 1. 安装相关类型库包
 ```ts
 npm install @types/xxxx
@@ -1677,7 +1848,25 @@ declare module xxx
 
 
 ## 79、TypeScript中如何设置模块导入的路径别名？
-https://www.javaroad.cn/questions/24922
+在 TypeScript 中，可以通过设置路径别名来简化模块导入的路径。路径别名是一种映射关系，它将某个较长的路径映射为一个短的别名。
+1. 在`tsconfig.json`文件中配置`paths`属性，该属性包含一个对象，每个键值对表示一个路径别名的映射关系，例如：
+  ```json
+  {
+    "compilerOptions": {
+      // ...
+      "baseUrl": "./src",
+      "paths": {
+        "@utils/*": ["utils/*"]
+      }
+    }
+  }
+  ```
+  上述配置指定了`@utils/*`别名表示`utils/*`相对于项目根目录下的`./src`目录。
+2. 在代码中使用路径别名导入模块：
+  ```ts
+  import { myFunction } from '@utils/my-utils';
+  ```
+  上述代码中，`@utils`是路径别名，`my-utils`是实际的相对路径，TypeScript编译器会自动将`@utils`替换为相应的路径。
 
 
 ## 80、const断言

@@ -349,38 +349,196 @@ export function set (target, key, val){
 ## 12、Vue.directive实现原理
 `Vue.directive()`是Vue.js提供的一个全局API，用于注册全局自定义指令。其实现原理如下：
 > `Vue.directive()`的实现原理就是在Vue实例的选项对象中注册全局自定义指令，然后在组件中创建并绑定指令实例，利用指令实例对元素进行各种操作并响应元素的生命周期事件。
-1. 首先通过`Vue.directive()`方法，在Vue实例的`options.directives`属性上注册一个全局自定义指令。
+1. 首先通过`Vue.directive()`静态方法，在Vue的静态属性`Vue.directives`上注册一个全局自定义指令。
 2. 在组件渲染时，如果该组件中使用了自定义指令，则会在`directives`选项中找到对应的指令配置对象，并创建一个指令实例。
 3. 指令实例包含一些生命周期钩子和一些方法，可以监听元素的生命周期事件，或者直接操作元素的DOM等。
 4. 当指令实例被绑定到元素上时，它会根据`bind、inserted、update`等生命周期钩子函数进行初始化。
 5. 当元素被插入到文档中或者更新时，指令实例中的相应钩子函数将被调用，执行特定的逻辑，更新元素的状态或者DOM。
 
+```js
+// 构造函数
+function Vue (options) {
+  this.options = options
+}
+const types = ['component', 'directive', 'filter']
+
+// 初始化: 生成静态属性
+function initGlobalApi (Vue) {
+  Vue.options = Object(null)
+  types.forEach(type => {
+    Vue.options[type + 's'] = Object.create(null)
+  })
+}
+initGlobalApi(Vue)
+
+// 判断是否是一个函数
+function isFunction (target) {
+  return typeof target === 'function'
+}
+// 判断是否是一个对象
+function isPlainObject (target) {
+  return Object.prototype.toString.call(target) === '[object Object]'
+}
+
+// 动态生成静态方法 Vue.component、Vue.directive和 Vue.filter
+types.forEach(type => {
+  Vue[type] = function (id, definition) {
+    if (type === 'components' && isPlainObject(definition)) {
+      definition.name = definition.name || id
+      // definition = this.options._base.extend(definition)
+    }
+    if (type === 'directives' && isFunction(definition)) {
+      definition = { bind: definition, update: definition }
+    }
+    Vue.options[type + 's'][id] = definition
+    return definition
+  }
+})
+```
+使用测试
+```js
+/**
+ * 全局注册
+ */
+const vue = new Vue({
+  el: '',
+  data: () => {
+    return {
+      name: '张三'
+    }
+  }
+})
+// 重复注册的话会被后一个覆盖
+Vue.directive('perms', {
+  bind: (el, binding, vnode, oldVnode) => {
+  }
+})
+Vue.component('c-button', {
+  name: 'cButton',
+  template: `<div>测试</div>`
+})
+Vue.filter('formatTime', (value) => {
+  // 返回处理后的之
+  return value * 2
+})
+console.log(Vue.options)
+
+/**
+ * 局部注册
+ */
+const vue1 = new Vue({
+  name: 'component1',
+  data: () => {
+    return {}
+  },
+  directives: {
+    perms: {
+      bind: () => {
+      }
+    }
+  },
+  components: {
+    cButton: {
+      name: 'c-button',
+      template: `<template><span>cbutton</span></template>`
+    }
+  },
+  filters: {
+    formatTime: (value) => {
+      // 返回处理后的之
+      return value * 2
+    }
+  }
+})
+console.log(vue1)
+```
+可以看到控制栏输出结果如下：
+![202303291531218.png](http://img.itchenliang.club/img/202303291531218.png)
+
 
 ## 12、Vue.filter实现原理
 `Vue.filter()`是Vue.js提供的一个全局API，用于注册全局过滤器。其实现原理如下：
 > `Vue.filter()`的实现原理就是在Vue实例的选项对象中注册全局过滤器，然后在组件中使用过滤器时，调用该过滤器函数对指定的值进行处理并返回处理结果。
-1. 首先通过`Vue.filter()`方法，在Vue实例的`options.filters`属性上注册一个全局过滤器。
+1. 首先通过`Vue.filter()`静态方法，在Vue的静态属性`Vue.options.filters`上注册一个全局过滤器。
 2. 在组件渲染时，如果该组件中使用了过滤器，则会在`filters`选项中找到对应的过滤器函数，并调用该函数对指定的值进行处理。
 3. 过滤器函数接收被处理的值作为第一个参数，可以接收其他参数，并返回处理后的结果。
 4. 当组件中使用过滤器时，Vue.js会自动将指令表达式的值和过滤器参数传递给对应的过滤器函数，并获取处理后的结果。
 
 
-## 12、Vue.mixin实现原理
-`Vue.mixin()`是Vue.js提供的一个全局API，用于混入全局的组件选项。其实现原理如下：
-> `Vue.mixin()`的实现原理就是在Vue实例的选项对象中注册一个全局混入对象，并在组件实例化时将混入对象的选项合并到组件的选项中。
-1. 首先通过`Vue.mixin()`方法，在Vue实例的`options.mixins`属性上注册一个全局混入对象。
-2. 在组件实例化时，如果该组件中使用了混入对象，则会将混入对象中的所有选项合并到组件的选项中。
-3. 如果混入对象和组件选项中存在同名的选项，则会进行合并。具体的合并策略由Vue.js内部的`mergeOptions()`函数确定。
-4. 组件中的选项将覆盖混入对象中的同名选项，如果需要访问混入对象中的选项，可以通过特殊的方式来获取。
-
-
 ## 12、Vue.component实现原理
 `Vue.component()`是Vue.js提供的一个全局API，用于注册全局组件。其实现原理如下：
 > `Vue.component()`的实现原理就是在Vue实例的选项对象中注册一个全局组件，然后在组件中创建并渲染组件实例，利用组件实例对组件进行各种操作并响应组件的生命周期事件。
-1. 首先通过`Vue.component()`方法，在Vue实例的`options.components`属性上注册一个全局组件。
+1. 首先通过`Vue.component()`静态方法，在Vue的静态属性`Vue.options.components`上注册一个全局组件。
 2. 在组件渲染时，如果该组件中使用了注册的全局组件，则会在`components`选项中找到对应的组件构造函数，并创建一个组件实例。
 3. 创建组件实例时，Vue.js会根据组件选项创建一个组件的虚拟DOM，并将其渲染成真实的DOM元素。
 4. 组件实例包含一些生命周期钩子和一些方法，可以监听自身的生命周期事件，或者直接操作自身的DOM等。
+
+
+## 12、Vue.mixin实现原理
+`Vue.mixin()`是Vue.js提供的一个全局API，用于混入全局的组件选项。其实现原理如下：
+> `Vue.mixin()`的实现原理就是在Vue实例的选项对象中注册一个全局混入对象，并在组件实例化时将混入对象的选项合并到组件的选项中。
+1. 首先通过`Vue.mixin()`静态方法，在Vue的静态属性`Vue.options.mixin`上注册一个全局混入对象。
+2. 在组件实例化时，如果该组件中使用了混入对象，则会将混入对象中的所有选项合并到组件的选项中。
+3. 如果混入对象和组件选项中存在同名的选项，则会进行合并。具体的合并策略由Vue.js内部的`mergeOptions()`函数确定。
+4. 组件中的选项将覆盖混入对象中的同名选项，如果需要访问混入对象中的选项，可以通过特殊的方式来获取。
+```js
+// 构造函数
+function Vue (options) {
+  this.options = mergeOption(options, Vue.options.mixin)
+}
+
+// 初始化
+function initGlobalApi (Vue) {
+  Vue.options = Object(null)
+  Vue.options.mixin = Object.create(null)
+  // ...
+  initMixin(Vue)
+}
+initGlobalApi(Vue)
+
+// 合并option
+function mergeOption (options, mixin) {
+  const merged = {}
+  const arr = [options, mixin]
+  arr.forEach(item => {
+    for (let key in item) {
+      if (!merged[key]) {
+        merged[key] = item[key]
+      } else {
+        // 采取旧近原则
+        merged[key] = Object.assign({}, item[key], merged[key])
+      }
+    }
+  })
+  return merged;
+}
+
+function initMixin (Vue) {
+  Vue.mixin = function (option) {
+    Vue.options.mixin = option
+  }
+}
+```
+测试
+```js
+Vue.mixin({
+  data: {
+    name: '张三',
+    gender: 'male',
+    fruits: ['香蕉', '苹果']
+  }
+})
+const vue = new Vue({
+  data: {
+    name: '李四',
+    age: 24,
+    fruits: ['栗子', '苹果']
+  }
+})
+console.log(vue)
+```
+控制台输出结果如下:
+![202303291614364.png](http://img.itchenliang.club/img/202303291614364.png)
 
 
 ## 12、Vue.compile实现原理
@@ -416,11 +574,78 @@ Vue 3中使用了基于`Proxy`的响应式系统，并引入了新的API`watchEf
 
 ## 12、Vue3中createApp实现原理
 `createApp`是Vue 3中创建应用程序实例的工厂函数。其实现原理如下：
-1. 创建一个Vue应用程序实例对象，并将根组件作为参数传递给该对象。
-2. 在应用程序实例对象中，创建各种全局API，并将其挂载到该实例的原型链上。
-3. 在应用程序实例对象中，创建全局状态管理器，并将其挂载到该实例的config.globalProperties属性上。
-4. 在应用程序实例对象中，创建各种全局指令和全局混入等功能，并将其挂载到该实例的选项对象中。
-5. 最后，通过调用应用程序实例对象的mount方法来挂载根组件到DOM节点上。
+1. `createApp`函数接收一个根组件作为参数，并返回一个应用实例对象。
+2. 该实例对象内部包含了一些API，用于注册组件、设置全局配置、插件安装等操作。
+3. 在应用实例上调用`mount`方法，将应用实例挂载到DOM节点上。
+4. 当应用状态改变时，应用实例会通过虚拟DOM机制自动触发重新渲染，并将新的DOM树更新到对应的位置上。
+5. 应用实例内部通过模板编译器将模板转换成渲染函数，然后通过渲染函数生成虚拟DOM节点树。
+6. 渲染器通过diff算法比较前后两次渲染生成的虚拟DOM节点树的差异，并进行最小化更新操作，从而达到高效的性能优化。
+
+总的来说，Vue3的`createApp`函数主要实现依赖于虚拟DOM机制、模板编译器和渲染器等技术，通过这些技术实现了高效的组件化UI开发和性能优化。
+```js
+function createApp (options) {
+  const app = {
+    version: 'x.x.x',
+    config: {
+      // 一些全局配置，例如挂载属性、错误处理等等
+      globalProperties: {}
+    },
+    _context: {
+      // 存储全局组件和指令
+      components: {},
+      directives: {},
+      mixins: {}
+    },
+    // 注册全局组件
+    component: function (name, component) {
+      this._context.components[name] = component
+    },
+    // 注册全局指令
+    directive: function (name, directive) {
+      this._context.directives[name] = directive
+    },
+    // 安装插件使用
+    use (plugin, option) {
+      plugin.install(this, option)
+    },
+    // 挂载应用程序
+    mount (rootContainer) {
+      // 具体实现查看源码
+      // const instance = createComponentInstance(options)
+      // instance.mount(rootContainer)
+      console.log('挂载应用了', rootContainer)
+    }
+  }
+  return app
+}
+```
+使用测试
+```js
+const app = createApp({
+  setup(props) {
+  }
+})
+app.component('c-button', {
+  name: 'cButton'
+})
+app.directive('perms', {
+  created: (el, binding, vnode, oldVnode) => {
+
+  }
+})
+app.use({
+  install: function (app, option) {
+    console.log(option)
+    // 挂载http请求
+    app.config.globalProperties.$http = () => {
+    }
+  }
+}, { maxSize: 10 })
+app.mount('#app')
+console.log(app)
+```
+控制台输出结果如下
+![202303291646569.png](http://img.itchenliang.club/img/202303291646569.png)
 
 
 ## 12、Vue3中Fragment实现原理
@@ -456,7 +681,7 @@ Vue3 中的`Fragment`本质上是一个组件，它可以将多个子节点包�
 :::
 
 
-## 42、为什么要使用异步组件？实现原理？
+## 12、为什么要使用异步组件？实现原理？
 **什么是异步组件?**
 > 异步组件就是定义的时候什么都不做，只在组件需要渲染（组件第一次显示）的时候进行加载渲染并缓存，缓存是以备下次访问。
 
@@ -481,6 +706,73 @@ Vue3 中的`Fragment`本质上是一个组件，它可以将多个子节点包�
 4. 然后，Vue会将该组件实例对象传递给异步组件工厂函数的回调函数，并通过resolve函数将其返回给父组件。
 5. 父组件接收到异步组件的实例对象后，就可以像普通组件一样渲染和使用该组件了。
 :::
+
+## 12、render函数实现原理
+Vue 的`render`函数的实现原理可以简单描述为以下几个步骤：
+1. 将模板编译成渲染函数：Vue 的模板编译器将模板解析成 AST（抽象语法树），然后生成渲染函数。渲染函数是一个接受`createElement`方法作为参数的函数，它会返回一个虚拟节点树描述组件的输出内容。
+2. 执行渲染函数：在每次组件渲染时，Vue 会执行渲染函数，并传入`createElement`方法作为参数。`createElement`方法可以创建虚拟节点，从而构建出虚拟 DOM 树。
+3. 比较新旧虚拟节点树：根据新的虚拟节点树和旧的虚拟节点树，执行 diff 算法得到需要更新的部分。
+4. 更新视图：将需要更新的部分对应的真实 DOM 元素进行更新。
+
+```js
+function createElement(tagName, props, children) {
+  var element = document.createElement(tagName);
+
+  for (var attr in props) {
+    if (props.hasOwnProperty(attr)) {
+      if (attr === 'innerHtml') {
+        element.innerHtml = attr
+      } else {
+        element.setAttribute(attr, props[attr]);
+      }
+    }
+  }
+
+  if (Array.isArray(children)) {
+    children.forEach(function(child) {
+      if (typeof child === 'string') {
+        element.appendChild(document.createTextNode(child));
+      } else {
+        element.appendChild(child);
+      }
+    });
+  } else if (typeof children === 'string') {
+    element.appendChild(document.createTextNode(children));
+  }
+
+  return element;
+}
+
+const render = () => {
+  return createElement(
+    'div',
+    {
+      class: 'my-component',
+      id: 'my-component'
+    },
+    [
+      createElement(
+        'p',
+        {
+          class: 'p',
+          innerHtml: '<span>内容</span>'
+        }
+      ),
+      createElement(
+        'h1',
+        {
+          class: 'title'
+        },
+        'hello render'
+      )
+    ]
+  );
+}
+const dom = render()
+console.log(dom)
+```
+打开控制台输出结果如下
+![202303291725265.png](http://img.itchenliang.club/img/202303291725265.png)
 
 
 ## 13、Vue为什么要用虚拟Dom？
@@ -587,8 +879,17 @@ Vue的异步组件是一种优化手段，用于延迟组件的加载和渲染�
 > 具体来说，当需要加载一个异步组件时，Vue会通过动态导入语法来请求相应的组件代码，这个请求是异步的，不会阻塞主线程。在异步组件加载完成后，Vue会将其缓存起来，并自动注册到全局的组件列表中，以便后续的使用。在使用异步组件时，只需要像普通组件一样使用即可，Vue会根据需要自动加载和渲染组件。
 
 
-## 21、❓Vue函数组件的优势和原理
+## 21、Vue函数组件的优势和原理
+Vue函数组件是通过 Vue 3 新增的`createComponent()`工厂函数实现的。`createComponent()`函数接受一个对象作为参数，包含了组件的各种选项和方法，最终返回一个虚拟节点（VNode）作为组件的实例。在`render()`函数中，我们可以将函数组件定义的内容渲染成 HTML/JSX 元素，并向父组件返回这个元素。
+> 在底层实现上，Vue 函数组件本质上是一个只包含`render()`函数的对象，它没有实例、生命周期钩子函数等，同样也不支持模板语法和自定义指令等功能。它通过`render()`函数计算组件的输出，返回一个VNode虚拟节点，最终渲染成真实的 DOM 元素。
 
+Vue函数组件的优势包括：
+1. 简洁：函数组件的定义方式更加简洁，没有类组件的繁琐结构。
+2. 性能高：由于没有实例化过程，渲染速度更快。
+3. 可复用性强：函数组件可以像普通函数一样多次调用，方便在各个组件中重复使用。
+4. 维护成本低：由于代码量较少，维护起来相对简单。
+
+Vue函数组件的原理是将函数组件转换为一个虚拟节点（Virtual DOM），然后通过`diff`算法与旧的虚拟节点进行比较，最终生成一颗新的虚拟节点树。这个过程中，Vue 会自动检测变化并更新视图。具体实现是通过 Vue 的模板编译器将模板解析成 render 函数，然后再将 render 函数转换成虚拟节点树。
 
 
 ## 22、组件的传值方式有哪些？Vue组件之间通信方式有哪些？

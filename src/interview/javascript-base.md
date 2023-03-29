@@ -239,6 +239,56 @@ window.onload = function(){
 前面提到的DOM事件流的执行顺序是**先捕获再冒泡**，所以dom事件流从外向内捕获过程就是`grandma -> monther -> daughter -> baby`，而只有`monther`和`daughter`设置了`useCapture = true`，所以在捕获阶段就先将事件处理了，而`grandma`和`baby`并未设置`useCapture = true`，默认是`false`，而我们又是点击的`baby`所以首先会先处理`baby`目标事件，然后再通过冒泡到`grandma`事件。
 
 
+## 19、微任务和宏任务
+js是一门单线程语言，所以它本身是不可能异步的，但是js的宿主环境（比如浏览器、node）是多线程，宿主环境通过某种方式（事件驱动）使得js具备了异步的属性。而在js中，我们一般将所有的任务都分成两类，一种是**同步任务**，另外一种是**异步**。
+> 而在异步任务中，又有着更加细致的分类，那就是`微任务`和`宏任务`。
+
+在事件循环中有两种类型的任务：微任务和宏任务。**在每次事件循环中，先执行所有的微任务，然后再执行一个宏任务。如果在执行过程中出现了新的微任务，会继续执行这些微任务，直到所有微任务执行完成为止，然后才会执行下一个宏任务。**
+
+### 宏任务macrotask
+宏任务是指在事件队列中排队等待执行的任务，例如用户交互事件、计时器回调函数等。
+- `setTimeout`和`setInterval`
+- `I/O操作`（例如读写文件、网络请求等）
+- `UI交互事件`（例如点击、滚动等）
+- `setImmediate`（Node.js中的宏任务）
+- `requestAnimationFrame`（浏览器渲染的宏任务）
+- `AJAX请求`、`postMessage`、`MessageChannel`
+
+### 微任务microtask
+微任务是指在当前任务执行完成后，在下一个事件循环之前执行的任务，例如Promise的回调函数。
+> 微任务通常来说就是需要在当前`同步任务`执行结束后立即执行的任务，比如对一系列动作做出反馈，或者是需要异步的执行任务而又不需要分配一个新的任务，这样便可以减小一点性能的开销。
+- `new Promise.then(() => {})`
+- `process.nextTick`
+- `async/await`
+- `MutationObserver(html5 新特性)`
+
+**执行顺序**
+```js
+// 首先执行的是script任务，也就是全局任务，属于宏任务。
+// script任务执行完后，开始执行所有的微任务
+// 微任务执行完毕，再取任务队列中的一个宏任务执行
+console.log('start');
+setTimeout(() => {
+  console.log('setTimeout');
+}, 0)
+new Promise((resolve, reject) => {
+  for (var i = 0; i < 5; i++) {
+    console.log(i);
+  }
+  resolve(6); // 修改promise实例对象的状态为成功的状态
+}).then((res) => {
+  console.log(res);
+})
+console.log('end');
+
+// start 0 1 2 3 4 end 6 setTimeout
+```
+从上面结果看出，`start 0 1 2 3 4 end`都是同步代码。同步任务执行完，开始判断微任务是否为空。显然现在还有一个微任务`Promise`，那么开始执行`Promise`，输出6；执行完`Promise`，微任务清空，微任务队列也为空了，然后重新渲染，再次判断任务队列中是否有任务。此时任务队列中有`setTimeout`宏任务，开始执行，于是最后输出`setTimeout`。
+
+**任务关系**
+- 宏任务是主流，当js开始被执行的时候，就是开启一个宏任务，在宏任务中执行一条一条的指令，宏任务可以同时拥有多个，但是会按照顺序一个一个执行。
+- 每一个宏任务，后面都可以跟着一个微任务队列，如果微任务队列中有指令或者方法，则先执行。如果没有，则开始执行下一个宏任务，知道所有的宏任务执行完毕。
+
 
 ## 9、setTimeout、Promise、async/await 的区别
 `setTimeout`、`Promise`、`async/await`是 JavaScript 中常用的异步编程方式，它们之间有以下区别：
@@ -345,265 +395,271 @@ func1().then(res => {
 `await`的含义为等待，也就是`async`函数需要等待`await`后的函数执行完成并且有了返回结果（Promise对象）之后，才能继续执行下面的代码。`await`通过返回一个`Promise`对象来实现同步的效果。
 
 
+## 29、`setTimeout`和`setImmediate`以及`process.nextTick`的区别
+### setTimeout()
+`setTimeout()`只是将事件插入了"任务队列"，必须等到当前代码（执行栈）执行完，主线程才会去执行它指定的回调函数。要是当前代码耗时很长，有可能要等很久，所以并没有办法保证，回调函数一定会在`setTimeout()`指定的时间执行。
+```js
+setTimeout(function(){
+  console.log('0')
+}, 0);// 意思是回调函数加入事件队列的队尾，主线程和事件队列的函数执行完成之后立即执行定时器的回调函数，如果定时器的定时是相同的，就按定时器回调函数的先后顺序来执行。
+console.log(1);
+setTimeout(function(){
+  console.log(2);
+}, 1000);
+setTimeout(function(){
+  console.log(4);
+}, 1000);
+console.log(3);
+//1 3 0 2 4
+```
+
+### setImmediate()
+`setImmediate()`是将事件插入到事件队列尾部，主线程和事件队列的函数执行完成之后立即执行`setImmediate`指定的回调函数，和`setTimeout(fn,0)`的效果差不多，但是当他们同时在同一个事件循环中时，执行顺序是不定的。
+```js
+console.log('1');
+
+setImmediate(function () {
+  console.log('2');
+});
+
+setTimeout(function () {
+  console.log('3');
+}, 0);
+
+process.nextTick(function () {
+  console.log('4');
+});
+//1 4 2 3也可能是1 4 3 2
+```
+
+### process.nextTick()
+`process.nextTick()`方法可以在当前"执行栈"的尾部-->下一次Event Loop（主线程读取"任务队列"）之前-->触发process指定的回调函数。也就是说，它指定的任务总是发生在所有异步任务之前，当前主线程的末尾。（nextTick虽然也会异步执行，但是不会给其他io事件执行的任何机会）
+```js
+process.nextTick(function A() {
+  console.log(1);
+  process.nextTick(function B(){
+    console.log(2);
+  });
+});
+
+setTimeout(function C() {
+  console.log(3);
+}, 0)
+// 1
+// 2
+// 3
+```
+当然这样也是一样的：
+```js
+setTimeout(function C() {
+    console.log(3);
+}, 0)
+process.nextTick(function A() {
+  console.log(1);
+  process.nextTick(function B(){
+    console.log(2);
+  });
+});
+// 1
+// 2
+// 3
+```
+当然这样还是一样的：
+```js
+setTimeout(function C() {
+  console.log(3);
+}, 0)
+process.nextTick(function A() {
+  process.nextTick(function B(){
+    console.log(2);
+  });
+  console.log(1);
+});
+// 1
+// 2
+// 3
+```
+最后`process.maxTickDepth()`的缺省值是1000，如果超过会报`exceed callback stack`。官方认为在递归中用`process.nextTick`会造成饥饿`event loop`，因为`nextTick`没有给其他异步事件执行的机会，递归中推荐用`setImmediate`
+```js
+foo = function(bar) {
+  console.log(bar);
+  return process.nextTick(function() {
+    return f(bar + 1);
+  });
+};
+setImmediate(function () {
+  console.log('1001');
+});
+foo(1);//注意这样不会输出1001，当递归执行到1000次是就会报错exceed callback stack，
+/*
+foo = function(bar) {
+    console.log(bar);
+　　 if(bar>1000){
+      return;
+    }
+    return process.nextTick(function() {
+                return f(bar + 1);
+    });
+};
+setImmediate(function () {
+      console.log('1001');
+});
+foo(1);
+*/
+```
+
+
+## 9、JS运行机制（Event Loop）
+在主线程上执行的代码会形成一个执行栈。当调用一个异步函数时，它会被放入任务队列中，等待主线程的执行栈中的所有代码执行完成后才会被执行。一旦主线程的执行栈为空，事件循环就会从任务队列中取出一个待执行的任务，并将其放入执行栈中，开始执行相应的代码。
+
+
 ## 10、JavaScript 继承的方式和优缺点
-js中的继承与其说是对象的继承，但更像是让函数的功能和用法的复用。首先定义一个父类：
-```js
-function Father (name) {
-  this.name = name || '->father'
-  this.sayName = function () {
-    console.log(this.name)
-  }
-}
-// 原型属性和方法
-Father.prototype.age = 18;
-Father.prototype.sayAge = function() {
-  console.log(this.age)
-}
-```
-
 ### 10.1、原型链继承
-将父类的实例作为子类的原型
-**优点**
-+ 纯粹的继承关系，实例是子类的实例，也是父类的实例
-+ 父类新增原型方法、原型属性，子类都能访问到
-+ 简单，易于实现
-
-**缺点**
-+ 可以在`Son`构造函数中，为`Son`实例增加实例属性。新增的属性和方法必须放在`new Father()`这样的语句之后执行
-+ 无法实现多继承，因为原型一次只能被一个实例更改
-+ 来自原型对象的所有属性被所有实例共享
-+ 创建子类实例时，无法向父构造函数传参
+原型链继承是指子类通过将自己的原型对象指向父类的实例来实现继承。
+> 这种方式简单易懂，但是存在一些问题，如父类属性被所有子类共享、不能传递参数等。
 ```js
-function Son (name) {
-  // Father.call(this, name)
-  this.name = name || '->son'
+function Animal() {
+  this.type = 'animal';
 }
-Son.prototype = new Father()
-const son = new Son('son')
-console.log(son.name) // son
-son.sayAge() // 18
-son.sayName() // son
-console.log(son.age) // 18
-console.log(son instanceof Father) // true
-console.log(son instanceof Son) // true
-```
-缺点第一点测试
-```js
-function Son (name) {
-  this.name = name || '->son'
-}
-Son.prototype.gender = 'male'
-Son.prototype = new Father()
-const son = new Son('son')
-console.log(son.gender) // undefined
+Animal.prototype.say = function() {
+  console.log('I am an animal.');
+};
 
-// 正确做法
-function Son (name) {
-  this.name = name || '->son'
-}
-Son.prototype = new Father()
-Son.prototype.gender = 'male'
-const son = new Son('son')
-console.log(son.gender) // male
+function Cat() {}
+Cat.prototype = new Animal();
+
+var cat = new Cat();
+console.log(cat.type); // 'animal'
+cat.say(); // 'I am an animal.'
 ```
 
-### 10.2、构造继承
-复制父类的实例属性给子类
-**优点**
-+ 解决了原型链继承中子类实例共享父类引用属性的问题
-+ 创建子类实例时，可以向父类传递参数
-+ 可以实现多继承（call多个父类对象）
-
-**缺点**
-+ 实例并不是父类实例，只是子类的实例
-+ 只能继承父类实例的属性和方法，不能继承其原型上的属性和方法
-+ 无法实现函数复用，每个子类都有父类实例的副本，影响性能
+### 10.2、构造函数继承
+构造函数继承是指在子类中调用父类的构造函数，使用`call`或`apply`方法来继承父类的属性和方法。
+> 但是，这种方式也存在问题，如无法继承父类的原型对象上的属性和方法。
 ```js
-function Son (name, gender) {
-  Father.call(this, name)
-  this.gender = gender || 'male'
-  this.sayGender = function () {
-    console.log(this.gender)
-  }
+function Animal(type) {
+  this.type = type;
 }
-const son = new Son('son', 'male')
-console.log(son.name, son.age, son.gender) // son undefined male
-son.sayName() // son
-// son.sayAge() 抛出错误：TypeError: son.sayAge is not a function
-son.sayGender() // male
-console.log(son instanceof Father) // false
-console.log(son instanceof Son) // true
+Animal.prototype.say = function() {
+  console.log('I am a ' + this.type + '.');
+};
+
+function Cat(type) {
+  Animal.call(this, type);
+}
+var cat = new Cat('cat');
+console.log(cat.type); // 'cat'
+cat.say(); // TypeError: cat.say is not a function
 ```
 
-### 10.3、实例继承
-为父类实例添加新特征，作为子类实例返回
-**优点**
-+ 不限制调用方法，不管是new子类()还是子类()，返回的对象具有相同的效果
-
-**缺点**
-+ 实例是父类的实例，不是子类的实例
-+ 不支持多继承
+### 10.3、组合继承
+组合继承结合了原型链继承和构造函数继承的优点，既可以继承父类的属性和方法，又可以继承父类原型上的属性和方法，同时还可以向父类传递参数。
 ```js
-function Son (name, gender) {
-  const f = new Father()
-  f.name = name
-  f.gender = gender
-  return f
+function Animal(type) {
+  this.type = type;
 }
-const son = new Son('son', 'male')
-console.log(son.name, son.age, son.gender) // son 18 male
-son.sayName() // son
-son.sayAge() // 18
-console.log(son instanceof Father) // true
-console.log(son instanceof Son) // false
+Animal.prototype.say = function() {
+  console.log('I am a ' + this.type + '.');
+};
+
+function Cat(type) {
+  Animal.call(this, type);
+}
+Cat.prototype = new Animal();
+var cat = new Cat('cat');
+console.log(cat.type); // 'cat'
+cat.say(); // 'I am a cat.'
 ```
 
-### 10.4、拷贝继承
-对父类实例中的的方法与属性拷贝给子类的原型
-**优点**
-+ 支持多继承
-
-**缺点**
-+ 效率低，性能差，占用内存高（因为需要拷贝父类属性）
-+ 无法获取父类不可枚举的方法（不可枚举的方法，不能使用`for-in`访问到)
+### 10.4、寄生组合式继承
+寄生组合式继承是对组合继承的改进，避免了重复调用父类构造函数的问题，提高了效率。
 ```js
-function Son (name, gender) {
-  const f = new Father()
-  for (var key in f) {
-    Son.prototype[key] = f[key]
-  }
-  this.name = name
-  this.gender = gender
+function Animal(type) {
+  this.type = type;
 }
-const son = new Son('son', 'male')
-console.log(son.name, son.age, son.gender) // son 18 male
-son.sayName() // son
-son.sayAge() // 18
-console.log(son instanceof Father) // false
-console.log(son instanceof Son) // true
-```
-无法获取父类不可枚举的方法缺点演示
-```js
-class Father {
-  constructor (name) {
-    this.name = name || '->father'
-  }
-  sayName () {
-    console.log(this.name)
-  }
-}
-Father.prototype.age = 18
-Father.prototype.sayAge = function () {
-  console.log(this.age)
-}
-function Son (name, gender) {
-  const f = new Father()
-  for (var key in f) {
-    console.log(key) // name age sayAge
-    Son.prototype[key] = f[key]
-  }
-  this.name = name
-  this.gender = gender
-}
-const son = new Son('son', 'male')
-```
-你会发现我们在class中定义的`sayName`方法并没有输出。
+Animal.prototype.say = function() {
+  console.log('I am a ' + this.type + '.');
+};
 
-### 10.5、组合继承
-通过调用父类构造，继承父类的属性并保留传参的优点，然后通过将父类实例作为子类原型，实现函数复用
-这里其实就是**原型链继承 + 构造继承**
-**优点**
-+ 弥补了构造继承的缺点，现在既可以继承实例的属性和方法，也可以继承原型的属性和方法
-+ 既是子类的实例，也是父类的实例
-+ 不存在引用属性共享问题
-+ 可传参
-+ 函数可以复用
-
-**缺点**
-+ 调用了两次父类构造函数，生成了两份实例（子类实例将子类原型上的那份屏蔽了)
-```js
-function Son (name, gender) {
-  Father.call(this, name)
-  this.gender = gender
+function Cat(type) {
+  Animal.call(this, type);
 }
-Son.prototype = new Father()
-console.log(Son.prototype.constructor) // [Function: Father]
-// 修复构造函数指向
-Son.prototype.constructor = Son
-const son = new Son('son', 'male')
-console.log(son.name, son.age, son.gender) // son 18 male
-son.sayName() // son
-son.sayAge() // 18
-console.log(son instanceof Father) // true
-console.log(son instanceof Son) // true
-console.log(Son.prototype.constructor) // [Function: Son]
-```
-
-### 10.6、寄生组合继承
-通过寄生方式，砍掉父类的实例属性，避免了组合继承生成两份实例的缺点
-**优点**
-+ 堪称完美
-
-**缺点**
-+ 实现起来较为复杂
-```js
-// 方式一
-function Son (name, gender) {
-  Father.call(this, name)
-  this.gender = gender
-}
-;(function() {
-  // 创建一个没有实例方法的类
-  var None = function() {}
-  None.prototype = Father.prototype
-  // 将实例作为子类的原型
-  Son.prototype = new None()
-  // 修复构造函数指向
-  Son.prototype.constructor = Son
-})()
-const son = new Son('son', 'male')
-console.log(son.name, son.age, son.gender) // son 18 male
-son.sayName() // son
-son.sayAge() // 18
-console.log(son instanceof Father) // true
-console.log(son instanceof Son) // true
-
-// 方式二
-function Son (name, gender) {
-  Father.call(this, name)
-  this.gender = gender
-}
-Son.prototype = Object.create(Father.prototype)
+// 使用 Object.create 创建一个中间对象，将其原型指向 Animal.prototype，
+Cat.prototype = Object.create(Animal.prototype);
 // 修复constructor的指向
-Son.prototype.constructor = Son
-Son.prototype.sayGender = function () {
-  console.log(this.gender)
-}
-const son = new Son('son', 'male')
-console.log(son.name, son.age, son.gender) // son 18 male
-son.sayName() // son
-son.sayAge() // 18
-console.log(son instanceof Father) // true
-console.log(son instanceof Son) // true
+Cat.prototype.constructor = Cat;
+
+var cat = new Cat('cat');
+console.log(cat.type); // 'cat'
+cat.say(); // 'I am a cat.'
 ```
 
-### 10.7、Class继承
-使用`extends`表明继承自哪个父类，并且在子类构造函数中必须调用`super`
+### 10.5、class 继承
+ES6 中引入了`class`关键字，可以更方便地实现继承。`class`继承本质上仍然是基于原型链的继承，只是语法更加简洁易懂。
 ```js
-class Son extends Father {
-  constructor (name, gender) {
-    super(name)
-    this.gender = gender
+class Animal {
+  constructor(type) {
+    this.type = type;
+  }
+  say() {
+    console.log(`I am a ${this.type}.`);
   }
 }
-const son = new Son('son', 'male')
-console.log(son.name, son.age, son.gender) // son 18 male
-son.sayName() // son
-son.sayAge() // 18
-console.log(son instanceof Father) // true
-console.log(son instanceof Son) // true
+
+class Cat extends Animal {
+  constructor(type) {
+    super(type);
+  }
+}
+let cat = new Cat('cat');
+console.log(cat.type); // 'cat'
+cat.say(); // 'I am a cat.'
 ```
 
+### 10.6、拷贝继承
+对父类实例中的的方法与属性拷贝给子类的原型
+```js
+function Animal(type) {
+  this.type = type;
+}
+Animal.prototype.say = function() {
+  console.log('I am a ' + this.type + '.');
+};
+
+function Cat(type, name) {
+  const animal = new Animal()
+  for (let key in animal) {
+    Cat.prototype[key] = animal[key]
+  }
+  this.type = type
+  this.name = name
+}
+var cat = new Cat('cat', '小喵');
+console.log(cat.type, cat.name); // 'cat'，小喵
+cat.say(); // 'I am a cat.'
+```
+
+### 10.7、实例继承
+为父类实例添加新特征，作为子类实例返回
+```js
+function Animal(type) {
+  this.type = type;
+}
+Animal.prototype.say = function() {
+  console.log('I am a ' + this.type + '.');
+};
+
+function Cat(type, name) {
+  const animal = new Animal()
+  animal.type = type
+  animal.name = name
+  return animal
+}
+
+var cat = new Cat('cat', '小喵');
+console.log(cat.type, cat.name); // 'cat'，小喵
+cat.say(); // 'I am a cat.'
+```
 
 ## 11、什么是原型链？
 原型链就是实例对象和原型对象之间的链接，每一个对象都有原型，原型本身又是对象，原型又有原型，以此类推形成一个链式结构称为原型链
@@ -749,92 +805,343 @@ console.log(animal.getX()) // 123
 ```
 
 
-## 13、复杂数据类型如何转变为字符串
-- 首先会调用`valueOf`方法，如果方法的返回值是一个基本数据类型，就返回这个值
-  > **时间对象是先调用`toString`方法**
-  ```js
-  var obj = {
-    valueOf: function() {
-      return 1;
-    }
-  };
-  console.log(obj + ""); //'1'
+## 13、JS 块级作用域、变量提升、var、let、const的区别
+> 作用域指的是变量和函数在代码中可见性和访问性的范围。即作用域指的是变量的可见区域
 
-  // 时间对象是先调用 toString 方法
-  const date = new Date()
-  date.valueOf = () => {
-    return 'valueOf'
-  }
-  date.toString = () => {
-    return 'toString'
-  }
-  console.log(date + "") // toString
-  ```
-- 如果调用`valueOf`方法之后的返回值仍旧是一个复杂数据类型，就会调用该对象的`toString`方法
-  ```js
-  var obj = {
-    valueOf: function() {
-      return [1, 2];
-    }
-  };
-  console.log(obj + ""); //'[object Object]';
-  ```
-- 如果`toString`方法调用之后的返回值是一个基本数据类型，就返回这个值，
-  ```js
-  // 3;
-  var obj = {
-    valueOf: function() {
-      return [1, 2];
-    },
-    toString: function() {
-      return 1;
-    }
-  };
-  console.log(obj + ""); //'1';
-  ```
-- 如果`toString`方法调用之后的返回值是一个复杂数据类型，就报一个错误。
-  ```js
-  // 4;
-  var obj = {
-    valueOf: function() {
-      return [1, 2];
-    },
-    toString: function() {
-      return [1, 2, 3];
-    }
-  };
-  console.log(obj + "");
-  // 报错 Uncaught TypeError: Cannot convert object to primitive value
-  ```
+### 13.1、作用域
+JS 中作用域有：**全局作用域**、**函数作用域**、**块级作用域**(ES6新增)。
+> 块作用域由`{ }`包括，`if`语句和`for `语句里面的`{ }`也属于**块作用域**。
 
-**拓展**
+#### 全局作用域
+- 全局作用域在网页运行时创建，在网页关闭时销毁
+- 直接写到script标签中的代码都在全局作用域中
+- 全局作用域中的变量是全局变量，可在任意地方访问
 ```js
-var arr = [
-  new Object(),
-  new Date(),
-  new RegExp(),
-  new String(),
-  new Number(),
-  new Boolean(),
-  new Function(),
-  new Array(),
-  Math
-]
-console.log(arr.length) // 9
-for (var i = 0; i < arr.length; i++) {
-  arr[i].valueOf = function() {
-    return [1, 2, 3]
-  }
-  arr[i].toString = function() {
-    return 'toString'
-  }
-  console.log(arr[i] + '')
+let a = 9
+console.log(a) // 9
+
+for (let i = 0; i < 2; i++) {
+  console.log(a, i) // 9 0, 9 1
+}
+
+function demo () {
+  console.log(a) // 9
 }
 ```
-1. 上面程序得到的返回值是`toString * 9`
-  > 说明：执行`valueof`后都来执行`toString`
-2. 若`return [1, 2, 3]`处为`return "valueof"`，得到的返回值是`valueof toString valueof*7`
-  > 说明：其他八种复杂数据类型是先调用`valueOf`方法，**时间对象是先调用`toString`方法**
+
+#### 局部作用域
+**函数作用域**: 指在函数内部声明的变量，在`函数内部`和`函数内部声明的函数`中都可以访问到。
+- 函数作用域在函数调用时创建，调用结束后销毁
+- 函数每一次调用都会产生一个全新的函数作用域，它们都是独立的，互不影响
+- 在函数作用域中声明的变量只能在块函数内部访问，外部访问不了
+```js
+let a = 9
+console.log(a) // 9
+
+function demo () {
+  let a = 10
+  console.log(a) // 10
+  console.log(b) // Uncaught ReferenceError: b is not defined
+  return function test () {
+    let b = 3
+    console.log(a) // 10
+    console.log(b) // 3
+  }
+}
+demo()()
+```
+
+**块级作用域**(es6): 
+- 使用let/const关键字创建的变量都具有块级作用域。
+- 块级作用域的变量只有在语句块内可以访问。所谓语句块就是用`{ }`包起来的区域。
+- 块级作用域有几个特性：`不存在变量提升`、`暂时性死区`、`不允许重复声明`。
+  - 什么是暂时性死区呢？<br>
+    只要块级作用域内存在`let`命令，它所声明的变量就绑定了这个区域，不再受外部影响。在代码块内，使用`let`命令声明函数之前，该变量都是不可用的，这在语法上称为`“暂时性死区”`。
+    ```js
+    var tmp = 123;
+    if (true) {
+      tmp = 'abc'; // Uncaught ReferenceError: Cannot access 'tmp' before initialization
+      let tmp;
+    }
+    ```
+- 通过`var`定义的变量可以跨块级作用域，而不能跨函数作用域
+  ```js
+  // if语句和for语句中用var定义的变量可以在外面访问到，
+  // 可见，if语句和for语句属于块作用域，不属于函数作用域。
+  f (true) {
+    var c = 3;
+  }
+  console.log(c); // 3
+  for (var i = 0; i < 4; i++) {
+    var d = 5;
+  };
+  console.log(i); // 4  (循环结束i已经是4，所以此处i为4)
+  console.log(d); // 5
+  ```
+- 子作用域可以访问到父作用域的变量
+  ```js
+  // 子作用域可以访问到父作用域的变量
+  function demo() {
+    var a = 1
+    let b = 2
+    const c = 3
+    test()
+    function test () {
+      console.log(a)
+      console.log(b)
+      console.log(c)
+    }
+  }
+  demo()
+
+  // 特殊案例
+  // 子作用域可以访问到父作用域的变量
+  function demo() {
+    if (true) {
+      var a = 1
+      let b = 2
+      const c = 3
+    }
+    console.log(a)
+    console.log(b) // Uncaught ReferenceError: b is not defined
+    console.log(c) // Uncaught ReferenceError: c is not defined
+  }
+  demo()
+  ```
+
+### 13.2、变量提升
+JS在执行之前，会先进行预编译，主要做两个工作(这就是变量提升)：
+1. 将全局作用域或者函数作用域内的所有函数声明提前
+2. 将全局作用域或者函数作用域内的所有`var`声明的变量提前声明，并且复制`undefined`
+
+- **变量的提升**<br>
+  使用`var`声明的变量，它会在所有代码执行前被声明，所以我们可以在变量声明前就访问变量，此时的值为`undefined`
+  ```js
+  console.log(a) // undefined
+  var a = 1
+  console.log(a) // 1
+
+  // 等价于
+  var a = undefined
+  console.log(a)
+  a = 1
+  console.log(a)
+  ```
+  从下面例子可以看出：通过`var`定义的变量可以跨块作用域访问到。
+  ```js
+  if (true) {
+    var a = 1
+    console.log(a) // 1
+  }
+  console.log(a) // 1
+
+  // 等价于
+  var a = undefined
+  if (true) {
+    a = 1
+    console.log(a)
+  }
+  console.log(a)
+  ```
+  从下面例子可以看出：通过`var`定义的变量不能跨函数作用域访问到。
+  ```js
+  (() => {
+    var a = 1 // Uncaught ReferenceError: a is not defined
+  })();
+  console.log(a)
+  ```
+- **函数的提升**<br>
+  使用函数声明创建的函数`function fn(){  }`，会在其他代码执行前先执行，所以我们可以在函数声明前调用函数。
+  ```js
+  demo()
+  function demo () {
+    console.log('aa') // aa
+  }
+  ```
+  注意：
+    - 函数声明可以提升，但是函数表达式不提升，具名的函数表达式的标识符也不会提升。
+    - 同名的函数声明，后面的覆盖前面的
+    - 函数声明的提升，不受逻辑判断的控制
+    ```js
+    // 函数表达式和具名函数表达式标识符都不会提升
+    test(); // TypeError test is not a function
+    log(); // TypeError log is not a function
+    var test = function log() {
+      console.log('test')
+    }
+
+    // 同名函数声明，后面的覆盖前面的
+    test(); // 2
+    function test() {
+      console.log(1);
+    }
+    function test() {
+      console.log(2);
+    }
+
+    // 函数声明的提升，不受逻辑判断的控制
+    // 注意这是在ES5环境中的规则，在ES6中会报错
+    function test() {
+      log();
+      if (false) {
+        function log() {
+          console.log('test');
+        }
+      }
+    }
+    test(); // 'test'
+    ```
+  <span style="color: red;">在块级作用域中声明函数会是什么效果呢？</span><br>
+  ES6环境中，如果在语句块中声明函数，按照正常的规范，函数声明应该被封闭在语句块里面，但是为了兼容老代码，因此语法标准允许其他的实现：
+    - 允许在块级作用域内声明函数。
+    - 函数声明类似于var，即会提升到全局作用域或函数作用域的头部。
+    - 同时，函数声明还会提升到所在的块级作用域的头部。
+    ```js
+    /**
+     * 简单例子
+     */
+    f()
+    function f(flag) {
+      console.log('I am outside!'); // I am outside!
+
+      demo()
+      if (flag) {
+        function demo () {
+          console.log('I am inside!') // Uncaught TypeError: demo is not a function
+        }
+      }
+    }
+
+    /**
+     * 同名例子
+     */
+    function f() {
+      console.log('I am outside!');
+    }
+    (function () {
+      if (false) {
+        // 重复声明一次函数f
+        function f() {
+          console.log('I am inside!');
+        }
+      }
+      f(); // Uncaught TypeError: f is not a function
+    }());
+
+    // 等价于
+    function f() {
+      console.log('I am outside!');
+    }
+    (function () {
+      var f = undefined;
+      if (false) {
+        function f() {
+          console.log('I am inside!');
+        }
+      }
+      f(); // Uncaught TypeError: f is not a function
+    }());
+    ```
+
+### 13.3、var、let、const 的区别
+- var 定义的变量，没有块的概念，可以跨块访问, 不能跨函数访问。`var`可以重复定义同一个变量，效果是重复赋值。
+  ```js
+  var a = 1
+  var a = 2
+  console.log(a) // 2
+  ```
+- let 定义的变量，具有块级作用域，函数内部使用let定义后，对函数外部无影响，不能跨函数访问。`let`定义的变量不能重复定义同一个变量。
+  ![202302281614171.png](http://img.itchenliang.club/img/202302281614171.png)
+- const 用来定义常量，使用时必须初始化(即必须赋值)，只能在块作用域里访问，而且定义之后是不允许改变的。
+  ![202302281612254.png](http://img.itchenliang.club/img/202302281612254.png)
+- 同一个变量只能使用一种方式声明，不然会报错
+  ```js
+  var a = 1
+  let a = 2 // Uncaught SyntaxError: Identifier 'a' has already been declared
+  console.log(a)
+  ```
+- var定义的全局变量会挂载到window对象上，使用window可以访问，let定义的全局变量则不会挂载到window对象上
+  ```js
+  var a = 1
+  console.log(window.a)
+  ```
+
+
+## 13、说说你对作用域链的理解
+作用域链，用于解释代码中变量的访问规则。
+> 当代码在作用域内访问一个变量时，JavaScript 引擎会先在当前作用域内查找该变量，如果找不到，就会逐级向上查找直到全局作用域，这个查找的过程就是**作用域链**，又称**变量查找的机制**。
+
+作用域链的作用: 保证执行环境里有权访问的变量和函数是有序的，作用域链的变量只能向上访问，变量访问到`window`对象即被终止，作用域链向下访问变量是不被允许的。
+```js
+var a = 11
+function demo () {
+  let a = 1
+  console.log(a)
+}
+demo() // 1
+```
+上面例子中，在`demo`中输出了变量`a`，首先会在`demo`的函数作用域找是否存在变量`a`，找到了就返回了变量`a`的值`1`。
+```js
+var a = 11
+function demo () {
+  console.log(a)
+}
+demo() // 11
+```
+上面例子中，在`demo`中输出了变量`a`，首先会在`demo`的函数作用域找是否存在变量`a`，没有找到，就向上级作用域(此处为全局作用域)查找，找到了就反悔了变量`a`的值`11`。
+```js
+function demo () {
+  console.log(a)
+}
+demo() // Uncaught ReferenceError: a is not defined
+```
+上面例子中，同样首先在`demo`函数作用域查找变量`a`，没有找到，然后向上级作用域(全局作用域)查找没有找到，就会报`Uncaught ReferenceError: a is not defined`错。
+
+
+## 13、什么是属性搜索原则？
+1. 首先会去查找对象本身上面有没有这个属性，有的话，就返回这个属性
+2. 如果对象本身上面没有这个属性，就到它的原型上面去查找，如果有，就返回
+3. 然后又在原型的原型上面去查找有没有这个属性，如果查找到最后一直没有找到，就返回一个`undefined`
+
+
+## 13、JavaScript中执行上下文和执行栈是什么？
+### 执行上下文
+在 JavaScript 中，执行上下文是指代码执行时的环境。每当 JavaScript 引擎需要执行一段代码时，就会创建一个对应的执行上下文，并将其放入执行上下文栈 (Execution Context Stack) 中。当这个执行上下文执行完成后，它会从栈中弹出，控制权再次回到上一个执行上下文。
+
+执行上下文通常包括以下三个组成部分：
+1. 变量对象(Variable Object)：用于存储当前环境中定义的变量和函数声明。
+2. 作用域链(Scope Chain)：由词法作用域决定，用于解析变量和函数的访问权限。
+3. this值：用于存储当前函数的上下文对象。
+
+执行上下文可以分为三种类型：
+- 全局执行上下文：整个 JavaScript 代码的默认环境，由 JavaScript 引擎自动创建。
+- 函数执行上下文：每当一个函数被调用时，都会创建一个对应的函数执行上下文。
+- Eval执行上下文：在`eval()`函数中运行的代码块会在`eval`执行上下文中执行。
+
+**执行上下文包含以下三个重要的属性：**
+- 变量对象（Variable Object）：存储变量、函数声明和函数参数等信息。
+- 作用域链（Scope Chain）：由当前执行上下文的变量对象和所有父级执行上下文变量对象的链式结构，用于实现词法作用域。
+- this指向：表示当前函数执行的上下文对象。
+
+注意: 执行上下文是按照执行顺序逐层压入执行栈中的，栈顶的执行上下文表示当前正在执行的代码块。当代码块执行完成后，该执行上下文将从栈中弹出，控制权返回到上一级执行上下文。
+
+### 执行栈
+执行栈（Execution Stack），也称为调用栈（Call Stack），是一种后进先出（LIFO）的数据结构，用于存储代码执行时创建的所有执行上下文。
+> 每当一个函数被调用时，都会创建一个新的执行上下文，并将其压入执行栈的顶部。当该函数执行完成后，其对应的执行上下文将从栈中弹出，控制权返回到当前执行上下文的下一个语句。
+
+例如，以下代码示例演示了执行栈中的执行顺序：
+```js
+function add(a, b) {
+  return a + b;
+}
+function multiply(a, b) {
+  return a * b;
+}
+const result = multiply(3, add(2, 4));
+console.log(result); // 输出 18
+```
+- 在上述代码中，当`multiply`函数被调用时，会创建一个新的执行上下文并压入执行栈的顶部；接着，当`add`函数被调用时，也会创建一个新的执行上下文并压入执行栈的顶部。
+- 当`add`函数执行完成后，其对应的执行上下文将从栈中弹出，控制权返回到`multiply`函数，继续执行剩余的代码。当`multiply`函数执行完成后，其对应的执行上下文也将从栈中弹出，最终代码执行完毕，执行栈为空。
 
 
 ## 14、javascript 的 typeof 返回哪些数据类型
@@ -1910,266 +2217,92 @@ console.log(arr3) //[1, 2, 'haha', 4, 5] 替换一个元素
 ```
 
 
-## 32、JS 块级作用域、变量提升、var、let、const的区别
-> 作用域指的是变量的可见区域
-
-### 32.1、作用域
-JS 中作用域有：**全局作用域**、**函数作用域**、**块级作用域**(ES6新增)。
-> 块作用域由`{ }`包括，`if`语句和`for `语句里面的`{ }`也属于**块作用域**。
-
-#### 全局作用域
-- 全局作用域在网页运行时创建，在网页关闭时销毁
-- 直接写到script标签中的代码都在全局作用域中
-- 全局作用域中的变量是全局变量，可在任意地方访问
-```js
-let a = 9
-console.log(a) // 9
-
-for (let i = 0; i < 2; i++) {
-  console.log(a, i) // 9 0, 9 1
-}
-
-function demo () {
-  console.log(a) // 9
-}
-```
-
-#### 局部作用域
-**函数作用域**: 指在函数内部声明的变量，在`函数内部`和`函数内部声明的函数`中都可以访问到。
-- 函数作用域在函数调用时创建，调用结束后销毁
-- 函数每一次调用都会产生一个全新的函数作用域，它们都是独立的，互不影响
-- 在函数作用域中声明的变量只能在块函数内部访问，外部访问不了
-```js
-let a = 9
-console.log(a) // 9
-
-function demo () {
-  let a = 10
-  console.log(a) // 10
-  console.log(b) // Uncaught ReferenceError: b is not defined
-  return function test () {
-    let b = 3
-    console.log(a) // 10
-    console.log(b) // 3
-  }
-}
-demo()()
-```
-
-**块级作用域**(es6): 
-- 使用let/const关键字创建的变量都具有块级作用域。
-- 块级作用域的变量只有在语句块内可以访问。所谓语句块就是用`{ }`包起来的区域。
-- 块级作用域有几个特性：`不存在变量提升`、`暂时性死区`、`不允许重复声明`。
-  - 什么是暂时性死区呢？<br>
-    只要块级作用域内存在`let`命令，它所声明的变量就绑定了这个区域，不再受外部影响。在代码块内，使用`let`命令声明函数之前，该变量都是不可用的，这在语法上称为`“暂时性死区”`。
-    ```js
-    var tmp = 123;
-    if (true) {
-      tmp = 'abc'; // Uncaught ReferenceError: Cannot access 'tmp' before initialization
-      let tmp;
-    }
-    ```
-- 通过`var`定义的变量可以跨块级作用域，而不能跨函数作用域
+## 32、复杂数据类型如何转变为字符串
+- 首先会调用`valueOf`方法，如果方法的返回值是一个基本数据类型，就返回这个值
+  > **时间对象是先调用`toString`方法**
   ```js
-  // if语句和for语句中用var定义的变量可以在外面访问到，
-  // 可见，if语句和for语句属于块作用域，不属于函数作用域。
-  f (true) {
-    var c = 3;
-  }
-  console.log(c); // 3
-  for (var i = 0; i < 4; i++) {
-    var d = 5;
+  var obj = {
+    valueOf: function() {
+      return 1;
+    }
   };
-  console.log(i); // 4  (循环结束i已经是4，所以此处i为4)
-  console.log(d); // 5
-  ```
-- 子作用域可以访问到父作用域的变量
-  ```js
-  // 子作用域可以访问到父作用域的变量
-  function demo() {
-    var a = 1
-    let b = 2
-    const c = 3
-    test()
-    function test () {
-      console.log(a)
-      console.log(b)
-      console.log(c)
-    }
+  console.log(obj + ""); //'1'
+
+  // 时间对象是先调用 toString 方法
+  const date = new Date()
+  date.valueOf = () => {
+    return 'valueOf'
   }
-  demo()
-
-  // 特殊案例
-  // 子作用域可以访问到父作用域的变量
-  function demo() {
-    if (true) {
-      var a = 1
-      let b = 2
-      const c = 3
-    }
-    console.log(a)
-    console.log(b) // Uncaught ReferenceError: b is not defined
-    console.log(c) // Uncaught ReferenceError: c is not defined
+  date.toString = () => {
+    return 'toString'
   }
-  demo()
+  console.log(date + "") // toString
+  ```
+- 如果调用`valueOf`方法之后的返回值仍旧是一个复杂数据类型，就会调用该对象的`toString`方法
+  ```js
+  var obj = {
+    valueOf: function() {
+      return [1, 2];
+    }
+  };
+  console.log(obj + ""); //'[object Object]';
+  ```
+- 如果`toString`方法调用之后的返回值是一个基本数据类型，就返回这个值，
+  ```js
+  // 3;
+  var obj = {
+    valueOf: function() {
+      return [1, 2];
+    },
+    toString: function() {
+      return 1;
+    }
+  };
+  console.log(obj + ""); //'1';
+  ```
+- 如果`toString`方法调用之后的返回值是一个复杂数据类型，就报一个错误。
+  ```js
+  // 4;
+  var obj = {
+    valueOf: function() {
+      return [1, 2];
+    },
+    toString: function() {
+      return [1, 2, 3];
+    }
+  };
+  console.log(obj + "");
+  // 报错 Uncaught TypeError: Cannot convert object to primitive value
   ```
 
-### 32.2、变量提升
-JS在执行之前，会先进行预编译，主要做两个工作(这就是变量提升)：
-1. 将全局作用域或者函数作用域内的所有函数声明提前
-2. 将全局作用域或者函数作用域内的所有`var`声明的变量提前声明，并且复制`undefined`
-
-- **变量的提升**<br>
-  使用`var`声明的变量，它会在所有代码执行前被声明，所以我们可以在变量声明前就访问变量，此时的值为`undefined`
-  ```js
-  console.log(a) // undefined
-  var a = 1
-  console.log(a) // 1
-
-  // 等价于
-  var a = undefined
-  console.log(a)
-  a = 1
-  console.log(a)
-  ```
-  从下面例子可以看出：通过`var`定义的变量可以跨块作用域访问到。
-  ```js
-  if (true) {
-    var a = 1
-    console.log(a) // 1
+**拓展**
+```js
+var arr = [
+  new Object(),
+  new Date(),
+  new RegExp(),
+  new String(),
+  new Number(),
+  new Boolean(),
+  new Function(),
+  new Array(),
+  Math
+]
+console.log(arr.length) // 9
+for (var i = 0; i < arr.length; i++) {
+  arr[i].valueOf = function() {
+    return [1, 2, 3]
   }
-  console.log(a) // 1
-
-  // 等价于
-  var a = undefined
-  if (true) {
-    a = 1
-    console.log(a)
+  arr[i].toString = function() {
+    return 'toString'
   }
-  console.log(a)
-  ```
-  从下面例子可以看出：通过`var`定义的变量不能跨函数作用域访问到。
-  ```js
-  (() => {
-    var a = 1 // Uncaught ReferenceError: a is not defined
-  })();
-  console.log(a)
-  ```
-- **函数的提升**<br>
-  使用函数声明创建的函数`function fn(){  }`，会在其他代码执行前先执行，所以我们可以在函数声明前调用函数。
-  ```js
-  demo()
-  function demo () {
-    console.log('aa') // aa
-  }
-  ```
-  注意：
-    - 函数声明可以提升，但是函数表达式不提升，具名的函数表达式的标识符也不会提升。
-    - 同名的函数声明，后面的覆盖前面的
-    - 函数声明的提升，不受逻辑判断的控制
-    ```js
-    // 函数表达式和具名函数表达式标识符都不会提升
-    test(); // TypeError test is not a function
-    log(); // TypeError log is not a function
-    var test = function log() {
-      console.log('test')
-    }
-
-    // 同名函数声明，后面的覆盖前面的
-    test(); // 2
-    function test() {
-      console.log(1);
-    }
-    function test() {
-      console.log(2);
-    }
-
-    // 函数声明的提升，不受逻辑判断的控制
-    // 注意这是在ES5环境中的规则，在ES6中会报错
-    function test() {
-      log();
-      if (false) {
-        function log() {
-          console.log('test');
-        }
-      }
-    }
-    test(); // 'test'
-    ```
-  <span style="color: red;">在块级作用域中声明函数会是什么效果呢？</span><br>
-  ES6环境中，如果在语句块中声明函数，按照正常的规范，函数声明应该被封闭在语句块里面，但是为了兼容老代码，因此语法标准允许其他的实现：
-    - 允许在块级作用域内声明函数。
-    - 函数声明类似于var，即会提升到全局作用域或函数作用域的头部。
-    - 同时，函数声明还会提升到所在的块级作用域的头部。
-    ```js
-    /**
-     * 简单例子
-     */
-    f()
-    function f(flag) {
-      console.log('I am outside!'); // I am outside!
-
-      demo()
-      if (flag) {
-        function demo () {
-          console.log('I am inside!') // Uncaught TypeError: demo is not a function
-        }
-      }
-    }
-
-    /**
-     * 同名例子
-     */
-    function f() {
-      console.log('I am outside!');
-    }
-    (function () {
-      if (false) {
-        // 重复声明一次函数f
-        function f() {
-          console.log('I am inside!');
-        }
-      }
-      f(); // Uncaught TypeError: f is not a function
-    }());
-
-    // 等价于
-    function f() {
-      console.log('I am outside!');
-    }
-    (function () {
-      var f = undefined;
-      if (false) {
-        function f() {
-          console.log('I am inside!');
-        }
-      }
-      f(); // Uncaught TypeError: f is not a function
-    }());
-    ```
-
-### 32.3、var、let、const 的区别
-- var 定义的变量，没有块的概念，可以跨块访问, 不能跨函数访问。`var`可以重复定义同一个变量，效果是重复赋值。
-  ```js
-  var a = 1
-  var a = 2
-  console.log(a) // 2
-  ```
-- let 定义的变量，具有块级作用域，函数内部使用let定义后，对函数外部无影响，不能跨函数访问。`let`定义的变量不能重复定义同一个变量。
-  ![202302281614171.png](http://img.itchenliang.club/img/202302281614171.png)
-- const 用来定义常量，使用时必须初始化(即必须赋值)，只能在块作用域里访问，而且定义之后是不允许改变的。
-  ![202302281612254.png](http://img.itchenliang.club/img/202302281612254.png)
-- 同一个变量只能使用一种方式声明，不然会报错
-  ```js
-  var a = 1
-  let a = 2 // Uncaught SyntaxError: Identifier 'a' has already been declared
-  console.log(a)
-  ```
-- var定义的全局变量会挂载到window对象上，使用window可以访问，let定义的全局变量则不会挂载到window对象上
-  ```js
-  var a = 1
-  console.log(window.a)
-  ```
+  console.log(arr[i] + '')
+}
+```
+1. 上面程序得到的返回值是`toString * 9`
+  > 说明：执行`valueof`后都来执行`toString`
+2. 若`return [1, 2, 3]`处为`return "valueof"`，得到的返回值是`valueof toString valueof*7`
+  > 说明：其他八种复杂数据类型是先调用`valueOf`方法，**时间对象是先调用`toString`方法**
 
 
 ## 33、null和undefined的区别
@@ -3329,6 +3462,36 @@ function stopDefault(e) {
 > 宿主就是指JavaScript运行环境，js可以在浏览器中运行，也可以在服务器上运行(nodejs)，对于嵌入到网页中的js来说，其宿主对象就是浏览器，所以宿主对象就是浏览器提供的对象。
 
 
+## 89、内置函数(原生函数)
+JavaScript 的内建函数(built-in function)，也叫原生函数(native function)。
+- Number()
+- String()
+- Boolean()
+- Function()
+- Array()
+- Object()
+- Symbol()
+- Error()
+- Date()
+- RegExp()
+
+原生函数可以被当作构造函数来使用，但是构造出来的值都是对象类型的：
+```js
+var str = new String('hello world')
+typeof str  // 'object'
+Object.prototype.toString.call(str)  // '[object String]'
+
+var str = 'hello world'
+typeof str  // 'string'
+Object.prototype.toString.call(str)  // '[object String]'
+```
+通过构造函数（如`new String("hello world")`）创建出来的是封装了基本类型值（如`"hello world"`）的封装对象。注意的是
+```js
+!!Boolean(false) // 结果: false;  第一步: Boolean(false) = false; 第二步: !!false = false
+!!new Boolean(false) // 结果: true; 第一步: new Boolean(false)={false}; 第二步: !!{false} = true
+```
+
+
 ## 62、两种函数声明有什么区别？
 ```js
 // 创建函数方式一: 函数表达式
@@ -4028,37 +4191,6 @@ document.body.appendChild(df);
 **前端性能优化都是从一些细节地方做起的，如果不加以注意，后果很严重。**
 
 
-## 73、说说你对作用域链的理解
-作用域链，用于解释代码中变量的访问规则。
-> 当代码在作用域内访问一个变量时，JavaScript 引擎会先在当前作用域内查找该变量，如果找不到，就会逐级向上查找直到全局作用域，这个查找的过程就是**作用域链**，又称**变量查找的机制**。
-
-作用域链的作用: 保证执行环境里有权访问的变量和函数是有序的，作用域链的变量只能向上访问，变量访问到`window`对象即被终止，作用域链向下访问变量是不被允许的。
-```js
-var a = 11
-function demo () {
-  let a = 1
-  console.log(a)
-}
-demo() // 1
-```
-上面例子中，在`demo`中输出了变量`a`，首先会在`demo`的函数作用域找是否存在变量`a`，找到了就返回了变量`a`的值`1`。
-```js
-var a = 11
-function demo () {
-  console.log(a)
-}
-demo() // 11
-```
-上面例子中，在`demo`中输出了变量`a`，首先会在`demo`的函数作用域找是否存在变量`a`，没有找到，就向上级作用域(此处为全局作用域)查找，找到了就反悔了变量`a`的值`11`。
-```js
-function demo () {
-  console.log(a)
-}
-demo() // Uncaught ReferenceError: a is not defined
-```
-上面例子中，同样首先在`demo`函数作用域查找变量`a`，没有找到，然后向上级作用域(全局作用域)查找没有找到，就会报`Uncaught ReferenceError: a is not defined`错。
-
-
 ## 74、offsetWidth/offsetHeight, clientWidth/clientHeight 与 scrollWidth/scrollHeight 的区别？
 client系列
 - `clientWidth/clientHeight`返回的是元素的内部宽度，它的值只包含`content + padding`，如果有滚动条，不包含滚动条。
@@ -4266,41 +4398,12 @@ ES5 的对象属性名都是字符串，这容易造成属性名的冲突。
 ES6 引入了一种新的原始数据类型Symbol，表示独一无二的值。它是 JavaScript 语言的第七种数据类型，前六种是：undefined、null、布尔值（Boolean）、字符串（String）、数值（Number）、对象（Object）。
 
 
-## 89、内置函数(原生函数)
-JavaScript 的内建函数(built-in function)，也叫原生函数(native function)。
-- Number()
-- String()
-- Boolean()
-- Function()
-- Array()
-- Object()
-- Symbol()
-- Error()
-- Date()
-- RegExp()
-
-原生函数可以被当作构造函数来使用，但是构造出来的值都是对象类型的：
-```js
-var str = new String('hello world')
-typeof str  // 'object'
-Object.prototype.toString.call(str)  // '[object String]'
-
-var str = 'hello world'
-typeof str  // 'string'
-Object.prototype.toString.call(str)  // '[object String]'
-```
-通过构造函数（如`new String("hello world")`）创建出来的是封装了基本类型值（如`"hello world"`）的封装对象。注意的是
-```js
-!!Boolean(false) // 结果: false;  第一步: Boolean(false) = false; 第二步: !!false = false
-!!new Boolean(false) // 结果: true; 第一步: new Boolean(false)={false}; 第二步: !!{false} = true
-```
-
-
 ## 90、对象浅拷贝和深拷贝有什么区别
-对象拷贝是指将一个对象的值复制到另一个对象中，以实现数据的共享或备份。常见的对象拷贝方式包括浅拷贝和深拷贝。
+对象的浅拷贝和深拷贝是指对于一个对象，将其复制一份后得到的新对象，两者的区别在于新对象与原对象之间是否共享引用的属性。
 
 ::: tip 浅拷贝
-浅拷贝指复制一个对象时，只复制其基本类型的属性值，而不复制其引用类型的属性。换句话说，新对象中的引用类型属性仍然与原对象中的引用类型属性指向同一个内存地址。因此，在修改新对象中的引用类型属性时，会影响到原对象中的相应属性。
+浅拷贝只复制了对象本身及其非引用类型的属性，而引用类型的属性则共享原对象中的值，修改其中一个对象的引用类型属性会影响到另一个对象。
+> 换句话说，新对象中的引用类型属性仍然与原对象中的引用类型属性指向同一个内存地址。因此，在修改新对象中的引用类型属性时，会影响到原对象中的相应属性。
 
 浅拷贝可以使用`直接赋值`、`Object.assign`、`for···in只循环一层`、`扩展运算符`来实现。
 ```js
@@ -4332,7 +4435,8 @@ console.log(obj2); // {a: 3, b: {c: 4}}
 :::
 
 ::: tip 深拷贝
-深拷贝指复制一个对象时，同时复制其引用类型的属性，使得新对象中的引用类型属性与原对象中的引用类型属性完全独立。因此，在修改新对象中的引用类型属性时，不会影响到原对象中的相应属性。
+深拷贝则递归地复制了整个对象及其嵌套的引用类型属性，新对象与原对象之间不存在任何关联。
+> 因此，在修改新对象中的引用类型属性时，不会影响到原对象中的相应属性。
 
 常见的深拷贝方法可以使用`JSON`的`stringify和parse`两个函数来实现以及手写深拷贝
 ```js
@@ -4346,9 +4450,13 @@ console.log(obj2); // {a: 3, b: {c: 4}}
 
 // 手写实现
 function deepClone (target) {
-  let res = {}
+  let res = Array.isArray(obj) ? [] : {};
   for (let key in target) {
-    res[key] = target[key]
+    if (typeof target[key] === 'object') {
+      res[key] = deepClone(target[key])
+    } else {
+      res[key] = target[key]
+    }
   }
   return res
 }
@@ -4389,270 +4497,6 @@ console.log(obj2) // {name: '李四', age: 23}
   </script>
   ```
 2. `innerHTML`是一个属性，是`HTMLElement`的属性，是一个元素的内部`html`内容。
-
-
-## 93、让你自己设计实现一个requireJS，你会怎么做？
-首先看看`require.js`的使用
-```js
-require.config({
-  paths: {
-    a: 'js/a',
-    b: 'js/b',
-    home: 'js/home'
-  },
-  shim: {
-    'home': {
-      deps: ['a']
-    },
-    'a': {
-      deps: ['b']
-    }
-  }
-});
- 
-//index.js
-require(['home'], function (home) {
- 
-});
- 
-//home.js
-define(['a'],function(a){
- 
-});
- 
-//a.js
-define(['b'],function(b){
- 
-});
- 
-//b.js
-define([],function(){
- 
-});
-```
-查看html元素，会在head中看到：
-```html
-<script src="js/b.js"></script>
-<script src="js/a.js"></script>
-<script src="js/home.js"></script>
-```
-很明显程序的执行顺序是`b - > a -> home`，如果我们把`require.config`中的`shim`删除，那么程序就不知道js的依赖关系，于是我们查看head：
-```html
-<script src="js/home.js"></script>
-<script src="js/a.js"></script>
-<script src="js/b.js"></script>
-```
-奇怪的是程序运行后并没有发生错误，奥秘就在于每个js文件都做了amd规范，我们把逻辑都放在了define的回调函数中，当加载了js文件后并不会马上执行我们的逻辑代码。
-
-`define`做了一件重要的事情，生成模块。当确定模块都加载完毕了，利用一个递归函数按顺序执行`define`中的回调函数。最后执行顶层模块对象的回调函数，即`require`方法的第二个参数。
-
-模块之间的通信是利用`args`这个参数，它保存了它的子级模块回调函数的返回值，`callback`顾名思义保存了当前模块的回调函数。
-
-模块对象如下：
-```js
-{ moduleName: "_@$1", deps: ["a","b"], callback: null, args: null}
-```
-现在我们明白了，其实head中插入的script标签先后顺序无关紧要了。
-
-自我实现:
-首先定义全局变量`context`，由于`require`方法可以多次调用，意味着顶层模块对象也是多个，所以`topModule`是一个数组。
-`modules`模块对象上面已经解释过了。`waiting`保存了等待加载完成的模块。它很重要，我们通过判断：`if(!context.waiting.length){  //执行递归函数按顺序执行define中的回调函数  }`
-```js
-var context = {
-  topModule: [], //存储requre函数调用生成的顶层模块对象名。　　
-  modules: {}, //存储所有的模块。使用模块名作为key，模块对象作为value　　
-  waiting: [], //等待加载完成的模块
-  loaded: [] //加载好的模块   (加载好是指模块所在的文件加载成功)
-};
-```
-接着我们看`require`方法：
-```js
-var require = root.require = function(dep,callback) {
-  if (typeof dep == 'function'){
-    callback = dep;
-    dep = [];
-  }else if (typeof callback != 'function'){
-    callback = function(){};
-    dep = dep || [];
-  }
-
-  var name = '_@$' + (requireCounter++);
-  context.topModule.push(name);
-  //剔除数组重复项
-  dep = unique(dep);
-
-  //context.modules._@$1 = {moduleName:"_@$1",deps:["a","b"],callback:null,callbackReturn:null,args:null}
-  createModule({
-    moduleName: name,
-    deps: deps2format(dep),
-    callback: callback
-  });
-
-  each(dep,function(name){
-    req(name);
-  });
-
-  //如果dep是空数组直接执行callback
-  completeLoad();
-};
-```
-requier方法做了5件事情：
-- 1、参数容错处理
-- 2、生成顶层模块名并添加到topModule数组中
-- 3、剔除数组（依赖）重复项
-- 4、创建顶层模块
-- 5、遍历数组（依赖）
-
-遍历数组中调用了`req`方法，我们来看一下：
-```js
-function req(name,callback){
-  var deps = config.shim[name];
-  deps = deps ? deps.deps : [];
-
-  function notifymess(){
-    //检查依赖是否全部加载完成
-    if(iscomplete(deps)){
-      var element = createScript(name);
-      element && (element.onload = element.onreadystatechange = function () {
-        onscriptLoaded.call(this,callback);
-      });
-    }
-  };
-
-  //如果存在依赖则把创建script标签的任务交给依赖去完成
-  if(deps.length > 0){
-    each(deps,function(name){
-      req(name, notifymess);
-    });
-  }else{
-    notifymess();
-  }
-};
-```
-req方法是一个递归函数，首先判断是否存在依赖，如果存在则遍历依赖，在循环中调用req，传递2个参数，模块名与notifymess方法，由于存在依赖，所以不创建script标签，也就是说不执行notifymess方法，而是把它当成回调函数传递给req，等待下次执行req再执行。否则执行notifymess方法，即创建script标签添加到head中。
-大致的思路就是父模块创建script方法交给子模块去完成，当子模块创建了script标签，然后在onload事件中创建父script标签，只有这样才能按照依赖关系在head中按先后顺序插入script标签。
-
-也许有人觉得这样做太过麻烦，不是说插入script标签顺序不重要了吗，他是由define回调统一处理。但是你别忘了，如果加载的js文件不是amd规范的是没有包裹define方法的。req函数之所以这样做正是出于这种情况的考虑。
-
-现在我们根据配置参数完成了首次插入script标签的任务。第二次插入标签的任务将在define中完成。（其实插入标签是交替进行的，这里说的首次和再次是思路上的划分）
-
-接着我们就看一下define方法：
-```js
-var define = root.define = function(name,dep,callback){
-  if(typeof name === 'object'){
-    callback = dep;
-    dep = name;
-    name = 'temp';
-  }else if (typeof dep == 'function') {
-    callback = dep;
-    dep = [];
-  }else if (typeof callback != 'function') {
-    callback = function () {};
-    dep = dep || [];
-  }
-
-  //剔除数组重复项
-  dep = unique(dep);
-
-  //创建一个临时模块，在onload完成后修改它
-  createModule({
-    moduleName:name,
-    deps:deps2format(dep),
-    callback:callback
-  });
-
-  //遍历依赖，如果配置文件中不存在则创建script标签
-  each(dep,function(name){
-    var element = createScript(name);
-    element && (element.onload = element.onreadystatechange = onscriptLoaded);
-  });
-};
-```
-define方法做了4件事情：
-- 1、参数容错处理
-- 2、剔除数组（依赖）重复项
-- 3、创建一个临时模块，在onload完成后修改它
-- 4、遍历数组（依赖），如果配置文件中不存在则创建script标签
-
-模块就是在define方法执行后创建的，这也不难理解只有define需要模块化方便之后的回调函数统一处理，如果程序一上来就创建模块势必造成资源浪费（没有amd规范的js文件当然不需要模块化管理啦）
-
-由于无法得知模块名，我们只能创建一个临时模块，模块名暂时叫temp，然后在该js文件的onload事件中通过this.getAttribute('data-requiremodule') 获得模块名再改回来。
-
-这里的思路是script标签添加到head中，首先执行的是该js文件（define方法），然后再执行onload事件，我们正是利用这个时间差修改了模块名。
-
-接着看一下script标签onload事件做了哪些事情：
-```js
-function onscriptLoaded(callback){
-  if (!this.readyState || /loaded|complete/.test(this.readyState)) {
-    this.onload = this.onreadystatechange = null;
-    var name = this.getAttribute('data-requiremodule');
-    context.waiting.splice(context.waiting.indexOf(name),1);
-    context.loaded.push(name);
-    typeof callback === 'function' && callback();
-    if(context.modules.hasOwnProperty('temp')){
-      var tempModule = context.modules['temp'];
-      //修改临时模块名
-      tempModule.moduleName = name;
-      //生成新模块
-      createModule(tempModule);
-      //删除临时模块
-      delete context.modules['temp'];
-    }
-    //script标签全部加载完成，准备依次执行define的回调函数
-    completeLoad();
-  }
-};
-```
-它做了4件事情：
-- 1、获得模块名
-- 2、waiting数组中删除一个当前的模块名，loaded数组中添加一个当前的模块名
-- 3、如果有临时模块修改它
-- 4、如果script标签全部加载完成，准备依次执行define的回调函数
-
-获得模块名的思路是在创建script时给一个自定义属性：element.setAttribute('data-requiremodule', name);  在onload中获取 this.getAttribute('data-requiremodule');
-```js
-function createScript(name){
-  var element,
-      scripts = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
-
-  name = name2format(name);
-
-  if(!iscontain(name)) return false;
-
-  context.waiting.push(name);
-  element = document.createElement('script');
-  element.setAttribute('type', 'text/javascript');
-  element.setAttribute('async', true);
-  element.setAttribute('charset', 'utf-8');
-  element.setAttribute('src', (config.paths[name] || name) + '.js');
-  element.setAttribute('data-requiremodule', name);
-  scripts.appendChild(element, scripts.firstChild);
-  return element;
-};
-```
-最后依次执行回调：
-```js
-function exec(module) {　　
-  var deps = module.deps;　　//当前模块的依赖数组
-  var args = module.args;　　//当前模块的回调函数参数
-  for (var i = 0, len = deps.length; i < len; i++) { //遍历 　　　
-    var dep = context.modules[deps[i]];
-    args[i] = exec(dep); //递归得到依赖模块返回值作为对应参数
-  }
-  return module.callback.apply(module, args); // 调用回调函数，传递给依赖模块对应的参数。
-}
- 
-function completeLoad(){
-  if(!context.waiting.length){
-    while(context.topModule.length){
-      var name = context.topModule.shift(),
-          topModule = context.modules[name]; //找到顶层模块。
-      exec(topModule);
-    }
-  }
-};
-```
-简化版的requireJs源码分析完了.
 
 
 ## 94、用原生 JavaScript 的实现过什么功能吗？
@@ -4754,29 +4598,20 @@ function add (x,y,z) {
 的返回结果一致。
 ```js
 function add (x, y, z) {
-  return x + y + z
+  return x + y +z
 }
 function curry (fn, ...args) {
-  // 形参数量大于等于实参数量
-  const argsLen = args.length // 实参
-  const fnLen = fn.length // 形参
-  if (argsLen >= fnLen) {
-    // 如果大于返回执行结果
+  if (args.length >= fn.length) {
     return fn(...args)
-  } else {
-    // 反之继续柯里化，递归，并将上一次的参数以及下次的参数继续传递下去
-    return (...b) => {
-      return curry(fn, ...args, ...b)
-    }
+  }
+  return (...otherArgs) => {
+    return curry(fn, ...args, ...otherArgs)
   }
 }
-
-// 将add加工成柯里化函数
-const addCurry = curry(add);
-console.log(addCurry(1, 2, 3)); // 6
-console.log(addCurry(1)(2)(3)); // 6
-console.log(addCurry(1, 2)(3)); // 6
-console.log(addCurry(1)(2, 3)); // 6
+const addCurry = curry(add)
+console.log(addCurry(1, 2, 3)) // 6
+console.log(addCurry(1)(2, 3)) // 6
+console.log(addCurry(1)(2)(3)) // 6
 ```
 
 
@@ -5054,12 +4889,6 @@ ul.addEventListener('click', (event) => {
   - `querySelectorAll(CSS selectors)`：匹配指定 CSS 选择器的所有元素，返回 NodeList 对象
 
 
-## 115、什么是属性搜索原则？
-1. 首先会去查找对象本身上面有没有这个属性，有的话，就返回这个属性
-2. 如果对象本身上面没有这个属性，就到它的原型上面去查找，如果有，就返回
-3. 然后又在原型的原型上面去查找有没有这个属性，如果查找到最后一直没有找到，就返回一个`undefined`
-
-
 ## 116、如何避免重绘或者重排？
 重绘: ``、重排``
 - 减少直接操作`dom`元素，改用`className`用于控制或者使用`cssText`统一设置样式
@@ -5132,78 +4961,21 @@ return parseInt(cur, index);
 // parseInt('112', 4) -> 由于基数为4，故结果为 1 * 4 ^ 2 + 1 * 4 ^ 1 + 2 * 4 ^ 0 = 22
 ```
 
-
-## 119、JavaScript中执行上下文和执行栈是什么？
-### 执行上下文
-在 JavaScript 中，执行上下文是指代码执行时的环境，包括变量、函数、对象等信息。执行上下文可以分为三种类型：
-- 全局执行上下文：当进入全局代码时，会创建一个全局执行上下文（Global Execution Context），它在整个程序生命周期中只存在一次。例如，在浏览器中打开一个页面时，就会创建一个全局执行上下文。
-- 函数执行上下文：每当调用函数时，都会创建一个函数执行上下文（Function Execution Context）。每个函数都有自己的执行上下文，保存了该函数的变量、参数和函数内部定义的其他函数等信息。
-- Eval执行上下文：使用`eval()`函数时，也会创建一个执行上下文（Eval Execution Context）。Eval 执行上下文可以访问当前作用域中的变量，但其本身不被视为一个作用域。
-
-**执行上下文包含以下三个重要的属性：**
-- 变量对象（Variable Object）：存储变量、函数声明和函数参数等信息。
-- 作用域链（Scope Chain）：由当前执行上下文的变量对象和所有父级执行上下文变量对象的链式结构，用于实现词法作用域。
-- this指向：表示当前函数执行的上下文对象。
-
-注意: 执行上下文是按照执行顺序逐层压入执行栈中的，栈顶的执行上下文表示当前正在执行的代码块。当代码块执行完成后，该执行上下文将从栈中弹出，控制权返回到上一级执行上下文。
-
-### 执行栈
-执行栈（Execution Stack），也称为调用栈（Call Stack），是一种后进先出（LIFO）的数据结构，用于存储代码执行时创建的所有执行上下文。
-> 每当一个函数被调用时，都会创建一个新的执行上下文，并将其压入执行栈的顶部。当该函数执行完成后，其对应的执行上下文将从栈中弹出，控制权返回到当前执行上下文的下一个语句。
-
-例如，以下代码示例演示了执行栈中的执行顺序：
+## 120、什么是工厂函数
+JavaScript 工厂函数（Factory Function）是一种创建和返回对象的函数，它不需要使用`new`关键字来将一个类构造函数实例化，而是直接返回一个新的对象，通常用于抽象对象的创建过程。
+> 工厂函数可以接受任意数量的参数，并使用这些参数来生成新的对象。由于工厂函数本身就是一个普通的 JavaScript 函数，因此它具有一些常规的函数特点，比如可以使用函数作用域、闭包等技术来隐藏实现细节、保护私有数据等。
 ```js
-function add(a, b) {
-  return a + b;
+function createStudent(name, age, gender) {
+  return {
+    name: name,
+    age: age,
+    gender: gender,
+    study: function(subject) {
+      console.log(`${this.name} is studying ${subject}.`);
+    }
+  };
 }
-function multiply(a, b) {
-  return a * b;
-}
-const result = multiply(3, add(2, 4));
-console.log(result); // 输出 18
 ```
-- 在上述代码中，当`multiply`函数被调用时，会创建一个新的执行上下文并压入执行栈的顶部；接着，当`add`函数被调用时，也会创建一个新的执行上下文并压入执行栈的顶部。
-- 当`add`函数执行完成后，其对应的执行上下文将从栈中弹出，控制权返回到`multiply`函数，继续执行剩余的代码。当`multiply`函数执行完成后，其对应的执行上下文也将从栈中弹出，最终代码执行完毕，执行栈为空。
-
-
-## 120、微任务和宏任务
-js是一门单线程语言，所以它本身是不可能异步的，但是js的宿主环境（比如浏览器、node）是多线程，宿主环境通过某种方式（事件驱动）使得js具备了异步的属性。而在js中，我们一般将所有的任务都分成两类，一种是**同步任务**，另外一种是**异步**。
-> 而在异步任务中，又有着更加细致的分类，那就是`微任务`和`宏任务`。
-
-### 宏任务macrotask
-主要有`script(整体代码)`、`setTimeout`、`setInterval`、`I/O`、`UI交互事件(DOM事件)`、`AJAX请求`、`postMessage`、`MessageChannel`、`setImmediate(Node.js 环境)`。
-> 浏览器为了能够使得JS内部`task`与`DOM任务`能够有序的执行，会在一个`task`执行结束后，在`下一个task`执行开始前，对页面进行重新渲染（`task->渲染->task->…`）
-
-### 微任务microtask
-主要有`process.nextTick`、`Promises【new Promise().then(回调)】`、`async/await`、`MutationObserver(html5 新特性)`
-> 微任务通常来说就是需要在当前`同步任务`执行结束后立即执行的任务，比如对一系列动作做出反馈，或者是需要异步的执行任务而又不需要分配一个新的任务，这样便可以减小一点性能的开销。
-
-**执行顺序**
-```js
-// 首先执行的是script任务，也就是全局任务，属于宏任务。
-// script任务执行完后，开始执行所有的微任务
-// 微任务执行完毕，再取任务队列中的一个宏任务执行
-console.log('start');
-setTimeout(() => {
-  console.log('setTimeout');
-}, 0)
-new Promise((resolve, reject) => {
-  for (var i = 0; i < 5; i++) {
-    console.log(i);
-  }
-  resolve(6); // 修改promise实例对象的状态为成功的状态
-}).then((res) => {
-  console.log(res);
-})
-console.log('end');
-
-// start 0 1 2 3 4 end 6 setTimeout
-```
-从上面结果看出，`start 0 1 2 3 4 end`都是同步代码。同步任务执行完，开始判断微任务是否为空。显然现在还有一个微任务`Promise`，那么开始执行`Promise`，输出6；执行完`Promise`，微任务清空，微任务队列也为空了，然后重新渲染，再次判断任务队列中是否有任务。此时任务队列中有`setTimeout`宏任务，开始执行，于是最后输出`setTimeout`。
-
-**任务关系**
-- 宏任务是主流，当js开始被执行的时候，就是开启一个宏任务，在宏任务中执行一条一条的指令，宏任务可以同时拥有多个，但是会按照顺序一个一个执行。
-- 每一个宏任务，后面都可以跟着一个微任务队列，如果微任务队列中有指令或者方法，则先执行。如果没有，则开始执行下一个宏任务，知道所有的宏任务执行完毕。
 
 
 ## 121、数组降维
@@ -7725,129 +7497,6 @@ CDN边缘节点缓存机制，一般都遵守http标准协议，通过http响应
 服务器缓存有助于优化性能和节省宽带，它将需要频繁访问的Web页面和对象保存在离用户更近的系统中，当再次访问这些对象的时候加快了速度。
 
 
-## 243、`setTimeout`和`setImmediate`以及`process.nextTick`的区别
-### setTimeout()
-`setTimeout()`只是将事件插入了"任务队列"，必须等到当前代码（执行栈）执行完，主线程才会去执行它指定的回调函数。要是当前代码耗时很长，有可能要等很久，所以并没有办法保证，回调函数一定会在`setTimeout()`指定的时间执行。
-```js
-setTimeout(function(){
-  console.log('0')
-}, 0);// 意思是回调函数加入事件队列的队尾，主线程和事件队列的函数执行完成之后立即执行定时器的回调函数，如果定时器的定时是相同的，就按定时器回调函数的先后顺序来执行。
-console.log(1);
-setTimeout(function(){
-  console.log(2);
-}, 1000);
-setTimeout(function(){
-  console.log(4);
-}, 1000);
-console.log(3);
-//1 3 0 2 4
-```
-
-### setImmediate()
-`setImmediate()`是将事件插入到事件队列尾部，主线程和事件队列的函数执行完成之后立即执行`setImmediate`指定的回调函数，和`setTimeout(fn,0)`的效果差不多，但是当他们同时在同一个事件循环中时，执行顺序是不定的。
-```js
-console.log('1');
-
-setImmediate(function () {
-  console.log('2');
-});
-
-setTimeout(function () {
-  console.log('3');
-}, 0);
-
-process.nextTick(function () {
-  console.log('4');
-});
-//1 4 2 3也可能是1 4 3 2
-```
-
-### process.nextTick()
-`process.nextTick()`方法可以在当前"执行栈"的尾部-->下一次Event Loop（主线程读取"任务队列"）之前-->触发process指定的回调函数。也就是说，它指定的任务总是发生在所有异步任务之前，当前主线程的末尾。（nextTick虽然也会异步执行，但是不会给其他io事件执行的任何机会）
-```js
-process.nextTick(function A() {
-  console.log(1);
-  process.nextTick(function B(){
-    console.log(2);
-  });
-});
-
-setTimeout(function C() {
-  console.log(3);
-}, 0)
-// 1
-// 2
-// 3
-```
-当然这样也是一样的：
-```js
-setTimeout(function C() {
-    console.log(3);
-}, 0)
-process.nextTick(function A() {
-  console.log(1);
-  process.nextTick(function B(){
-    console.log(2);
-  });
-});
-// 1
-// 2
-// 3
-```
-当然这样还是一样的：
-```js
-setTimeout(function C() {
-  console.log(3);
-}, 0)
-process.nextTick(function A() {
-  process.nextTick(function B(){
-    console.log(2);
-  });
-  console.log(1);
-});
-// 1
-// 2
-// 3
-```
-最后`process.maxTickDepth()`的缺省值是1000，如果超过会报`exceed callback stack`。官方认为在递归中用`process.nextTick`会造成饥饿`event loop`，因为`nextTick`没有给其他异步事件执行的机会，递归中推荐用`setImmediate`
-```js
-复制代码
-foo = function(bar) {
-  console.log(bar);
-  return process.nextTick(function() {
-    return f(bar + 1);
-  });
-};
-setImmediate(function () {
-  console.log('1001');
-});
-foo(1);//注意这样不会输出1001，当递归执行到1000次是就会报错exceed callback stack，
-/*
-foo = function(bar) {
-    console.log(bar);
-　　 if(bar>1000){
-      return;
-    }
-    return process.nextTick(function() {
-                return f(bar + 1);
-    });
-};
-setImmediate(function () {
-      console.log('1001');
-});
-foo(1);
-*/
-```
-
-
-## 244、JS运行机制（Event Loop）
-JS执行是单线程的，它是基于事件循环的。
-1. 所有同步任务都在主线程上执行，形成一个执行栈。
-2. 主线程之外，会存在一个任务队列，只要异步任务有了结果，就在任务队列中放置一个事件。
-3. 当执行栈中的所有同步任务执行完后，就会读取任务队列。那些对应的异步任务，会结束等待状态，进入执行栈。
-4. 主线程不断重复第三步。
-
-
 ## 245、ES6 都有什么`Iterator`遍历器
 1. 遍历器（`Iterator`）是一种接口，为各种不同的数据结构提供统一的访问机制。任何数据结构只要部署`Iterator`接口，就可以完成遍历操作（即依次处理该数据结构的所有成员）
 2. `Iterator`的作用有三个：
@@ -8309,6 +7958,270 @@ promiseAll([p1,p2,p3]).then(function(value){
   ```
 
 
+## 93、让你自己设计实现一个requireJS，你会怎么做？
+首先看看`require.js`的使用
+```js
+require.config({
+  paths: {
+    a: 'js/a',
+    b: 'js/b',
+    home: 'js/home'
+  },
+  shim: {
+    'home': {
+      deps: ['a']
+    },
+    'a': {
+      deps: ['b']
+    }
+  }
+});
+ 
+//index.js
+require(['home'], function (home) {
+ 
+});
+ 
+//home.js
+define(['a'],function(a){
+ 
+});
+ 
+//a.js
+define(['b'],function(b){
+ 
+});
+ 
+//b.js
+define([],function(){
+ 
+});
+```
+查看html元素，会在head中看到：
+```html
+<script src="js/b.js"></script>
+<script src="js/a.js"></script>
+<script src="js/home.js"></script>
+```
+很明显程序的执行顺序是`b - > a -> home`，如果我们把`require.config`中的`shim`删除，那么程序就不知道js的依赖关系，于是我们查看head：
+```html
+<script src="js/home.js"></script>
+<script src="js/a.js"></script>
+<script src="js/b.js"></script>
+```
+奇怪的是程序运行后并没有发生错误，奥秘就在于每个js文件都做了amd规范，我们把逻辑都放在了define的回调函数中，当加载了js文件后并不会马上执行我们的逻辑代码。
+
+`define`做了一件重要的事情，生成模块。当确定模块都加载完毕了，利用一个递归函数按顺序执行`define`中的回调函数。最后执行顶层模块对象的回调函数，即`require`方法的第二个参数。
+
+模块之间的通信是利用`args`这个参数，它保存了它的子级模块回调函数的返回值，`callback`顾名思义保存了当前模块的回调函数。
+
+模块对象如下：
+```js
+{ moduleName: "_@$1", deps: ["a","b"], callback: null, args: null}
+```
+现在我们明白了，其实head中插入的script标签先后顺序无关紧要了。
+
+自我实现:
+首先定义全局变量`context`，由于`require`方法可以多次调用，意味着顶层模块对象也是多个，所以`topModule`是一个数组。
+`modules`模块对象上面已经解释过了。`waiting`保存了等待加载完成的模块。它很重要，我们通过判断：`if(!context.waiting.length){  //执行递归函数按顺序执行define中的回调函数  }`
+```js
+var context = {
+  topModule: [], //存储requre函数调用生成的顶层模块对象名。　　
+  modules: {}, //存储所有的模块。使用模块名作为key，模块对象作为value　　
+  waiting: [], //等待加载完成的模块
+  loaded: [] //加载好的模块   (加载好是指模块所在的文件加载成功)
+};
+```
+接着我们看`require`方法：
+```js
+var require = root.require = function(dep,callback) {
+  if (typeof dep == 'function'){
+    callback = dep;
+    dep = [];
+  }else if (typeof callback != 'function'){
+    callback = function(){};
+    dep = dep || [];
+  }
+
+  var name = '_@$' + (requireCounter++);
+  context.topModule.push(name);
+  //剔除数组重复项
+  dep = unique(dep);
+
+  //context.modules._@$1 = {moduleName:"_@$1",deps:["a","b"],callback:null,callbackReturn:null,args:null}
+  createModule({
+    moduleName: name,
+    deps: deps2format(dep),
+    callback: callback
+  });
+
+  each(dep,function(name){
+    req(name);
+  });
+
+  //如果dep是空数组直接执行callback
+  completeLoad();
+};
+```
+requier方法做了5件事情：
+- 1、参数容错处理
+- 2、生成顶层模块名并添加到topModule数组中
+- 3、剔除数组（依赖）重复项
+- 4、创建顶层模块
+- 5、遍历数组（依赖）
+
+遍历数组中调用了`req`方法，我们来看一下：
+```js
+function req(name,callback){
+  var deps = config.shim[name];
+  deps = deps ? deps.deps : [];
+
+  function notifymess(){
+    //检查依赖是否全部加载完成
+    if(iscomplete(deps)){
+      var element = createScript(name);
+      element && (element.onload = element.onreadystatechange = function () {
+        onscriptLoaded.call(this,callback);
+      });
+    }
+  };
+
+  //如果存在依赖则把创建script标签的任务交给依赖去完成
+  if(deps.length > 0){
+    each(deps,function(name){
+      req(name, notifymess);
+    });
+  }else{
+    notifymess();
+  }
+};
+```
+req方法是一个递归函数，首先判断是否存在依赖，如果存在则遍历依赖，在循环中调用req，传递2个参数，模块名与notifymess方法，由于存在依赖，所以不创建script标签，也就是说不执行notifymess方法，而是把它当成回调函数传递给req，等待下次执行req再执行。否则执行notifymess方法，即创建script标签添加到head中。
+大致的思路就是父模块创建script方法交给子模块去完成，当子模块创建了script标签，然后在onload事件中创建父script标签，只有这样才能按照依赖关系在head中按先后顺序插入script标签。
+
+也许有人觉得这样做太过麻烦，不是说插入script标签顺序不重要了吗，他是由define回调统一处理。但是你别忘了，如果加载的js文件不是amd规范的是没有包裹define方法的。req函数之所以这样做正是出于这种情况的考虑。
+
+现在我们根据配置参数完成了首次插入script标签的任务。第二次插入标签的任务将在define中完成。（其实插入标签是交替进行的，这里说的首次和再次是思路上的划分）
+
+接着我们就看一下define方法：
+```js
+var define = root.define = function(name,dep,callback){
+  if(typeof name === 'object'){
+    callback = dep;
+    dep = name;
+    name = 'temp';
+  }else if (typeof dep == 'function') {
+    callback = dep;
+    dep = [];
+  }else if (typeof callback != 'function') {
+    callback = function () {};
+    dep = dep || [];
+  }
+
+  //剔除数组重复项
+  dep = unique(dep);
+
+  //创建一个临时模块，在onload完成后修改它
+  createModule({
+    moduleName:name,
+    deps:deps2format(dep),
+    callback:callback
+  });
+
+  //遍历依赖，如果配置文件中不存在则创建script标签
+  each(dep,function(name){
+    var element = createScript(name);
+    element && (element.onload = element.onreadystatechange = onscriptLoaded);
+  });
+};
+```
+define方法做了4件事情：
+- 1、参数容错处理
+- 2、剔除数组（依赖）重复项
+- 3、创建一个临时模块，在onload完成后修改它
+- 4、遍历数组（依赖），如果配置文件中不存在则创建script标签
+
+模块就是在define方法执行后创建的，这也不难理解只有define需要模块化方便之后的回调函数统一处理，如果程序一上来就创建模块势必造成资源浪费（没有amd规范的js文件当然不需要模块化管理啦）
+
+由于无法得知模块名，我们只能创建一个临时模块，模块名暂时叫temp，然后在该js文件的onload事件中通过this.getAttribute('data-requiremodule') 获得模块名再改回来。
+
+这里的思路是script标签添加到head中，首先执行的是该js文件（define方法），然后再执行onload事件，我们正是利用这个时间差修改了模块名。
+
+接着看一下script标签onload事件做了哪些事情：
+```js
+function onscriptLoaded(callback){
+  if (!this.readyState || /loaded|complete/.test(this.readyState)) {
+    this.onload = this.onreadystatechange = null;
+    var name = this.getAttribute('data-requiremodule');
+    context.waiting.splice(context.waiting.indexOf(name),1);
+    context.loaded.push(name);
+    typeof callback === 'function' && callback();
+    if(context.modules.hasOwnProperty('temp')){
+      var tempModule = context.modules['temp'];
+      //修改临时模块名
+      tempModule.moduleName = name;
+      //生成新模块
+      createModule(tempModule);
+      //删除临时模块
+      delete context.modules['temp'];
+    }
+    //script标签全部加载完成，准备依次执行define的回调函数
+    completeLoad();
+  }
+};
+```
+它做了4件事情：
+- 1、获得模块名
+- 2、waiting数组中删除一个当前的模块名，loaded数组中添加一个当前的模块名
+- 3、如果有临时模块修改它
+- 4、如果script标签全部加载完成，准备依次执行define的回调函数
+
+获得模块名的思路是在创建script时给一个自定义属性：element.setAttribute('data-requiremodule', name);  在onload中获取 this.getAttribute('data-requiremodule');
+```js
+function createScript(name){
+  var element,
+      scripts = document.head || document.getElementsByTagName('head')[0] || document.documentElement;
+
+  name = name2format(name);
+
+  if(!iscontain(name)) return false;
+
+  context.waiting.push(name);
+  element = document.createElement('script');
+  element.setAttribute('type', 'text/javascript');
+  element.setAttribute('async', true);
+  element.setAttribute('charset', 'utf-8');
+  element.setAttribute('src', (config.paths[name] || name) + '.js');
+  element.setAttribute('data-requiremodule', name);
+  scripts.appendChild(element, scripts.firstChild);
+  return element;
+};
+```
+最后依次执行回调：
+```js
+function exec(module) {　　
+  var deps = module.deps;　　//当前模块的依赖数组
+  var args = module.args;　　//当前模块的回调函数参数
+  for (var i = 0, len = deps.length; i < len; i++) { //遍历 　　　
+    var dep = context.modules[deps[i]];
+    args[i] = exec(dep); //递归得到依赖模块返回值作为对应参数
+  }
+  return module.callback.apply(module, args); // 调用回调函数，传递给依赖模块对应的参数。
+}
+ 
+function completeLoad(){
+  if(!context.waiting.length){
+    while(context.topModule.length){
+      var name = context.topModule.shift(),
+          topModule = context.modules[name]; //找到顶层模块。
+      exec(topModule);
+    }
+  }
+};
+```
+简化版的requireJs源码分析完了.
+
+
 ## 259、❓请介绍Promise，异常捕获
 
 
@@ -8531,18 +8444,3 @@ Webpack 具有四个核心的概念，分别是 Entry（入口）、Output（输
 - 插件可以用于执行范围更广的任务，包括打包、优化、压缩、搭建服务器等等，要使用一个插件，一般是先使用 npm 包管理器进行安装，然后在配置文件中引入，最后将其实例化后传递给 plugins 数组属性。
 
 使用 webpack 的确能够提供我们对于项目的管理，但是它的缺点就是调试和配置起来太麻烦了。但现在 webpack4.0 的免配置一定程度上解决了这个问题。但是我感觉就是对我来说，就是一个黑盒，很多时候出现了问题，没有办法很好的定位。
-
-
-## 什么是 MVVM？比之 MVC 有什么区别？什么又是 MVP ？
-MVC、MVP 和 MVVM 是三种常见的软件架构设计模式，主要通过分离关注点的方式来组织代码结构，优化我们的开发效率。
-
-比如说我们实验室在以前项目开发的时候，使用单页应用时，往往一个路由页面对应了一个脚本文件，所有的页面逻辑都在一个脚本文件里。页面的渲染、数据的获取，对用户事件的响应所有的应用逻辑都混合在一起，这样在开发简单项目时，可能看不出什么问题，当时一旦项目变得复杂，那么整个文件就会变得冗长，混乱，这样对我们的项目开发和后期的项目维护是非常不利的。
-
-MVC 通过分离 Model、View 和 Controller 的方式来组织代码结构。其中 View 负责页面的显示逻辑，Model 负责存储页面的业务数据，以及对相应数据的操作。并且 View 和 Model 应用了观察者模式，当 Model 层发生改变的时候它会通知有关 View 层更新页面。Controller 层是 View 层和 Model 层的纽带，它主要负责用户与应用的响应操作，当用户与页面产生交互的时候，Co
-ntroller 中的事件触发器就开始工作了，通过调用 Model 层，来完成对 Model 的修改，然后 Model 层再去通知 View 层更新。
-
-MVP 模式与 MVC 唯一不同的在于 Presenter 和 Controller。在 MVC 模式中我们使用观察者模式，来实现当 Model 层数据发生变化的时候，通知 View 层的更新。这样 View 层和 Model 层耦合在一起，当项目逻辑变得复杂的时候，可能会造成代码的混乱，并且可能会对代码的复用性造成一些问题。MVP 的模式通过使用 Presenter 来实现对 View 层和 Model 层的解耦。MVC 中的
-Controller 只知道 Model 的接口，因此它没有办法控制 View 层的更新，MVP 模式中，View 层的接口暴露给了 Presenter 因此我们可以在 Presenter 中将 Model 的变化和 View 的变化绑定在一起，以此来实现 View 和 Model 的同步更新。这样就实现了对 View 和 Model 的解耦，Presenter 还包含了其他的响应逻辑。
-
-MVVM 模式中的 VM，指的是 ViewModel，它和 MVP 的思想其实是相同的，不过它通过双向的数据绑定，将 View 和 Model 的同步更新给自动化了。当 Model 发生变化的时候，ViewModel 就会自动更新；ViewModel 变化了，View 也会更新。这样就将 Presenter 中的工作给自动化了。我了解过一点双向数据绑定的原理，比如 vue 是通过使用数据劫持和发布订阅者模式来实现的这一功
-能。

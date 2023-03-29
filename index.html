@@ -16,7 +16,9 @@
     // }).then(res => {
     //   console.log(res)
     // })
-    import('http://img.itchenliang.club/plugin/data.js').then(res => {
+
+    // 动态加载模块
+    import('./data.js').then(res => {
       console.log(res)
     })
   </script>

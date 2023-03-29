@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://unpkg.com/handlebars@4.7.7/dist/handlebars.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+function createElement(tagName, props, children) {
+  var element = document.createElement(tagName);
+
+  for (var attr in props) {
+    if (props.hasOwnProperty(attr)) {
+      if (attr === 'innerHtml') {
+        element.innerHtml = attr
+      } else {
+        element.setAttribute(attr, props[attr]);
+      }
+    }
+  }
+
+  if (Array.isArray(children)) {
+    children.forEach(function(child) {
+      if (typeof child === 'string') {
+        element.appendChild(document.createTextNode(child));
+      } else {
+        element.appendChild(child);
+      }
+    });
+  } else if (typeof children === 'string') {
+    element.appendChild(document.createTextNode(children));
+  }
+
+  return element;
+}
+  function createApp (options) {
+    const app = {
+      version: 'x.x.x',
+      config: {
+        // 一些全局配置，例如挂载属性、错误处理等等
+        globalProperties: {}
+      },
+      _context: {
+        // 存储全局组件和指令
+        components: {},
+        directives: {},
+        mixins: {}
+      },
+      // 注册全局组件
+      component: function (name, component) {
+        this._context.components[name] = component
+      },
+      // 注册全局指令
+      directive: function (name, directive) {
+        this._context.directives[name] = directive
+      },
+      // 安装插件使用
+      use (plugin, option) {
+        plugin.install(this, option)
+      },
+      // 挂载应用程序
+      mount (rootContainer) {
+        // 具体实现查看源码
+        // const instance = createComponentInstance(options)
+        // instance.mount(rootContainer)
+        console.log('挂载应用了', rootContainer)
+      }
+    }
+    return app
+  }
+
+  const app = createApp({
+    setup(props) {
+    }
+  })
+  app.component('c-button', {
+    name: 'cButton',
+    render: () => {
+      return createElement(
+        'div',
+        {
+          class: 'my-component',
+          id: 'my-component'
+        },
+        [
+          createElement(
+            'p',
+            {
+              class: 'p',
+              innerHtml: '<span>内容</span>'
+            }
+          ),
+          createElement(
+            'h1',
+            {
+              class: 'title'
+            },
+            'hello render'
+          )
+        ]
+      );
+    }
+  })
+  app.directive('perms', {
+    created: (el, binding, vnode, oldVnode) => {
+    }
+  })
+  app.use({
+    install: function (app, option) {
+      console.log(option)
+      // 挂载http请求
+      app.config.globalProperties.$http = () => {
+      }
+    }
+  }, { maxSize: 10 })
+  app.mount('#app')
+
+
+const render = () => {
+  return createElement(
+    'div',
+    {
+      class: 'my-component',
+      id: 'my-component'
+    },
+    [
+      createElement(
+        'p',
+        {
+          class: 'p',
+          innerHtml: '<span>内容</span>'
+        }
+      ),
+      createElement(
+        'h1',
+        {
+          class: 'title'
+        },
+        'hello render'
+      )
+    ]
+  );
+}
+const dom = render()
+console.log(dom)
+  </script>
+</body>
+</html>
