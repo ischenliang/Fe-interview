@@ -1101,7 +1101,7 @@ demo() // Uncaught ReferenceError: a is not defined
 ## 13、什么是属性搜索原则？
 1. 首先会去查找对象本身上面有没有这个属性，有的话，就返回这个属性
 2. 如果对象本身上面没有这个属性，就到它的原型上面去查找，如果有，就返回
-3. 然后又在原型的原型上面去查找有没有这个属性，如果查找到最后一直没有找到，就返回一个`undefined`
+3. 然后又在原型的原型上面去查找有没有这个属性，如果查找到最后(`Object.prototype`)一直没有找到，就返回一个`undefined`
 
 
 ## 13、JavaScript中执行上下文和执行栈是什么？
@@ -5107,7 +5107,8 @@ function*foo(x, y) { ··· }
 
 
 ## 125、怎样理解setTimeout执行误差
-在 JavaScript 中，`setTimeout`函数是用来延迟指定时间后执行一段代码的方法。但是，由于 JavaScript 是单线程执行的语言，`setTimeout`函数并不能保证精确地在指定时间后立即执行回调函数，而是会有一定的误差。
+`setTimeout`函数用于在一定时间后执行指定的代码。然而，由于JavaScript是单线程语言，在调用`setTimeout`时无法保证准确地在指定时间后执行代码。这是因为在指定时间之前可能有其他代码正在执行，从而导致`setTimeout`被延迟执行。
+> 此外，也存在浏览器实现的不同，以及硬件性能等因素的影响，都会对`setTimeout`的执行误差产生影响。因此，不能完全依赖`setTimeout`在精确的时间点上执行代码。
 
 这种误差主要是由以下两个方面造成的：
 - JS引擎中的事件循环机制：JavaScript 引擎需要在执行代码的同时，处理其他任务，比如用户输入、网络请求等。在这些任务的处理过程中，会影响到 setTimeout 函数的回调函数的执行时间。
@@ -5498,16 +5499,6 @@ function findMostWord(article) {
 ```
 
 
-## 140、什么是堆？什么是栈？它们之间有什么区别和联系？
-堆和栈都是计算机内存中的一种数据结构，它们之间有以下区别和联系：
-- 定义：栈是一种后进先出（LIFO）的数据结构，用于存储函数调用、局部变量等；堆是一种动态分配的数据结构，用于存储程序运行时动态生成的对象。
-- 存储方式：栈采用顺序存储结构，所有元素在同一块连续的内存空间中；堆采用链式存储结构，元素可以分布在不同的内存区域，并通过指针相互连接。
-- 内存管理：栈的内存分配和回收由系统自动完成，无需手动干预；堆的内存分配和回收需要手动进行操作，否则会导致内存泄漏或内存溢出等问题。
-- 访问速度：由于栈采用顺序存储结构，其访问速度比堆更快；而堆采用链式存储结构，访问速度较慢。
-- 适用场景：栈适用于多层函数调用、递归等场景，堆适用于存储动态数据结构，如对象、数组等。
-- 联系：栈和堆都是内存中的数据结构，程序在运行时使用栈和堆来存储数据。在某些情况下，栈和堆可能同时被使用，例如函数中创建一个对象时，对象的引用存储在栈上，而对象本身存储在堆中。
-
-
 ## 141、undefined 与 undeclared 的区别？
 `undefined`是Javascript中的语言类型之一，而`undeclared`是Javascript中的一种语法错误。
 - `undefined`: 已申明，未赋值<br>
@@ -5570,12 +5561,28 @@ const p = new Person()
 - 判断一个数是不是有穷的，可以使用`isFinite`函数来判断。
 
 
+## 140、什么是堆？什么是栈？它们之间有什么区别和联系？
+堆和栈都是计算机内存中的一种数据结构，它们之间有以下区别和联系：
+- 定义：
+  - 栈是一种后进先出（LIFO）的数据结构，用于存储函数调用、局部变量等；
+  - 堆是一种动态分配的数据结构，用于存储程序运行时动态生成的对象。
+- 存储方式：
+  - 栈采用顺序存储结构，所有元素在同一块连续的内存空间中；
+  - 堆采用链式存储结构，元素可以分布在不同的内存区域，并通过指针相互连接。
+- 内存管理：
+  - 栈的内存分配和回收由系统自动完成，无需手动干预；
+  - 堆的内存分配和回收需要手动进行操作，否则会导致内存泄漏或内存溢出等问题。
+- 访问速度：由于栈采用顺序存储结构，其访问速度比堆更快；而堆采用链式存储结构，访问速度较慢。
+- 适用场景：栈适用于多层函数调用、递归等场景，堆适用于存储动态数据结构，如对象、数组等。
+- 联系：栈和堆都是内存中的数据结构，程序在运行时使用栈和堆来存储数据。在某些情况下，栈和堆可能同时被使用，例如函数中创建一个对象时，对象的引用存储在栈上，而对象本身存储在堆中。
+
+
 ## 146、栈、堆、队列和哈希表的区别?
 栈(Stack)、堆(Heap)、队列(Queue)和哈希表(Hash Table)是常见的数据结构，它们之间的主要区别如下：
-- 栈(Stack)：栈是一种后进先出(LIFO)的数据结构。只允许在栈顶进行插入和删除操作。常用于处理递归函数、表达式求值、内存分配等场景。
-- 堆(Heap)：堆是一种可以动态分配内存的数据结构。堆中的元素没有特定的顺序，但是在堆中每个节点的键值都不大于或不小于其子节点的键值。常用于实现优先队列、动态存储等场景。
-- 队列(Queue)：队列是一种先进先出(FIFO)的数据结构。只允许在队尾进行插入操作，在队头进行删除操作。常用于操作系统任务调度、消息传递等场景。
-- 哈希表(Hash Table)：哈希表是一种通过散列函数将键映射到值的数据结构。哈希表通常具有快速的查找、插入和删除操作，并且可以通过合理的设置散列函数来减少冲突。常用于实现字典、缓存等场景。
+- 栈(Stack)：栈是一种**后进先出(LIFO)的数据结构**。只允许在栈顶进行插入和删除操作，类似于弹夹式装弹机。常用于处理递归函数、表达式求值、内存分配等场景。
+- 堆(Heap)：是一种**树形数据结构**，在堆中，每个节点都有一个值，通常所说的堆指的是二叉堆，满足一定的堆特性。堆是一个完全二叉树，且父节点的值大于或小于它的左右子节点的值，被称为大根堆或小根堆。常用于实现优先队列、动态存储等场景。
+- 队列(Queue)：队列是一种**先进先出(FIFO)的数据结构**。只允许在队尾进行插入操作，在队头进行删除操作，类似于排队买票。常用于实现消息队列、缓存队列等场景。
+- 哈希表(Hash Table)：是一种**通过散列函数将键映射到值的数据结构**。哈希表通常具有快速的查找、插入和删除操作，并且可以通过合理的设置散列函数来减少冲突。常用于实现字典、缓存等场景。
 
 
 
@@ -5891,16 +5898,16 @@ b1.toString() // 1, 2
 - 如果`第一个操作数`为真，则返回第一个操作数；
 - 如果`第一个操作数`为假，则返回第二个操作数；
 ```js
-console.log(1 || 2);//--->1
-console.log(0 || 3);//--->3
+console.log(1 || 2); // 1
+console.log(0 || 3); // 3
 ```
 
 **&&（与）**
 - 如果`第一个操作数`为真，则返回第二个操作数的结果；
 - 如果`第一个操作数`为假，则返回第一个操作数的结果;
 ```js
-console.log(1 && 0);//0
-console.log(0 && 2);//0
+console.log(1 && 2); // 2
+console.log(0 && 2); // 0
 ```
 `&&`和`||`不是返回条件判断的结果，而是返回他们其中一个操作数的值。
 
@@ -5912,13 +5919,14 @@ console.log(0 && 2);//0
 - Symbol值转化为布尔类型的值，无论显示转换还是隐式转换都返回`true`。
 
 
-## 160、`==`操作符的强制类型转换规则？
-- （1）字符串和数字之间的相等比较，将字符串转换为数字之后再进行比较。
-- （2）其他类型和布尔类型之间的相等比较，先将布尔值转换为数字后，再应用其他规则进行比较。
-- （3）`null`和`undefined`之间的相等比较，结果为真。其他值和它们进行比较都返回假值。
-- （4）对象和非对象之间的相等比较，对象先调用`ToPrimitive`抽象操作后，再进行比较。
-- （5）如果一个操作值为`NaN`，则相等比较返回`false`（`NaN`本身也不等于`NaN`）。
-- （6）如果两个操作值都是对象，则比较它们是不是指向同一个对象。如果两个操作数都指向同一个对象，则相等操作符返回`true`，否则，返回`false`。
+## 160、== 操作符的强制类型转换规则？
+1. 如果两个操作数的类型相同，则直接比较它们的值。
+2. 如果其中一个操作数是`null`，另一个操作数必须是`undefined`或者`null`才会返回`true`，否则返回`false`。
+3. 如果其中一个操作数是数字，另一个操作数是字符串，则将字符串转换为数字。
+4. 如果其中一个操作数是布尔值，另一个操作数是非布尔值，则将布尔值转换成数字`0`或`1`，再跟另一个操作数进行比较。
+5. 如果其中一个操作数是对象，另一个操作数是字符串或数字，则将对象转换为原始类型的值（即调用`valueOf`和`toString`方法），再跟另一个操作数进行比较。如果对象不能被转换成原始类型的值，则返回`false`。
+6. 如果其中一个操作数是`NaN`，则返回`false`。注意，`NaN`不等于任何值，包括它本身。
+7. 如果两个操作数都是对象，则比较它们的引用是否相等。即使两个对象具有相同的属性和值，但它们在内存中的位置不同，也会返回`false`。
 
 
 ## 161、如何将字符串转化为数字，例如 '12.3b'?
@@ -6206,16 +6214,16 @@ JavaScript 模块化是一种用于组织和管理代码的方式，它可以将
 
 ## 174、js的几种模块规范？
 ### CommonJS
-它通过`require`来引入模块，通过`module.exports`定义模块的输出接口。这种模块加载方案是服务器端的解决方案，它是以同步的方式来引入模块的，因为在服务端文件都存储在本地磁盘，所以读取非常快，所以以同步的方式加载没有问题。但如果是在浏览器端，由于模块的加载是使用网络请求，因此使用异步加载的方式更加合适。
+它通过`require`来引入模块，通过`module.exports`定义模块的输出接口。这种模块加载方案是服务器端的解决方案，它是以同步的方式来引入模块的，因为在服务端文件都存储在本地磁盘，所以读取非常快，所以以同步的方式加载没有问题。但如果是在浏览器端，由于模块的加载是使用网络请求，因此使用异步加载的方式更加合适。**同步加载**
 
 ### AMD
-采用异步加载的方式来加载模块，模块的加载不影响后面语句的执行，所有依赖这个模块的语句都定义在一个回调函数里，等到加载完成后再执行回调函数。`require.js`实现了`AMD`规范。
+采用异步加载的方式来加载模块，模块的加载不影响后面语句的执行，所有依赖这个模块的语句都定义在一个回调函数里，等到加载完成后再执行回调函数。`require.js`实现了`AMD`规范。**立即加载依赖，异步执行木块**
 
 ### CMD
-和`AMD`方案都是为了解决异步模块加载的问题，`sea.js`实现了`CMD`规范。它和`require.js`的区别在于模块定义时对依赖的处理不同和对依赖模块的执行时机的处理不同。
+和`AMD`方案都是为了解决异步模块加载的问题，`sea.js`实现了`CMD`规范。它和`require.js`的区别在于模块定义时对依赖的处理不同和对依赖模块的执行时机的处理不同。**异步加载，运行时加载依赖，同步执行模块代码**
 
 ### ES方案
-使用`import`和`export`的形式来导入导出模块。这种方案和上面三种方案都不同。
+使用`import`和`export`的形式来导入导出模块。该规范支持静态分析和树摇优化，是未来 JavaScript 开发的趋势。**同步加载**
 
 
 ## 175、什么是yield 表达式
@@ -6248,52 +6256,42 @@ for (const fruit of generator()) {
 ## 176、JS 模块加载器的轮子怎么造，也就是如何实现一个模块加载器？
 实现一个模块加载器可以让我们更深入地理解 JavaScript 模块化的实现原理。以下是一个简单的模块加载器示例，它可以动态地从指定 URL 加载模块。
 ```js
-function loadModule(url) {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.onload = () => resolve(xhr.responseText);
-    xhr.onerror = () => reject(new Error(`Could not load module at ${url}`));
-    xhr.send();
-  });
-}
-
 class Module {
-  constructor(name, deps, fn) {
-    this.name = name;
-    this.deps = deps;
-    this.fn = fn;
-    this.exports = {};
+  constructor (name, deps, fn) {
+    this.name = name
+    this.deps = deps
+    this.fn = fn
   }
-  async load() {
-    const args = await Promise.all(this.deps.map(dep => import(dep)));
-    this.fn(...args);
+  async load () {
+    const args = await Promise.all(this.deps.map((dep) => {
+      return import(dep)
+    }))
+    this.fn(...args)
   }
 }
-
 class ModuleManager {
-  constructor() {
-    this.modules = new Map();
+  constructor () {
+    this.modules = new Map()
   }
-  async import(name, deps, fn) {
+  async importModule (name, deps, fn) {
     if (!this.modules.has(name)) {
-      const module = new Module(name, deps, fn);
-      this.modules.set(name, module);
-      await module.load();
+      const module = new Module(name, deps, fn)
+      this.modules.set(name, module)
+      await module.load()
     }
-    return this.modules.get(name).exports;
+    return this.modules.get(name)
   }
 }
 
-const moduleManager = new ModuleManager();
-
-// 使用示例
-await moduleManager.import('math', ['https://unpkg.com/lodash'], async (_) => {
-  const add = (a, b) => console.log(_.add(a, b));
-  module.exports = { add };
-});
-const math = await moduleManager.import('math');
-math.add(1, 2); // 输出 3
+const moduleManager = new ModuleManager()
+await moduleManager.importModule('math', ['./data.js', './data2.js'], async (...args) => {
+  const [oss, cos] = args
+  console.log(oss.default)
+  console.log(cos.default)
+})
+// 输出结果如下
+// {name: 'oss plugin', version: '1.0.0'}
+// {name: 'cos plugin', version: '1.0.0'}
 ```
 
 
@@ -6395,15 +6393,16 @@ JavaScript类数组对象是一个`拥有数字索引`和`length`属性的对象
 
 此时对上面的标签设置相关的事件，执行相关的函数
 ```html
+<button id="btn">回退</button>
 <div class="navbar">
   <a href="#/home">首页</a>
   <a href="#/about">关于</a>
   <a href="#/404">404</a>
 </div>
 <div id="app">
-  default  
+  default
 </div>
-<script>
+<script type="module">
   const app = document.querySelector('#app')
   const links = document.querySelectorAll('a')
 
@@ -6416,16 +6415,21 @@ JavaScript类数组对象是一个`拥有数字索引`和`length`属性的对象
       // 改变url地址，此时内容页面其他内容不发生改变
       history.pushState({}, '', href)
       // 当pushstate后，触发事件进行匹配
-      historyChange()
+      renderView()
     })
   }
 
-  // 监听url的pathname弹出，执行方法
+  // 需要在调用 back、go、forward时才会触发
   window.addEventListener('popstate', () => {
-    historyChange()
+    console.log(123)
+    renderView()
+  })
+  // 测试回退
+  document.querySelector('#btn').addEventListener('click', () => {
+    history.back()
   })
 
-  function historyChange () {
+  function renderView () {
     switch (location.hash) {
       case '#/home':
         app.innerHTML = 'Home'
@@ -6437,6 +6441,7 @@ JavaScript类数组对象是一个`拥有数字索引`和`length`属性的对象
         app.innerHTML = 'default'
     }
   }
+  renderView()
 </script>
 ```
 如果想要切换服务器数据，并且达到无刷新，可以在`popstate`监听函数中和`a`连接点击时触发`ajax`向服务器发起请求。
@@ -6476,8 +6481,30 @@ npm i promise-polyfill
 npm i babel-polyfill
 ```
 还有一个`babel`，是我们常见的做低版本兼容的工具包，**`babel`和`polyfill`的区别在于**:
-- `babel`只转化新的语法，不负责实现新版本js中新增的api
-- `polyfill`负责实现新版本js中新增的api
+- <span style="color: red;"><code>babel</code>只转化新的语法，不负责实现新版本js中新增的api</span>
+- <span style="color: red;"><code>polyfill</code>负责实现新版本js中新增的api</span>
+  例如使用polyfill实现`Object.is`
+  ```js
+  if (!Object.is) {
+    Object.defineProperty(Object, "is", {
+      value: function (x, y) {
+        // SameValue algorithm
+        if (x === y) {
+          // return true if x and y are not 0, OR
+          // if x and y are both 0 of the same sign.
+          // This checks for cases 1 and 2 above.
+          return x !== 0 || 1 / x === 1 / y;
+        } else {
+          // return true if both x AND y evaluate to NaN.
+          // The only possibility for a variable to not be strictly equal to itself
+          // is when that variable evaluates to NaN (example: Number.NaN, 0/0, NaN).
+          // This checks for case 3.
+          return x !== x && y !== y;
+        }
+      }
+    });
+  }
+  ```
 - 所以在兼容的时候一般是`babel + polyfill`都用到，所以`babel-polyfill`一步到位
 
 
@@ -6673,21 +6700,25 @@ JavaScript 中数字的存储遵循 IEEE 754 标准，是以`64`位双精度格�
   所以，在 JavaScript 中**`0.1 + 0.2 !== 0.3`**
 
 **解决办法**
-由于小数的运算可能导致精度丢失问题，那么要解决这个问题，可以将其转换为整数后再进行运算，运算后再转换为对应的小数，例如：
-```js
-var a = 0.1, b = 0.2
-var result = (a * 100 + b * 100) / 100
-console.log(result) // 0.3
-console.log(result === 0.3) // true
-```
-当然，除了上述方式外，我们也可以利用 ES6 中的极小数`Number.EPSILON`来进行判断。
-
-例如判断`0.1 + 0.2`是否等于`0.3`，可以将两个数字相加的结果与`0.3`相减，如果想着的结果小于极小数，那么就可以认定是相等的：
-```js
-var a = 0.1, b = 0.2, c = 0.3;
-var result = (Math.abs(a + b - c) < Number.EPSILON);
-console.log(result) // true
-```
+- 由于小数的运算可能导致精度丢失问题，那么要解决这个问题，可以将其转换为整数后再进行运算，运算后再转换为对应的小数，例如：
+  ```js
+  var a = 0.1, b = 0.2
+  var result = (a * 100 + b * 100) / 100
+  console.log(result) // 0.3
+  console.log(result === 0.3) // true
+  ```
+- 当然，除了上述方式外，我们也可以利用 ES6 中的极小数`Number.EPSILON`来进行判断。
+  > 例如判断`0.1 + 0.2`是否等于`0.3`，可以将两个数字相加的结果与`0.3`相减，如果想着的结果小于极小数，那么就可以认定是相等的：
+  ```js
+  var a = 0.1, b = 0.2, c = 0.3;
+  var result = (Math.abs(a + b - c) < Number.EPSILON);
+  console.log(result) // true
+  ```
+- 初次之外还可以使用`Decimal.js`进行计算
+  ```js
+  const Decimal = require('decimal.js');
+  const result = new Decimal(0.1).add(0.2); // 0.3
+  ```
 
 浮点数运算可能造成精度丢失的情况，可能造成精度丢失的地方有：
 - 超过有效数字位数时会被舍入处理
@@ -6706,7 +6737,7 @@ console.log(result) // true
 >  比如，十进制中的数`+7`，计算机字长为8位，转换成二进制就是 0 0 0 0 0 1 1 1（一个`byte`有`8bit`，有效的取值范围是`-128 ~ +127`）。如果是`-7`，就是`1 0 0 0 0 1 1 1`
 
 ### 原码
-十进制数据的二进制表现形式就是原码，原码最左边的一个数字就是符号位，0为正，1为负。
+**十进制数据的二进制表现形式就是原码，原码最左边的一个数字就是符号位，0为正，1为负**。
 > 例如：`56 -> 0 0 1 1 1 0 0 0`，左边第一位为符号位，其他位为数据位。
 
 > 一个`byte`有`8bit`，最大值是`0 1 1 1 1 1 1 1 (+127)`，最小值是`1 1 1 1 1 1 1 1 (-127)`

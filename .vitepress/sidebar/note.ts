@@ -46,12 +46,12 @@ const jsSidebar = [
   {
     text: 'BOM对象',
     items: [
-      { text: 'Window', link: '/note/bom-window' },
-      { text: 'Navigator', link: '/note/bom-navigator' },
-      { text: 'Screen', link: '/note/bom-screen' },
-      { text: 'History', link: '/note/bom-history' },
-      { text: 'Location', link: '/note/bom-location' },
-      { text: '存储对象', link: '/note/bom-storage' },
+      { text: 'Window', link: 'bom-window' },
+      { text: 'Navigator', link: 'bom-navigator' },
+      { text: 'Screen', link: 'bom-screen' },
+      { text: 'History', link: 'bom-history' },
+      { text: 'Location', link: 'bom-location' },
+      { text: '存储对象', link: 'bom-storage' },
     ]
   },
   {

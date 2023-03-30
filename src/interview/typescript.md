@@ -1456,6 +1456,9 @@ tsc --declaration file1.ts
 1. 确保已安装TypeScript。如果未安装，请使用以下命令全局安装：`npm install -g typescript`
 2. 创建一个包含TypeScript源代码的目录，并创建一个名为`tsconfig.json`的文件来配置编译器选项。
 3. 在`tsconfig.json`文件中添加`"declaration": true`配置选项，以启用生成定义文件功能。
+  > 可以配置`tsconfig.json`文件中的`declaration`和`outDir`
+  1. `declaration: true`, 将会自动生成声明文件
+  2. `outDir: ''`, 指定目录
 4. 执行`tsc`命令，编译器将会生成`.js`和`.d.ts`两个文件，其中`.d.ts`文件就是定义文件。
 ```json
 {
@@ -1565,9 +1568,37 @@ printer.doInkJetPrint();
 
 
 ## 65、什么是 .map 文件，为什么/如何使用它？
-`.map`文件是 TypeScript 编译器生成的一种辅助文件，它包含了编译后 JavaScript 代码与 TypeScript 源码之间的映射关系。通过`.map`文件，可以在调试 TypeScript 代码时，将编译后的 JavaScript 代码映射回原始的 TypeScript 代码行数和位置，从而更轻松地进行调试。
+在TypeScript编译时，会生成一个与每个 TypeScript 文件对应的 JavaScript 文件，同时也会生成一个`.map`文件。该文件包含了源代码和编译后代码之间的映射关系。
 
-在开发过程中，可以使用 TypeScript 编译器的`--sourceMap`选项来生成`.map`文件。这个选项告诉编译器生成`.map`文件，并将其与编译后的 JavaScript 文件放在同一个目录下。在浏览器中调试 TypeScript 代码时，只需要将浏览器的开发者工具设置为使用`.map`文件即可。
+`.map`文件是一种调试工具，它可以帮助开发人员在调试 TypeScript 应用时，直接在浏览器中查看 TypeScript 代码而不是编译后的 JavaScript 代码。这样可以方便地进行断点调试、查看变量值等操作。
+
+使用`.map`文件需要将 TypeScript 编译选项中的`sourceMap`设置为`true`，例如：
+```bash
+tsc --sourceMap app.ts
+```
+或者在`tsconfig.json`中设置：
+```json
+{
+  "compilerOptions": {
+    "sourceMap": true
+  }
+}
+```
+如果开启了源映射，当浏览器加载编译后的 JavaScript 代码时，会自动下载和解析相应的`.map`文件，并且在调试器中显示出 TypeScript 代码。
+
+`.map`文件通常包含以下内容：
+- `version`字段：表示源映射版本。当前最新的版本是 3。
+- `sources`字段：表示源文件路径，通常对应 TypeScript 文件。
+- `names`字段：表示编译后代码中使用的变量名等标识符。
+- `mappings`字段：表示源代码和编译后代码之间的映射关系。
+```json
+{
+  "version": 3,
+  "sources": ["app.ts"],
+  "names": ["a", "b", "c"],
+  "mappings": "AAAA,EAAE,IAAI,GAAI,MAAM,EAAE,IAAI;AACN,cAGA,CAAC,GAAG,EAAE,CAAC",
+}
+```
 
 
 ## 66、原生 Javascript 是否支持模块？
@@ -1840,11 +1871,6 @@ npm install @types/xxxx
 ```ts
 declare module xxx
 ```
-
-## 78、ts如何自动生成库包的声明文件？
-可以配置`tsconfig.json`文件中的`declaration`和`outDir`
-1. `declaration: true`, 将会自动生成声明文件
-2. `outDir: ''`, 指定目录
 
 
 ## 79、TypeScript中如何设置模块导入的路径别名？
