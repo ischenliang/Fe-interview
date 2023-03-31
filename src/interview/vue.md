@@ -2330,11 +2330,15 @@ app.directive('color', (el, binding) => {
 ```
 :::
 ::: tip 局部指令
-```js
-// 在模板中启用 v-focus
-const vFocus = {
-  mounted: (el) => el.focus()
-}
+任何以`v`开头的驼峰式命名的变量都可以被用作一个自定义指令。
+```html
+<input type="text" v-focus>
+<script setup>
+  // 在模板中启用 v-focus
+  const vFocus = {
+    mounted: (el) => el.focus()
+  }
+</script>
 ```
 上面名称`vFocus`即可以在模板中以`v-focus`的形式使用。在没有使用`<script setup>`的情况下，自定义指令需要通过`directives`选项注册：
 ```js
@@ -2394,6 +2398,7 @@ binding 参数会是一个这样的对象：
 - `v-show`是根据判断条件来动态的进行显示和隐藏`DOM`元素，就是修改`display`属性在`block`和`none`切换；
 - `v-if`的切换开销高，会触发回流重绘；
 - `v-show`的初始渲染开销高；
+  > 初始都会渲染，并且会执行具体的生命周期，如`created`，案例:在`el-tabs`中的就是使用`v-show`实现，如果在`el-tab-pane`中使用组件，并且在组件中分别输出`component1`和`component2`，可以看到初次渲染时两个数据都输出了。
 - `v-show`的性能比`v-if`高；
 - 如果需要频繁切换某个元素的显示/隐藏时，使用`v-show`会更加节省性能上的开销；
 - 如果在运行时条件很少改变，使用`v-if`更好；
@@ -2669,7 +2674,7 @@ const ctx = getCurrentInstance().proxy
   ```
 - `toRef`: 用来创建一个响应式引用，它接受两个参数：第一个参数是一个响应式对象，第二个参数是这个对象中的一个属性名。调用`toRef`后会返回一个仅包含该属性的响应式对象引用。
   ```js
-  import { reactive, toRef } from 'vue'
+  import { reactive, toRef, ref } from 'vue'
   const state = reactive({
     count: 0,
   })
@@ -2677,6 +2682,18 @@ const ctx = getCurrentInstance().proxy
   console.log(countRef.value) // 输出 0
   state.count++
   console.log(countRef.value) // 输出 1
+
+
+  const state = ref({
+    name: '张三',
+    age: 23
+  })
+  const res = toRef(state.value, 'name')
+  console.log(res.value) // 张三
+  state.value.name = '李四'
+  console.log(res.value) // 李四
+  res.value = '王五'
+  console.log(state.value.name) // 王五
   ```
 - `toRefs`: 用来将一个响应式对象转化为普通对象，但是每个属性都会变成一个响应式对象引用。
   ```js
@@ -2789,13 +2806,17 @@ ref是通过使用ES6的`Proxy`对象来实现的。当调用`ref`函数时，�
 
 
 ## 66、reactive响应式设计实现原理？
-响应式系统的实现主要基于ES6的`Proxy`对象和`Reflect`API。当我们调用`reactive`函数时，它会接收一个普通的JavaScript对象作为参数，并返回一个代理对象。这个代理对象会拦截我们对对象属性的访问和修改，并通过Vue 3提供的`track`和`trigger`函数来实现响应式。
-- 具体来说，当我们对代理对象的属性进行访问时，Vue 3会通过`track`函数将当前的依赖关系记录下来。如果该属性被用于渲染视图或计算其他响应式属性，则会在观察者中建立起这种依赖关系。
-- 当我们对代理对象的属性进行修改时，Vue 3会通过`trigger`函数通知所有依赖于该属性的观察者进行更新。这些观察者可能是渲染视图、计算其他响应式属性或执行副作用等。
+Vue3 的响应式机制采用了名为 "Reactive" 的新 API，将`Object.defineProperty`改为了使用 ES6 中的`Proxy`对象来监听数据变化。这个新的 API 相较于 Vue2.x，具有更好的性能、更简单的实现方式以及更好的类型推导支持等优点。
+
+具体实现原理如下：
+1. 响应式数据转换：在首次对数据进行`reactive`化时，Reactive 函数会先将所有的嵌套数据类型都进行递归地转换，保证所有的嵌套数据类型都是`reactive`的。
+2. 代理数据对象：通过`Proxy`对象来代理原始数据对象，拦截对数据对象的`set`和`get`操作。当原始数据对象发生变化时，Proxy 对象会触发`set`操作，并通知相关的依赖进行更新。
+3. 建立依赖追踪：在`Reactive`函数内部维护一个依赖`map`，将每个数据对象与其相关依赖关联起来。当数据对象发生改变时，`Reactive`函数会遍历相关依赖，触发它们的更新。
+4. 进行依赖收集：在模板编译阶段，对模板中使用到的所有数据进行依赖收集。在更新时，只更新模板中使用到的数据所对应的依赖。
 
 
 ## 67、什么是组合式API？
-组合式API是Vue 3中的一个新特性，它通过提供一组基础函数，可以更加灵活和直观地编写可重用的逻辑代码。组合式API提供了一些基础函数：
+组合式 API（Composition API）是 Vue.js 3.x 中引入的一种新的组件编写方式。它通过将逻辑代码逻辑分离并封装到复用、可组合的函数里，取代了 Vue 2.x 中常用的 Options API。组合式API提供了一些基础函数：
 - 响应式 API：例如`ref()`和`reactive()`，使我们可以直接创建响应式状态、计算属性和侦听器。
 - 生命周期钩子：例如`onMounted()`和`onUnmounted()`，使我们可以在组件各个生命周期阶段添加逻辑。
 - 依赖注入：例如`provide()`和`inject()`，使我们可以在使用响应式 API 时，利用 Vue 的依赖注入系统。
@@ -3120,10 +3141,13 @@ Vue中标签绑定事件：
 
 
 ## 76、vue-loader是什么？使用它的用途有哪些？
-`vue-loader`是`webpack`的一个`loader`，用于处理`.vue`文件，将`template/js/style`提取出来，然后分别把他们交给对应的`loader`去处理。
+`vue-loader`是一个`webpack`的加载器(loader)，主要用于将Vue单文件组件(`.vue`文件)转换为JavaScript模块。使得这些组件可以在浏览器中正常运行。
 
-用途
-> 降级: js可以写`es6`、`style`样式可以`scss`或`less`、`template`可以加jade等
+使用`vue-loader`可以实现以下功能：
+1. 允许你用 Single-File Components 单文件组件的格式来写Vue组件。
+2. 提取`.vue`文件中的`template，script，style`等部分，再通过`vue-template-compiler`、`style-loader`等插件，最终形成一个可以在浏览器中运行的 JavaScript 文件。
+3. 修改`.vue`文件后不需要手动刷新浏览器即可在开发过程中实现热重载来保持状态，提升开发效率。
+4. 允许为 Vue 组件的每个部分使用其它的 webpack loader，例如在`<style>`的部分使用 Sass 和在`<template>`的部分使用`Pug`。
 
 
 ## 77、请说出vue-cli项目中src目录每个文件夹和文件的用法？

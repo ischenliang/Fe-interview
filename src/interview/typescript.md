@@ -1637,28 +1637,23 @@ interface SearchFunc {
 }
 let mySearch: SearchFunc;
 mySearch = function(source: string, subString: string) {
-  let result = source.search(subString);
-  return result > -1;
+  return source.search(subString) > -1;
 }
-
 
 // Array
 interface StringArray {
   [index: number]: string;
 }
-
 let myArray: StringArray;
 myArray = ["Bob", "Fred"];
-
 
 // Class, constructor存在于类的静态部分，所以不会检查
 interface ClockInterface {
   currentTime: Date;
   setTime(d: Date);
 }
-
 class Clock implements ClockInterface {
-  currentTime: Date;
+  currentTime: Date = new Date();
   setTime(d: Date) {
     this.currentTime = d;
   }
@@ -1753,14 +1748,21 @@ function getColorOrFruit(key: FruitOrColor): string {
 **keyof**关键字
 > `keyof`是 TypeScript 中的一个关键字，用于获取一个类型的所有属性名作为联合类型。
 ```ts
-type Keys = keyof T;
+interface Person {
+  name: string
+  age: number
+}
+type keys = keyof Person
+let key: keys
+key = 'name'
+key = 'age'
+key = 'hah' // 不能将类型“"hah"”分配给类型“keyof Person”
 ```
 使用`keyof`可以方便地进行类型检查和类型推导。例如，可以使用`keyof`来编写类型安全的函数操作对象的属性：
 ```ts
 function getProperty<T, K extends keyof T>(obj: T, key: K) {
   return obj[key];
 }
-
 const person = { name: "Alice", age: 30 };
 getProperty(person, "name"); // 返回 "Alice"
 getProperty(person, "age"); // 返回 30
@@ -1845,9 +1847,11 @@ type ExcludeKeys<T, U> = Exclude<keyof T, keyof U>;
 
 
 ## 75、简单介绍TypeScript类型兼容的理解？抗变，双变，协作，和逆变的简单理解？
-- Covariant 协变，TS对象兼容性是协变，父类 <= 子类，是可以的。子类 <= 父类，错误。
-- Contravariant 逆变，禁用`strictFunctionTypes`编译，函数参数类型是逆变的，父类 <= 子类，是错误。子类 <= 父类，是可以的。
-- Bivariant 双向协变，函数参数的类型默认是双向协变的。父类 <= 子类，是可以的。子类 <= 父类，是可以的。
+TypeScript类型兼容性指的是两个类型是否可以相互赋值和使用。在TypeScript中，类型兼容性是基于结构子类型化的，也就是说只要两个类型具有相同的属性和方法，它们就是类型兼容的。
+- **抗变(Covariant)**：表示类型参数遵循继承关系方向变化的规则，即父类型可以被赋值给子类型。比如，数组的类型是抗变的，因为对于一个父类型的数组，可以赋值给其子类型的数组。
+- **双变(Bivariant)**：表示类型参数可以在父子类型之间任意切换，这种行为往往会导致一些问题，不太推荐使用。
+- **协变(Contravariant)**：表示类型参数遵循继承关系逆向变化的规则，即子类型可以被赋值给父类型。比如，函数参数的类型是协变的，因为一个函数可以接收比其参数类型更为具体的类型。
+- **逆变(Invariant)**：表示类型参数必须与其指定类型严格相同，不能进行类型转换。比如，类的实例化类型是逆变的，因为不能将其父类型的实例赋值给其子类型。
 
 
 ## 76、简单介绍一下TypeScript模块的加载机制？

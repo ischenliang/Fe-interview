@@ -6063,7 +6063,8 @@ js 延迟加载，也就是等页面加载完成之后再加载 JavaScript 文�
 
 
 ## 167、Ajax 是什么? 如何创建一个 Ajax？
-它是 Asynchronous JavaScript and XML 的缩写，指的是通过 JavaScript 的 异步通信，从服务器获取 XML 文档从中提取数据，再更新当前网页的对应部分，而不用刷新整个网页。
+Ajax全称是`asychronous javascript and xml`，可以说是已有技术的组合，主要用来实现客户端与服务器端的异步交互，实现页面的局部刷新。
+> 指的是通过 JavaScript 的异步通信，从服务器获取XML文档从中提取数据，再更新当前网页的对应部分，而不用刷新整个网页。
 
 具体来说，AJAX 包括以下几个步骤：
 1. 创建 XMLHttpRequest 对象，也就是创建一个异步调用对象
@@ -6510,99 +6511,51 @@ npm i babel-polyfill
 
 ## 183、介绍一下 js 的节流与防抖？
 JS 的节流(`throttling`)和防抖(`debouncing`)是两种常见的性能优化技术，用于控制某些频繁执行的操作以减少资源消耗和提高响应速度。
-- 节流: 原理是设置一个时间间隔，在该时间间隔内只能执行一次操作
-  > 例如: 当用户不断地滚动页面时，我们可以设置一个滚动事件的节流函数，使得在每个固定时间间隔内只执行一次滚动处理函数，而不是每滚动一下就执行一次。
-- 防抖: 原理是在某个操作连续触发时，只有最后一次操作完成时才执行相应的处理函数。
+- **防抖: 防抖指的是将多次执行变成只执行一次，即在触发事件后等待一段时间，如果这段时间内没有再次触发该事件，就执行相应的函数，否则重新开始等待一段时间。**
   > 例如: 当用户不断地输入搜索关键字时，我们可以设置一个输入框的防抖函数，只有用户停止输入一段时间后才触发搜索操作，而不是在每次输入时都进行搜索。
-
-### 防抖
-在事件被触发n秒后再执行回调函数，如果在这n秒内又被触发，则重新计时。
-
-**应用场景**
-- 用户在输入框中连续输入一串字符后，只会在输入完后去执行最后一次的查询ajax请求，这样可以有效减少请求次数，节约请求资源；
-- `window`的`resize`、`scroll`事件，不断地调整浏览器的窗口大小、或者滚动时会触发对应事件，防抖让其只触发一次；
-
-**实现**
-```html
-防抖的input
-<input type="text" id="debounce"><br/>
-<script>
-  function ajax(content) {
-    console.log(new Date() + 'ajax request' + content);
-  }	
-  // 防抖的input
-  let inputB = document.getElementById('debounce');
-  function debounce(func, delay) {
-    return function(args) {
-      // 获取函数的作用域和变量
-      let that = this, _args = args;
-      // 每次事件触发,都会清除当前的timer,然后重新设置超时调用
-      clearTimeout(func.id);
-      func.id = setTimeout(function() {
-        func.call(that, _args)
-      },delay)
-    }
+  ```js
+  // 防抖函数
+  function debounce(callback, time) {
+    let timer = null;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        callback.apply(this, args);
+      }, time);
+    };
   }
-  let debounceAjax = debounce(ajax, 500);
-  inputB.addEventListener('keyup', function(e) {
-    debounceAjax(e.target.value);
-  })
-</script>
-```
-代码说明: 
-- 每一次事件被触发，都会清除当前的`timer`然后重新设置超时调用，即重新计时。 这就会导致每一次高频事件都会取消前一次的超时调用，导致事件处理程序不能被触发；
-- 只有当高频事件停止，最后一次事件触发的超时调用才能在`delay`时间后执行；
-
-### 节流
-规定一个单位时间，在这个单位时间内，只能有一次触发事件的回调函数执行，如果在同一个单位时间内某事件被触发多次，只有一次能生效。
-
-**应用场景**
-- 鼠标连续不断地触发某事件（如点击），只在单位时间内只触发一次；
-- 在页面的无限加载场景下，需要用户在滚动页面时，每隔一段时间发一次`ajax`请求，而不是在用户停下滚动页面操作时才去请求数据；
-- 监听滚动事件，比如是否滑到底部自动加载更多，用`throttle`来判断；
-
-**实现**
-```html
-节流的input
-<input type="text" id="throttle">
-<script>
-  function ajax(content) {
-    console.log(new Date() + 'ajax request' + content);
+  ```
+  测试代码
+  ```html
+  <el-input v-model="value" @input="handleInput" />
+  <script setup lang="ts">
+  import { ref } from 'vue';
+  const value = ref('')
+  function handleInput (value) {
+    console.log(value)
+    debounce(() => {
+      console.log('执行请求', value)
+    }, 2000)()
   }
-  // 节流的input
-  let inputC = document.getElementById('throttle');
-  function throttle(fun, delay) {
-    let last, deferTimer;
-    return function(args) {
-      let that = this;
-      let _args = arguments;
-      let now = +new Date();
-      if(last && now < last + delay) {
-        clearTimeout(deferTimer);
-        deferTimer = setTimeout(function() {
-          last = now;
-          fun.apply(that, _args);
-        },delay)
-      }else {
-        last = now;
-        fun.apply(that, _args);
+  // ...
+  </script>
+  ```
+  可以看到我们在`input`框中输入内容后，如果两秒后没有输入内容，则才会执行`callback`。
+- **节流: 节流指的是在一段时间内只执行一次函数。具体实现通常是设置一个时间间隔，当第一次触发事件时，设定一个定时器，在定时器到期之前如果再次触发了该事件，就会被忽略，直到定时器到期后才会执行函数。**
+  > 例如: 当用户不断地滚动页面时，我们可以设置一个滚动事件的节流函数，使得在每个固定时间间隔内只执行一次滚动处理函数，而不是每滚动一下就执行一次。
+  ```js
+  function throttle(callback, delay) {
+    let timer;
+    return function() {
+      if (!timer) {
+        timer = setTimeout(() => {
+          callback.apply(this, arguments);
+          timer = null;
+        }, delay);
       }
-    }
+    };
   }
-  let throttleAjax = throttle(ajax, 2000);
-  inputC.addEventListener("keyup", function(e) {
-    throttleAjax(e.target.value);
-  })
-</script>
-```
-
-### 总结
-- **效果**
-  - 函数防抖是某一段时间内只执行一次；
-  - 函数节流是间隔时间执行，不管事件触发有多频繁，都会保证在规定时间内一定会执行一次真正的事件处理函数。
-- **原理**
-  - 防抖是维护一个计时器，规定在`delay`时间后触发函数，但是在`delay`时间内再次触发的话，都会清除当前的`timer`然后重新设置超时调用，即重新计时。这样一来，只有最后一次操作能被触发。
-  - 节流是通过判断是否到达一定时间来触发函数，若没到规定时间则使用计时器延后，而下一次事件则会重新设定计时器。
+  ```
 
 
 ## 184、`Object.is()`与原来的比较操作符`“===”`、`“==”`的区别？
@@ -6624,19 +6577,19 @@ JavaScript中有
 - **相应解码函数**: `unescape`, `decodeURI`, `decodeURIComponent`
 
 **编码函数的区别**
-- `encodeURI`和`encodeURIComponent`两者都是对URL进行编码的，但是两者的区别是编码的范围不同。
-  - `encodeURI`是对`URI`的组成部分进行转义，不能对`ascll字符`，`数字`，`~`，`!`，`@`，`#`，`$`，`&`，`*`，`()`，`=`，`:`，`/`，`,`，`;`，`?`，`+`，`'`进行编码。
-  - `encodeURIComponent`是对整个`URI`进行转义，不能对`ascll字母`，`数字`，`~`，`!`，`*`，`()`，`'`进行编码。
-  所以说`encodeURIComponent`比`encodeURI`的编码范围更大。
-- `escape`和`encodeURI`的作用相同，不过它们对于`unicode`编码为`0xff`之外字符的时候会有区别:
-  - `escape`是直接在字符的`unicode`编码前加上`%u`，不对`ascll字母`，`数字`，`@`，`*`，`/`，`+`进行编码，其余的都会进行编码。
-  - `encodeURI`首先会将字符转换为`UTF-8`的格式，再在每个字节前加上`%`；
+- `escape`函数对字符串进行编码，将字符串中的非 ASCII 字符转义为十六进制转义序列。该函数现已被废弃，请勿再使用。
+- `encodeURI`函数对整个 URL 进行编码，将 URL 中的非 ASCII 字符和某些特殊字符转义为可安全传输的 ASCII 字符。但该函数不会对以下字符进行编码：`;/?:@&=+$,#`。
+- `encodeURIComponent`函数对 URL 中的参数部分进行编码，将参数中的非 ASCII 字符和某些特殊字符转义为可安全传输的 ASCII 字符。该函数对所有非标准字符进行编码，包括`! ' ( ) * 和 $`等。
 ```js
-encodeURI("https://www.baidu.com?name=张三&age=23") // 'https://www.baidu.com?name=%E5%BC%A0%E4%B8%89&age=23'
-encodeURIComponent("https://www.baidu.com?name=张三&age=23") // 'https%3A%2F%2Fwww.baidu.com%3Fname%3D%E5%BC%A0%E4%B8%89%26age%3D23'
+encodeURI("https://www.baidu.com?name=张三&age=23")
+// 'https://www.baidu.com?name=%E5%BC%A0%E4%B8%89&age=23'
+encodeURIComponent("https://www.baidu.com?name=张三&age=23")
+// 'https%3A%2F%2Fwww.baidu.com%3Fname%3D%E5%BC%A0%E4%B8%89%26age%3D23'
 
-console.log(escape("aaa12@*/+"))  //aaa12@*/+
-console.log(escape("我是哈哈哈%"))  //%u6211%u662F%u54C8%u54C8%u54C8%25
+console.log(escape("aaa12@*/+"))
+//aaa12@*/+
+console.log(escape("我是哈哈哈%"))
+//%u6211%u662F%u54C8%u54C8%u54C8%25
 ```
 
 
@@ -6923,35 +6876,107 @@ for (var i = 0, j = 0; i < 5, j < 9; i++, j++) {
 
 
 ## 199、异步编程的实现方式？
-### 回调函数
-优点：简单、容易理解<br>
-缺点：不利于维护，代码耦合高
-
-### 事件监听
-采用时间驱动模式，取决于某个事件是否发生<br>
-优点：容易理解，可以绑定多个事件，每个事件可以指定多个回调函数<br>
-缺点：事件驱动型，流程不够清晰
-
-### 发布/订阅（观察者模式）
-类似于事件监听，但是可以通过‘消息中心’，了解现在有多少发布者，多少订阅者
-
-### Promise 对象
-优点：可以利用 then 方法，进行链式写法；可以书写错误时的回调函数；<br>
-缺点：编写和理解，相对比较难
-
-### Generator 函数
-优点：函数体内外的数据交换、错误处理机制<br>
-缺点：流程管理不方便
-
-### async 函数
-优点：内置执行器、更好的语义、更广的适用性、返回的是 Promise、结构清晰。<br>
-缺点：错误处理机制
+- **回调函数（Callback）**
+  ```js
+  function getData(callback) {
+    // 模拟异步请求数据
+    setTimeout(() => {
+      const data = { name: 'John', age: 30 };
+      callback(data);
+    }, 1000);
+  }
+  // 调用getData函数，并传入回调函数处理返回的数据
+  getData(data => {
+    console.log(data.name); // 输出John
+  });
+  ```
+- **Promise**
+  ```js
+  function getData() {
+    return new Promise((resolve, reject) => {
+      // 模拟异步请求数据
+      setTimeout(() => {
+        const data = { name: 'John', age: 30 };
+        resolve(data);
+      }, 1000);
+    });
+  }
+  // 调用getData函数，使用then方法处理返回的数据
+  getData().then(data => {
+    console.log(data.name); // 输出John
+  }).catch(error => {
+    console.error(error);
+  });
+  ```
+- **异步函数/Async Await**
+  ```js
+  function getData() {
+    return new Promise((resolve, reject) => {
+      // 模拟异步请求数据
+      setTimeout(() => {
+        const data = { name: 'John', age: 30 };
+        resolve(data);
+      }, 1000);
+    });
+  }
+  // 使用async关键字声明异步函数，使用await关键字等待Promise对象的结果
+  async function main() {
+    try {
+      const data = await getData();
+      console.log(data.name); // 输出John
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  main();
+  ```
+- **事件监听/发布订阅模式**
+  ```js
+  // 创建一个事件监听器对象
+  const eventEmitter = new EventEmitter();
+  // 绑定事件处理函数
+  eventEmitter.on('dataReceived', data => {
+    console.log(data.name); // 输出John
+  });
+  function getData() {
+    // 模拟异步请求数据
+    setTimeout(() => {
+      const data = { name: 'John', age: 30 };
+      // 发送事件，通知数据已经接收完成
+      eventEmitter.emit('dataReceived', data);
+    }, 1000);
+  }
+  // 调用getData函数，在接收到数据后发送事件
+  getData();
+  ```
+- **Generator函数和yield关键字**
+  ```js
+  function* getData() {
+    const data = yield new Promise(resolve => {
+      // 模拟异步请求数据
+      setTimeout(() => {
+        resolve({ name: 'John', age: 30 });
+      }, 1000);
+    });
+    return data;
+  }
+  // 创建一个生成器对象
+  const generator = getData();
+  // 调用生成器的next方法，执行到第一个yield语句
+  generator.next().value.then(data => {
+    // 将Promise的结果传入生成器，并继续往下执行
+    generator.next(data);
+  }).then(result => {
+    console.log(result.name); // 输出John
+  });
+  ```
 
 
 ## 200、URL 和 URI 的区别？
 >资源：可以通过浏览器访问的信息统称为资源。(图片、文本、HTML、CSS等等。。。)
 - URI是统一资源标识符。标识资源详细名称。包含资源名。
-- URL是统一资源定位器。定位资源的网络位置。包含`http:`。
+- URL是统一资源定位器。定位资源的网络位置。包含`http:`，必须包含协议、主机ip地址。
+  > URL是一种具体的URI，它是URI的一个子集，它不仅唯一标识资源，而且还提供了定位该资源的信息。
 ```js
 http://www.baidu.com ==> URL
 /a.html ==> URI
@@ -6966,57 +6991,125 @@ http://www.baidu.com/a.html  ==> 既是URL，又是URI
 
 
 ## 202、图片的懒加载和预加载
-**预加载**
-> 顾名思义，图片预加载就是在网页全部加载之前，提前加载图片。 当用户需要查看时可直接从本地缓存中渲染，以提供给用户更好的体验，减少等待的时间。
-
-**懒加载**
-> 懒加载的主要目的是作为服务器前端的优化，减少请求数或延迟请求数。
-- 原理: 页面中的`img`元素，如果没有`src`属性，浏览器就不会发出请求去下载图片，只有通过javascript设置了图片路径，浏览器才会发送请求。
-  - 懒加载的原理就是先在页面中把所有的图片统一使用一张占位图进行占位，把正真的路径存在元素的`“data-url”`（这个名字起个自己认识好记的就行）属性里，要用的时候就取出来，再设置；
-
 **两种技术的本质区别**
-> 两者的行为是相反的，一个是提前加载，一个是迟缓甚至不加载。懒加载对服务器前端有一定的缓解压力作用，预加载则会增加服务器前端压力。
+> 两者的行为是相反的，一个是提前加载，一个是迟缓甚至不加载。懒加载对服务器前端有一定的缓解压力作用，预加载则会增加服务器前端压力。懒加载适用于长页面、大量图片的情况，而预加载则适用于需要尽快展示的轮播图、广告等场景。
+- **懒加载(Lazy Loading)**：当网页打开时，只加载可见区域的内容。当用户滚动页面的时候，才会去加载其他未被加载的内容，包括图片、视频等资源。懒加载可以减少网页的加载时间和带宽消耗，提高用户体验。<span style="color: red;">迟缓甚至不加载</span>
+  ```html
+  <style>
+    * {
+      padding: 0;
+      margin: 0;
+    }
+    img {
+      width: 100%;
+      height: 100%;
+    }
+    .loading {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 32px;
+      height: 32px;
+      background-image: url('http://124.222.54.192:3002/picture-ped-img/2023/03/202303311606597.gif');
+      background-size: cover;
+    }
+    .loaded .loading {
+      display: none;
+    }
+  </style>
+  <div class="content">
+    <div class="image-wrapper" v-for="(item, index) in 10">
+      <img :data-src="'./image/' + item + '.png'" alt="" class="lazyload">
+      <div class="loading"></div>
+    </div>
+  </div>
+  <script>
+    const images = document.querySelectorAll('.lazyload');
+    function lazyLoad() {
+      images.forEach(image => {
+        const rect = image.getBoundingClientRect();
+        if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+          const loading = image.nextElementSibling;
+          image.onload = () => {
+            loading.style.display = 'none';
+            image.classList.add('loaded');
+          };
+          loading.style.display = 'block';
+          image.src = image.dataset.src;
+        }
+      });
+    }
+    window.addEventListener('scroll', lazyLoad);
+    window.addEventListener('load', lazyLoad);
+    window.addEventListener('resize', lazyLoad);
+  </script>
+  ```
+  可以打开`F12`控制栏看到，只有`1、2、3`图片被加载，如下图所示，只有滚动时才会去加载剩下的图片
+  ![202303311611365.png](http://img.itchenliang.club/img/202303311611365.png)
+- **预加载(Preloading)**：在浏览器显示网页之前，提前加载所有或部分页面所需的资源，包括图片、CSS文件、JavaScript文件等。预加载可以加快网页的访问速度，提高用户体验。<span style="color: red;">提前加载</span>
+  - 以下是一个简单的示例，在点击按钮时将预加载的图片插入到HTML中，你可以通过F12控制台查看这些图片是否已经预加载完成：
+    ```html
+    <button id="btn">添加图片</button>
+    <div class="container"></div>
+    <script>
+      const images = [
+        './8.png',
+        './9.png',
+        './10.png'
+      ];
+      function preload() {
+        images.forEach(src => {
+          const img = new Image();
+          img.src = src;
+        });
+      }
+      function addImages() {
+        const container = document.querySelector('.container');
+        images.forEach(src => {
+          const img = new Image();
+          img.src = src;
+          container.appendChild(img);
+        });
+      }
+      window.addEventListener('load', preload);
+      document.querySelector('#btn').addEventListener('click', addImages);
+    </script>
+    ```
+    可以看到我们图片已经被提前加载了，但是我们此时页面上并未去渲染图片，点击按钮会直接从缓存中那图片
+    ![202303311614309.png](http://img.itchenliang.club/img/202303311614309.png)
 
 
 ## 203、`mouseover`和`mouseenter`的区别？
-- `mouseover`: 当鼠标移入元素或其子元素都会触发事件，所以有一个重复触发，冒泡过程。对应的移除事件是`mouseout`
-- `mouseenter`: 当鼠标移除元素本身（不包含元素的子元素）会触发事件，也就是不会冒泡，对应的移除事件是`mouseleave`
+- `mouseover`: 当鼠标移动到一个元素上时，会在这个元素上触发 mouseover 事件。对应的移除事件是`mouseout`
+- `mouseenter`: 当鼠标移动到元素上时就会触发mouseenter事件。对应的移除事件是`mouseleave`
 
-`mouseover`和`mouseenter`的异同体现在两个方面：
-- 是否支持冒泡
-- 事件的触发时机
+`mouseover`和`mouseenter`主要有以下几个区别：
+1. 触发方式不同：`mouseover`事件在鼠标指针进入元素或其子元素时触发，而`mouseenter`事件只在鼠标指针进入元素本身时触发。
+2. 冒泡机制不同：`mouseover`事件会冒泡到父元素，而`mouseenter`事件不会冒泡。
+3. 事件对象属性不同：当`mouseover`事件被触发时，事件对象的`fromElement`属性表示当前鼠标所在的元素，而`mouseenter`事件没有类似的属性。
 ```html
-<div class="father" style="width: 500px;height: 500px;background-color: pink;">
-  <div class="son" style="width: 200px;height: 200px;background: purple;"></div>
+<div id="box">
+  <div id="box2"></div>
 </div>
 <script>
-  let father = document.querySelector('.father')
-  let son = document.querySelector('.son')
-  // 事件捕获
-  // mouseenter——不支持事件冒泡
-  father.addEventListener('mouseenter', function() {
-    console.log('father-mouseenter')
-  })
-
-  son.addEventListener('mouseenter', function(e) {
-    // e.stopPropagation()
-    console.log('son-mouseenter')
-  })
-
-  // mouseleave——支持事件冒泡
-  // father.addEventListener('mouseleave', function() {
-  //   console.log('father-mouseleave')
-  // })
-
-  // son.addEventListener('mouseleave', function(e) {
-  //   // e.stopPropagation()
-  //   console.log('son-mouseleave')
-  // })
+  const box = document.getElementById('box');
+  const box2 = document.getElementById('box2');
+  box.addEventListener('mouseover', (event) => {
+    console.log(`Mouseover event: from ${event.fromElement.tagName} to ${event.toElement.tagName}`);
+  });
+  box.addEventListener('mouseenter', () => {
+    console.log('Mouseenter event: enter box');
+  });
+  box2.addEventListener('mouseover', (event) => {
+    console.log(`Mouseover event: from ${event.fromElement.tagName} to ${event.toElement.tagName}`);
+  });
+  box2.addEventListener('mouseenter', () => {
+    console.log('Mouseenter event: enter box2');
+  });
 </script>
 ```
-- `mouseenter`事件的情况：当鼠标从元素的边界之外移入元素的边界之内时，事件被触发。而鼠标本身在元素边界内时，要触发该事件，必须先将鼠标移出元素边界外，再次移入才能触发。
-- `mouseover`事件的情况：当鼠标从元素的边界之外移入元素的边界之内时，事件被触发。如果移到父元素里面的子元素，事件也会被触发。
-总结: **`mouseenter`和`mouseleave`没有冒泡效果(推荐)**，而`mouseover`和`mouseout`会有冒泡效果
 
 
 ## 205、为什么使用`setTimeout`实现`setInterval`？怎么模拟？
@@ -7141,7 +7234,7 @@ function f(x){
 > 这是因为在正常模式下，函数内部有两个变量，可以跟踪函数的调用栈。严格模式下禁用这两个变量，所以尾调用模式仅在严格模式下生效。
 
 
-## 208、❓Symbol 类型的注意点？
+## 208、Symbol 类型的注意点？
 1. `Symbol`函数前不能使用`new`命令，否则会报错。
 2. `Symbol`函数可以接受一个字符串作为参数，表示对`Symbol`实例的描述，主要是为了在控制台显示，或者转为字符串时，比较容易区分。
 3. `Symbol`作为属性名，该属性不会出现在`for...in`、`for...of`循环中，也不会被`Object.keys()`、`Object.getOwnPropertyNames()`、`JSON.stringify()`返回。
@@ -7250,25 +7343,297 @@ wm.set(key, obj) // 正确
 error 统计使用浏览器的`window.onerror`事件。
 
 
-## 215、❓==单例模式模式是什么？==
-单例模式保证了全局只有一个实例来被访问。比如说常用的如弹框组件的实现和全局状态的实现。
-> 如何实现
+## 215、单例模式模式是什么？
+一个类只有一个实例，并提供全局访问点给该实例。在 JavaScript 中，单例模式通常在一个对象字面量中实现。这种模式适用于全局缓存、线程池以及需要强制实例化的场景。
+
+在 JavaScript 中实现单例模式可以使用以下两种方式：
+1. **使用对象字面量**
+  ```js
+  const SingletonObject = {
+    // 单例对象的属性和方法
+  };
+  ```
+  在上面的示例中，`SingletonObject`表示一个单例对象，由于 JavaScript 中对象字面量总是返回同一个对象，因此可以直接将其作为单例对象使用。
+2. **使用闭包**
+  ```js
+  const Singleton = (function() {
+    let instance;
+    function createInstance() {
+      // 创建单例对象的代码
+    }
+    return {
+      getInstance: function() {
+        if (!instance) {
+          instance = createInstance();
+        }
+        return instance;
+      }
+    };
+  })();
+  ```
+  在上面的示例中，使用立即执行函数创建一个闭包，其中保存了一个私有变量`instance`和一个内部函数`createInstance()`。`createInstance()`函数用于创建单例对象，而`getInstance()`方法则用于获取单例对象的引用。每次调用`getInstance()`方法时，都会检查`instance`是否已经被初始化，如果没有，则会调用`createInstance()`方法来创建单例对象并保存到`instance`中，最后返回`instance`的引用。
+  ```js
+  // 使用闭包实现单例模式的示例代码，用于管理全局状态
+  const StateManager = (function() {
+    let state;
+    function setState(newState) {
+      console.log(`Setting state to ${newState}...`);
+      state = newState;
+    }
+    function getState() {
+      return state;
+    }
+    return {
+      setState,
+      getState
+    };
+  })();
+  // 使用单例对象来管理全局状态
+  StateManager.setState('ready');
+  console.log(StateManager.getState());
+  ```
 
 
-## 216、❓策略模式是什么？
-策略模式主要是用来将方法的实现和方法的调用分离开，外部通过不同的参数可以调用不同的策略。我主要在 MVP 模式解耦的时候用来将视图层的方法定义和方法调用分离。
+## 216、策略模式是什么？
+策略模式主要是用来将方法的实现和方法的调用分离开，外部通过不同的参数可以调用不同的策略。我主要在 MVP 模式解耦的时候用来将视图层的方法定义和方法调用分离。策略模式通常包含以下几个角色：
+1. 环境（Context）：负责维护一个对策略对象的引用，并将具体的任务委托给策略对象进行处理。
+2. 抽象策略（Strategy）：定义了所有支持的算法所需实现的公共接口，以便将来可以在不改变环境类的情况下动态地添加、删除或更换具体策略。
+3. 具体策略（Concrete Strategy）：实现了抽象策略中定义的接口，提供了具体的算法实现。
+```js
+// 使用策略模式来计算支付金额
+class PaymentContext {
+  constructor(paymentStrategy) {
+    this.paymentStrategy = paymentStrategy;
+  }
+
+  pay(amount) {
+    return this.paymentStrategy.pay(amount);
+  }
+}
+
+class PaymentStrategy {
+  pay(amount) {}
+}
+
+class CreditCardPayment extends PaymentStrategy {
+  constructor(cardNumber, expirationDate, cvv) {
+    super();
+    this.cardNumber = cardNumber;
+    this.expirationDate = expirationDate;
+    this.cvv = cvv;
+  }
+
+  pay(amount) {
+    console.log(`Paying $${amount} with credit card ${this.cardNumber}...`);
+    // 实现具体的支付逻辑
+  }
+}
+
+class PayPalPayment extends PaymentStrategy {
+  constructor(email, password) {
+    super();
+    this.email = email;
+    this.password = password;
+  }
+
+  pay(amount) {
+    console.log(`Paying $${amount} with PayPal account ${this.email}...`);
+    // 实现具体的支付逻辑
+  }
+}
+
+// 创建环境对象，并设置支付策略
+const context = new PaymentContext(new CreditCardPayment('1234 5678 9012 3456', '12/22', '123'));
+
+// 调用支付方法进行支付
+context.pay(100);
+
+// 动态地更换支付策略
+context.paymentStrategy = new PayPalPayment('example@example.com', 'password');
+context.pay(50);
+```
 
 
-## 217、❓代理模式是什么？
-代理模式是为一个对象提供一个代用品或占位符，以便控制对它的访问。比如说常见的事件代理。
+## 217、代理模式是什么？
+代理模式是一种常用的设计模式，它可以在不改变原始对象的情况下，增加一层代理对象来控制对原始对象的访问。代理模式通常包含以下几个角色：
+1. 抽象主题（Subject）：定义了真实主题和代理主题之间的公共接口，使得代理主题可以在任何时候替代真实主题。
+2. 真实主题（Real Subject）：定义了代理所代表的真实对象。
+3. 代理主题（Proxy）：保存对真实主题的引用，并实现了与真实主题相同的接口，从而可以在客户端中使用代理来代替真实对象。
+```js
+// 使用代理模式来实现图片的懒加载
+class Image {
+  constructor(url) {
+    this.url = url;
+    this._loadImage();
+  }
+
+  _loadImage() {
+    console.log(`Loading image from ${this.url}...`);
+  }
+
+  display() {
+    console.log(`Displaying image from ${this.url}.`);
+  }
+}
+
+class ImageProxy {
+  constructor(url) {
+    this.url = url;
+    this.image = null;
+  }
+
+  display() {
+    if (!this.image) {
+      this.image = new Image(this.url);
+    }
+    this.image.display();
+  }
+}
+
+// 创建代理对象
+const proxy = new ImageProxy('https://example.com/image.jpg');
+
+// 页面滚动后加载图片
+document.addEventListener('scroll', () => {
+  const windowHeight = window.innerHeight;
+  const documentHeight = document.documentElement.scrollHeight;
+  const scrollTop = document.documentElement.scrollTop;
+
+  if (scrollTop + windowHeight > documentHeight * 0.75) {
+    console.log('Loading image...');
+    proxy.display();
+  }
+});
+```
 
 
-## 218、❓中介者模式是什么？
-中介者模式指的是，多个对象通过一个中介者进行交流，而不是直接进行交流，这样能够将通信的各个对象解耦。
+## 218、中介者模式是什么？
+中介者模式指的是，多个对象通过一个中介者进行交流，而不是直接进行交流，这样能够将通信的各个对象解耦。中介者模式通常包含以下几个角色：
+1. 中介者（Mediator）：定义了各个对象之间交互的接口，并负责协调各个对象之间的关系。
+2. 同事对象（Colleague）：表示需要参与到中介者模式中的对象，每个同事对象都知道中介者对象并可以直接与其交互。
+```js
+// 使用中介者模式来实现三个按钮之间的联动效果
+class Mediator {
+  constructor() {
+    this.buttons = [];
+  }
+
+  addButton(button) {
+    this.buttons.push(button);
+    button.setMediator(this);
+  }
+
+  clickButton(button) {
+    if (button === this.buttons[0]) {
+      // 点击第一个按钮时，设置第二个按钮的禁用状态为 false
+      this.buttons[1].setDisabled(false);
+    } else if (button === this.buttons[1]) {
+      // 点击第二个按钮时，设置第三个按钮的文本内容为 Hello World！
+      this.buttons[2].setText('Hello World!');
+    }
+  }
+}
+
+class Button {
+  constructor(text, disabled = true) {
+    this.text = text;
+    this.disabled = disabled;
+    this.mediator = null;
+  }
+
+  setMediator(mediator) {
+    this.mediator = mediator;
+  }
+
+  setText(text) {
+    this.text = text;
+  }
+
+  setDisabled(disabled) {
+    this.disabled = disabled;
+  }
+
+  onClick() {
+    if (this.mediator) {
+      this.mediator.clickButton(this);
+    }
+  }
+}
+
+// 创建中介者对象
+const mediator = new Mediator();
+
+// 创建三个按钮，并添加到中介者对象中
+const button1 = new Button('Button 1');
+mediator.addButton(button1);
+
+const button2 = new Button('Button 2', true);
+mediator.addButton(button2);
+
+const button3 = new Button('Button 3', false);
+mediator.addButton(button3);
+
+// 页面渲染后绑定按钮点击事件
+document.addEventListener('DOMContentLoaded', () => {
+  const containerEl = document.querySelector('.button-container');
+
+  [button1, button2, button3].forEach((button) => {
+    const buttonEl = document.createElement('button');
+    buttonEl.innerText = button.text;
+    buttonEl.disabled = button.disabled;
+
+    buttonEl.addEventListener('click', () => {
+      button.onClick();
+    });
+
+    containerEl.appendChild(buttonEl);
+  });
+});
+```
 
 
-## 219、❓适配器模式是什么？
-适配器用来解决两个接口不兼容的情况，不需要改变已有的接口，通过包装一层的方式实现两个接口的正常协作。假如我们需要一种新的接口返回方式，但是老的接口由于在太多地方已经使用了，不能随意更改，这个时候就可以使用适配器模式。比如我们需要一种自定义的时间返回格式，但是我们又不能对 js 时间格式化的接口进行修改，这个时候就可以使用适配器模式。
+## 219、适配器模式是什么？
+可以将一个对象的接口转换成另一个对象所期望的接口，从而使得原本不兼容的对象能够协同工作。适配器模式通常包含以下几个角色：
+1. 目标（Target）：定义客户端所期望的接口。
+2. 源对象（Adaptee）：需要被适配的对象。
+3. 适配器（Adapter）：实现目标接口，并持有源对象的引用，将目标接口转换成源对象所支持的接口。
+
+使用适配器模式可以实现多种功能
+1. 将一个类库的接口转换成客户端所期望的接口，从而不需要修改客户端代码，减少耦合度。
+2. 将两个不兼容的对象进行适配，使它们能够协同工作，提高代码的灵活性和可复用性。
+```js
+// 将一个对象的属性名进行重新命名，以符合另一个对象的接口
+// 源对象
+const oldData = {
+  firstName: 'John',
+  lastName: 'Doe',
+  age: 30,
+};
+
+// 目标接口
+class NewData {
+  constructor(firstName, lastName, years) {
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.years = years;
+  }
+}
+// 适配器
+class DataAdapter {
+  constructor(data) {
+    this.firstName = data.firstName;
+    this.lastName = data.lastName;
+    this.years = data.age;
+  }
+
+  getData() {
+    return new NewData(this.firstName, this.lastName, this.years);
+  }
+}
+// 使用适配器
+const newData = new DataAdapter(oldData).getData();
+console.log(newData); // {firstName: "John", lastName: "Doe", years: 30}
+```
 
 
 ## 220、观察者模式和发布订阅模式有什么不同？
@@ -7278,22 +7643,39 @@ error 统计使用浏览器的`window.onerror`事件。
 
 
 ## 221、开发中常用的几种`Content-Type`？
-- （1）`application/x-www-form-urlencoded`<br>
-  浏览器的原生`form`表单，如果不设置`enctype`属性，那么最终就会以`application/x-www-form-urlencoded`方式提交数据。该种方式提交的数据放在`body`里面，数据按照`key1=val1&key2=val2`的方式进行编码，`key`和`val`都进行了`URL`转码。
-- （2）`multipart/form-data`<br>
-  该种方式也是一个常见的`POST`提交方式，通常表单上传文件时使用该种方式。
-- （3）`application/json`<br>
-  告诉服务器消息主体是序列化后的 JSON 字符串。
-- （4）`text/xml`<br>
-  该种方式主要用来提交 XML 格式的数据。
+- （1）`application/x-www-form-urlencoded`: 表示表单提交时使用的默认格式，数据会以键值对的形式进行编码，通过`=`连接键和值，通过`&`连接不同键值对。
+- （2）`multipart/form-data`: 表示表单提交时的一种更加通用的格式，可以支持上传文件等二进制数据，常用于文件上传场景。
+- （3）`application/json`: 告诉服务器消息主体是序列化后的 JSON 字符串。
+- （4）`text/xml`: 表示响应内容是 HTML 格式的数据，常用于 Web 页面渲染。
+- （5）`text/plain`: 表示响应内容是纯文本格式的数据。
+- （6）`application/octet-stream`: 表示响应内容是二进制数据流，没有指定具体的数据类型，常用于文件下载场景。
 
 
 ## 222、如何判断一个对象是否为空对象？
-```js
-function checkNullObj(obj) {
-  return Object.keys(obj).length === 0 && Object.getOwnPropertySymbols(obj).length === 0;
-}
-```
+1. 使用`Object.keys()`方法获取该对象所有的键名，然后判断数组长度是否为`0`。
+  ```js
+  function isEmpty(obj) {
+    return Object.keys(obj).length === 0;
+  }
+  ```
+2. 使用`for...in`循环遍历该对象，如果循环体被执行了一次，则该对象不是空对象。
+  ```js
+  function isEmpty(obj) {
+    for (let key in obj) {
+      return false;
+    }
+    return true;
+  }
+  ```
+3. 以上两种方法都有一个潜在的问题，即如果该对象原型链上有属性，则会被算作该对象的属性。如果需要只判断该对象自身的属性是否为空，请使用`Object.getOwnPropertyNames()`方法或`Object.getOwnPropertySymbols()`方法。例如：
+  ```js
+  function isEmpty(obj) {
+    return (
+      Object.getOwnPropertyNames(obj).length === 0 &&
+      Object.getOwnPropertySymbols(obj).length === 0
+    );
+  }
+  ```
 
 
 ## 223、使用闭包实现每隔一秒打印`1, 2, 3, 4`
@@ -7350,21 +7732,21 @@ new new Foo().getName(); // 3 ==> 等价于 (new (new Foo())).getName() ==> 调�
 
 
 ## 225、如何确定页面的可用性时间，什么是 Performance API？
-Performance API 用于精确度量、控制、增强浏览器的性能表现。这个 API 为测量网站性能，提供以前没有办法做到的精度。
+`Performance API`用于精确度量、控制、增强浏览器的性能表现。这个 API 为测量网站性能，提供以前没有办法做到的精度。
 
 使用`getTime`来计算脚本耗时的缺点:
 - 首先，`getTime`方法（以及 Date 对象的其他方法）都只能精确到毫秒级别（一秒的千分之一），想要得到更小的时间差别就无能为力了
 - 其次，这种写法只能获取代码运行过程中的时间进度，无法知道一些后台事件的时间进度，比如浏览器用了多少时间从服务器加载网页。
 
-为了解决这两个不足之处，ECMAScript 5引入“高精度时间戳”这个 API，部署在`performance`对象上。它的精度可以达到1毫秒的千分之一（1秒的百万分之一）。
-- `navigationStart`：当前浏览器窗口的前一个网页关闭，发生`unload`事件时的`Unix`毫秒时间戳。如果没有前一个网页，则等于`fetchStart`属性。
-- `loadEventEnd`：返回当前网页`load`事件的回调函数运行结束时的`Unix`毫秒时间戳。如果该事件还没有发生，返回`0`。
+为了解决这两个不足之处，ECMAScript 5引入“高精度时间戳”这个 API，部署在`performance`对象上。它的精度可以达到1毫秒的千分之一（1秒的百万分之一）。可以计算出网页加载各个阶段的耗时。
 
-根据上面这些属性，可以计算出网页加载各个阶段的耗时。比如，网页加载整个过程的耗时的计算方法如下：
+比如，网页加载整个过程的耗时的计算方法如下：
 ```js
 var t = performance.timing;
 var pageLoadTime = t.loadEventEnd - t.navigationStart;
 ```
+- `navigationStart`：当前浏览器窗口的前一个网页关闭，发生`unload`事件时的`Unix`毫秒时间戳。如果没有前一个网页，则等于`fetchStart`属性。
+- `loadEventEnd`：返回当前网页`load`事件的回调函数运行结束时的`Unix`毫秒时间戳。如果该事件还没有发生，返回`0`。
 
 
 ## 226、js 中的命名规则
@@ -7375,44 +7757,41 @@ var pageLoadTime = t.loadEventEnd - t.navigationStart;
 
 
 ## 227、js 中倒计时的纠偏实现？
-在前端实现中我们一般通过`setTimeout`和`setInterval`方法来实现一个倒计时效果。
-> 但是使用这些方法会存在时间偏差的问题，这是由于 js 的程序执行机制造成的，`setTimeout`和`setInterval`的作用是隔一段时间将回调事件加入到事件队列中，因此事件并不是立即执行的，它会等到当前执行栈为空的时候再取出事件执行，因此事件等待执行的时间就是造成误差的原因。
+倒计时的纠偏指的是在定时器更新倒计时显示时，由于定时器的不精确性以及JavaScript引擎的性能波动等原因，可能导致倒计时显示时间与实际剩余时间存在一定误差。
 
-一般解决倒计时中的误差的有这样两种办法：
-- （1）第一种是通过前端定时向服务器发送请求获取最新的时间差，以此来校准倒计时时间。
-- （2）第二种方法是前端根据偏差时间来自动调整间隔时间的方式来实现的。这一种方式首先是以 setTimeout 递归的方式来实现倒计时，然后通过一个变量来记录已经倒计时的秒数。每一次函数调用的时候，首先将变量加一，然后根据这个变量和每次的间隔时间，我们就可以计算出此时无偏差时应该显示的时间。然后将当前的真实时间与这个时间相减，这样我们就可以得到时间的偏差大小，因此我们在设置下一个定时器的间隔大小的时候，我们就从间隔时间中减去这个偏差大小，以此来实现由于程序执行所造成的时间误差的纠正。
-  ```js
-  const interval = 1000
-  // 从服务器和活动开始时间计算出的时间差，这里测试用 50000ms
-  let ms = 50000
-  let count = 0
-  // 开始倒计时的时间
-  const startTime = new Date().getTime()
-  let timer = null
-  if (ms >= 0) {
-    timer = setTimeout(func, interval)
-  }
+在 JavaScript 中，倒计时的纠偏实现可以通过以下步骤完成：
+1. 获取当前时间（可以使用`Date.now()`方法）和预定结束时间。
+2. 计算两个时间之间的差值，得出剩余的毫秒数。
+3. 使用`setTimeout`或`setInterval`函数来每隔一段时间更新剩余的毫秒数，并更新显示倒计时的 UI。
+4. 为了纠偏误差，可以使用`performance.now()`方法获取更精确的时间戳，并计算与上次更新的时间戳之间的差距，用此差距来修正下一次更新的时间。
+```js
+const targetTime = new Date('2023-04-01T00:00:00.000Z').getTime(); // 预定结束时间
+let remainingTime = targetTime - Date.now(); // 剩余毫秒数
 
-  function func () {
-    count++
-    const delaytime = new Date().getTime() - (startTime + count * interval) // A
-    if (delaytime < 0) { 
-      delaytime = 0 
-    }
-    let nextTime = interval - delaytime
-    ms -= interval
-    console.log(`误差：${delaytime} ms，下一次执行：${nextTime} ms 后，离活动开始还有：${ms} ms`)
-    if (ms <= 0) {
-      clearTimeout(timer)
-    } else {
-      timer = setTimeout(func, nextTime)
-    }
+function updateCountdown() {
+  const currentTime = performance.now(); // 当前时间戳
+  const elapsedTime = currentTime - lastUpdateTime; // 上次更新至今的时间差
+  remainingTime -= elapsedTime; // 扣除时间差
+  if (remainingTime <= 0) {
+    // 倒计时结束
+    clearInterval(intervalId);
+    return;
   }
-  ```
+  // 更新 UI 显示
+  const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+  const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+  countdownEl.innerHTML = `${hours}:${minutes}:${seconds}`;
+  lastUpdateTime = currentTime; // 记录此次更新的时间戳
+}
+
+let lastUpdateTime = performance.now(); // 上次更新的时间戳
+const intervalId = setInterval(updateCountdown, 1000); // 每秒钟更新一次显示
+}
+```
 
 
 ## 228、进程间通信的方式？
-[进程间的六种通信方式](https://blog.csdn.net/GMLGDJ/article/details/124627224)
 1. 管道通信
 2. 消息队列通信
 3. 信号量通信
@@ -7425,16 +7804,16 @@ var pageLoadTime = t.loadEventEnd - t.navigationStart;
 微信JS-SDK：是开发者在网页上通过JavaScript代码使用微信原生功能的工具包，开发者可以使用它在网页上录制和播放微信语音、监听微信分享、上传手机本地图片、拍照等许多能力。
 
 JSSDK使用步骤: [微信JS-SDK说明文档](https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/JS-SDK.html)
-- 步骤一：绑定域名<br>
+- **步骤一：绑定域名**<br>
   先登录微信公众平台进入“公众号设置”的“功能设置”里填写“JS接口安全域名”。
-- 步骤二：引入JS文件
+- **步骤二：引入JS文件**
   ```html
   <!-- 在需要调用JS接口的页面引入JS文件 -->
   <script src="http://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
   <!-- 如需进一步提升服务稳定性，当上述资源不可访问时，可改访问 -->
   <script src="http://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
   ```
-- 步骤三：通过`config`接口注入权限验证配置<br>
+- **步骤三：通过`config`接口注入权限验证配置**<br>
   所有需要使用JS-SDK的页面必须先注入配置信息，否则将无法调用（同一个url仅需调用一次，对于变化url的SPA的web app可在每次url变化时进行调用）
   ```js
   wx.config({
@@ -7476,13 +7855,13 @@ JSSDK使用步骤: [微信JS-SDK说明文档](https://developers.weixin.qq.com/d
         第二步：对string1进行sha1签名，得到signature
           0f9de62fce790f9a083d5c99e95740ceb90c27ed
       ```
-- 步骤四：通过`ready`接口处理成功验证
+- **步骤四：通过`ready`接口处理成功验证**
   ```js
   wx.ready(function(){
     // config信息验证后会执行ready方法，所有接口调用都必须在config接口获得结果之后，config是一个客户端的异步操作，所以如果需要在页面加载时就调用相关接口，则须把相关接口放在ready函数中调用来确保正确执行。对于用户触发时才调用的接口，则可以直接调用，不需要放在ready函数中。
   });
   ```
-- 步骤五：通过`error`接口处理失败验证
+- **步骤五：通过`error`接口处理失败验证**
   ```js
   wx.error(function(res){
     // config信息验证失败会执行error函数，如签名过期导致验证失败，具体错误信息可以打开config的debug模式查看，也可以在返回的res参数中查看，对于SPA可以在这里更新签名。
@@ -7508,24 +7887,13 @@ document.addEventListener('WeixinJSBridgeReady', function onBridgeReady() {
 
 
 ## 241、ECMAScript 和 JavaScript 的关系
-前者是后者的规格，后者是前者的一种实现。在日常场合，这两个词是可以互换的。
+JavaScript 是一种编程语言，而 ECMAScript 是这种语言的标准化规范。ECMAScript 定义了 JavaScript 的语法、类型、语句、关键字等方面的规则和约束。
 
 
 ## 242、一次js请求一般情况下有哪些地方会有缓存处理？
-### DNS缓存
-DNS缓存指DNS返回了正确的IP之后，系统就会将这个结果临时储存起来。并且它会为缓存设定一个失效时间 (例如N小时)，在这N小时之内，当你再次访问这个网站时，系统就会直接从你电脑本地的DNS缓存中把结果交还给你，而不必再去询问DNS服务器，变相“加速”了网址的解析。当然，在超过N小时之后，系统会自动再次去询问DNS服务器获得新的结果。 所以，当你修改了 DNS 服务器，并且不希望电脑继续使用之前的DNS缓存时，就需要手动去清除本地的缓存了。<br>
-本地DNS迟迟不生效或者本地dns异常等问题，都会导致访问某些网站出现无法访问的情况，这个时候我们就需要手动清除本地dns缓存，而不是等待！
-
-### CDN缓存
-和Http类似，客户端请求数据时，先从本地缓存查找，如果被请求数据没有过期，拿过来用，如果过期，就向CDN边缘节点发起请求。CDN便会检测被请求的数据是否过期，如果没有过期，就返回数据给客户端，如果过期，CDN再向源站发送请求获取新数据。和买家买货，卖家没货，卖家再进货一个道理。<br>
-CDN边缘节点缓存机制，一般都遵守http标准协议，通过http响应头中的Cache-Control和max-age的字段来设置CDN边缘节点的数据缓存时间。
-
-### 浏览器缓存
-浏览器缓存（Browser Caching）是为了节约网络的资源加速浏览，浏览器在用户磁盘上对最近请求过的文档进行存储，当访问者再次请求这个页面时，浏览器就可以从本地磁盘显示文档，这样就可以加速页面的阅览。<br>
-浏览器缓存主要有两类：缓存协商：Last-modified ，Etag 和彻底缓存：cache-control，Expires。浏览器都有对应清除缓存的方法。
-
-### 服务器缓存
-服务器缓存有助于优化性能和节省宽带，它将需要频繁访问的Web页面和对象保存在离用户更近的系统中，当再次访问这些对象的时候加快了速度。
+1. 浏览器缓存：浏览器会在本地缓存静态资源，例如 JavaScript 文件。如果浏览器已经缓存了该文件，则会从缓存中读取该文件而不是向服务器发起请求。
+2. CDN 缓存：如果该文件被托管在 CDN 上，则可能会使用 CDN 的缓存。CDN 可以在全球多个节点缓存文件，并将请求路由到最近的可用节点。如果一个节点已经缓存了该文件，则会直接返回缓存的文件而不是向原始服务器发起请求。
+3. 代理服务器缓存：如果请求通过代理服务器进行传输，则代理服务器可能会缓存文件并在后续的请求中返回缓存文件而不是向原始服务器发起请求。
 
 
 ## 245、ES6 都有什么`Iterator`遍历器
@@ -7652,7 +8020,7 @@ console.log(v_parent); // {name: "小白"}  没有tell方法和type属性
 
 
 ## 248、说说你对 promise 的了解
-`Promise`是异步编程的一种解决方案，比传统的解决方案——`回调函数`和`事件监听`——更合理和更强大。
+`Promise`是异步编程的一种解决方案，比传统的解决方案`回调函数`和`事件监听`更合理和更强大。
 > 所谓 Promise，简单说就是一个容器，里面保存着某个未来才会结束的事件（通常是一个异步操作）的结果。从语法上说，`Promise`是一个对象，从它可以获取异步操作的消息。`Promise`提供统一的 API，各种异步操作都可以用同样的方法进行处理。
 
 Promise 对象有以下两个特点:
@@ -7813,7 +8181,7 @@ import("lodash").then(_ => {
 - 箭头函数没有原型对象`prototype`
 
 
-## 256、Promise 构造函数是同步执行还是异步执行，那么`then`方法呢？
+## 256、Promise 构造函数是同步执行还是异步执行，那么 then 方法呢？
 `promise`构造函数是同步执行的，`then`方法是异步执行的
 ```js
 const promise = new Promise((resolve, reject) => {
@@ -7839,45 +8207,51 @@ console.log(4)
 > 现在已经有的成熟解决方案：`tiny-async-pool`、`es6-promise-pool`、`p-limit`
 
 **手写实现**: 
+> 为了实现`Promise.all`的并发限制，我们可以使用一个自定义函数来模拟`Promise.all`的行为。这个函数将维护一个 “并发池” 和一个 “待处理队列”，类似于线程池和任务队列的概念。
+> 具体的做法是，首先将指定数量的`Promise`加入并发池中，然后在每个`Promise`执行完成时（不论成功或失败），都从待处理队列中取出下一个`Promise`加入并发池中，直到所有`Promise`都执行完成。
 ```js
-function PromiseLimit(funcArray, limit = 5) {
-  let i = 0;
-  const result = [];
-  const executing = [];
-  const queue = function() {
-    if (i === funcArray.length) return Promise.all(executing);
-    const p = funcArray[i++]();
-    result.push(p);
-    const e = p.then(() => executing.splice(executing.indexOf(e), 1));
-    executing.push(e);
-    if (executing.length >= limit) {
-      return Promise.race(executing).then(
-        () => queue(),
-        e => Promise.reject(e)
-      );
+function promiseAllWithLimit(promises, limit) {
+  const results = new Array(promises.length);
+  let index = 0;
+  let activeCount = 0;
+  let doneCount = 0;
+  function next() {
+    if (doneCount === promises.length) {
+      return Promise.resolve(results);
     }
-    return Promise.resolve().then(() => queue());
-  };
-  return queue().then(() => Promise.all(result));
+    while (activeCount < limit && index < promises.length) {
+      // 将 Promise 加入并发池中
+      const i = index;
+      index++;
+      activeCount++;
+      // 开始执行 Promise
+      promises[i].then((result) => {
+          results[i] = result;
+        }).catch((error) => {
+          results[i] = error;
+        }).finally(() => {
+          // 从并发池中移除 Promise，并加入下一个 Promise
+          activeCount--;
+          doneCount++;
+          next();
+        });
+    }
+  }
+  return next().then(() => results);
 }
 ```
 ```js
 // 效果演示
 // 测试代码
-const result = [];
-for (let index = 0; index < 10; index++) {
-  result.push(function() {
-    return new Promise((resolve, reject) => {
-      console.log("开始" + index, new Date().toLocaleString());
-      setTimeout(() => {
-        resolve(index);
-        console.log("结束" + index, new Date().toLocaleString());
-      }, parseInt(Math.random() * 10000));
-    });
-  });
-}
-PromiseLimit(result).then(data => {
-  console.log(data);
+const promises = [
+  new Promise((resolve) => setTimeout(() => resolve(1), 1000)),
+  new Promise((resolve) => setTimeout(() => resolve(2), 2000)),
+  new Promise((resolve) => setTimeout(() => resolve(3), 1500)),
+  new Promise((resolve) => setTimeout(() => resolve(4), 500)),
+];
+
+promiseAllWithLimit(promises, 2).then((results) => {
+  console.log(results); // [1, 2, 3, 4]
 });
 ```
 
@@ -7935,34 +8309,25 @@ Promise.all([p1, p2])
 
 ### Promise.all原理实现
 ```js
-function promiseAll(promises){
-  return new Promise(function(resolve,reject){
-    if(!Array.isArray(promises)){
-      return reject(new TypeError("argument must be anarray"))
-    }
-    var countNum = 0;
-    var promiseNum = promises.length;
-    var resolvedvalue = new Array(promiseNum);
-    for(var i = 0; i < promiseNum; i++){
-      (function(i){
-        Promise.resolve(promises[i]).then(function(value){
-          countNum++;
-          resolvedvalue[i]=value;
-          if(countNum===promiseNum){
-            return resolve(resolvedvalue)
-          }
-      }, function(reason){
-        return reject(reason)
-      )})(i)
-    }
-  })
+function myPromiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = new Array(promises.length);
+    let completedCount = 0;
+
+    promises.forEach((promise, index) => {
+      promise.then((result) => {
+        results[index] = result;
+        completedCount++;
+
+        if (completedCount === promises.length) {
+          resolve(results);
+        }
+      }).catch((error) => {
+        reject(error);
+      });
+    });
+  });
 }
-var p1 = Promise.resolve(1),
-p2 = Promise.resolve(2),
-p3 = Promise.resolve(3);
-promiseAll([p1,p2,p3]).then(function(value){
-  console.log(value)
-})
 ```
 
 ### Promise.all错误处理
@@ -8253,13 +8618,50 @@ function completeLoad(){
 简化版的requireJs源码分析完了.
 
 
-## 259、❓请介绍Promise，异常捕获
+## 259、请介绍Promise，异常捕获
+Promise是一种用于处理异步操作的对象。它代表一个尚未完成但最终会返回结果的操作，并允许开发人员以更清晰和可读的方式处理异步代码流程。
+
+Promise 提供了三种状态：`pending（进行中）`、`fulfilled（已成功）`和`rejected（已失败）`。当 Promise 对象处于`pending`状态时，表示操作正在进行中，此时可以设置回调函数以在操作完成后执行。当操作成功完成时，Promise 对象将进入`fulfilled`状态，并调用`.then()`方法指定的成功回调函数。而当操作失败时，Promise 对象将进入`rejected`状态，并调用`.catch()`方法指定的异常回调函数。
 
 
-## 260、❓设计并实现`Promise.race()`
+## 260、设计并实现Promise.race()
+`Promise.race()`是一个静态方法，它接受一个 Promise 数组并返回一个新的 Promise 对象，该对象将等待其中任何一个 Promise 对象完成并根据第一个完成的 Promise 对象的状态（成功或失败）来解决或拒绝。
+```js
+Promise.race = function(promises) {
+  return new Promise((resolve, reject) => {
+    // 遍历 Promise 数组
+    for (let i = 0; i < promises.length; i++) {
+      // 对每个 Promise 对象调用 .then() 方法
+      promises[i].then(
+        // 一旦有一个 Promise 成功，则使用 resolve() 方法解决新的 Promise 对象
+        value => {
+          resolve(value);
+        },
+        // 一旦有一个 Promise 失败，则使用 reject() 方法拒绝新的 Promise 对象
+        error => {
+          reject(error);
+        }
+      );
+    }
+  });
+};
+```
 
 
-## 270、❓模拟实现一个`Promise.finally`
+## 270、设计并实现Promise.finally()
+`Promise.finally()`是一个实例方法，它接受一个回调函数，并在 Promise 对象的状态变为 settled（已成功或已失败）时执行该回调函数，无论前面的操作是成功还是失败。
+```js
+Promise.prototype.finally = function (callback) {
+  const P = this.constructor;
+  return this.then(
+    (value) => P.resolve(callback()).then(() => value),
+    (reason) =>
+      P.resolve(callback()).then(() => {
+        throw reason;
+      })
+  );
+};
+```
 
 
 ## 271、用Promise对象实现的 Ajax

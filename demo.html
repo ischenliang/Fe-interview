@@ -7,55 +7,30 @@
   <title>Document</title>
 </head>
 <body>
-<button id="btn">回退</button>
-<div class="navbar">
-  <a href="#/home">首页</a>
-  <a href="#/about">关于</a>
-  <a href="#/404">404</a>
-</div>
-<div id="app">
-  default
-</div>
-<script type="module">
-  const app = document.querySelector('#app')
-  const links = document.querySelectorAll('a')
-
-  // 循环为所有的a绑定点击事件
-  for (let link of links) {
-    link.addEventListener('click', (e) => {
-      // 阻止默认行为
-      e.preventDefault()
-      let href = link.getAttribute('href')
-      // 改变url地址，此时内容页面其他内容不发生改变
-      history.pushState({}, '', href)
-      // 当pushstate后，触发事件进行匹配
-      renderView()
-    })
-  }
-
-  // 需要在调用 back、go、forward时才会触发
-  window.addEventListener('popstate', () => {
-    console.log(123)
-    renderView()
-  })
-  // 测试回退
-  document.querySelector('#btn').addEventListener('click', () => {
-    history.back()
-  })
-
-  function renderView () {
-    switch (location.hash) {
-      case '#/home':
-        app.innerHTML = 'Home'
-        break
-      case '#/about':
-        app.innerHTML = 'About'
-        break
-      default:
-        app.innerHTML = 'default'
+  <button id="btn">添加图片</button>
+  <div class="container"></div>
+  <script>
+    const images = [
+      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/1.png',
+      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/2.png',
+      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/2.png'
+    ];
+    function preload() {
+      images.forEach(src => {
+        const img = new Image();
+        img.src = src;
+      });
     }
-  }
-  renderView()
-</script>
+    function addImages() {
+      const container = document.querySelector('.container');
+      images.forEach(src => {
+        const img = new Image();
+        img.src = src;
+        container.appendChild(img);
+      });
+    }
+    window.addEventListener('load', preload);
+    document.querySelector('#btn').addEventListener('click', addImages);
+  </script>
 </body>
 </html>
