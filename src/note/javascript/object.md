@@ -148,4 +148,49 @@ console.log(obj.name) // name属性被读取 李四
 
 ### Object.seal()
 
-### 
+### Object.is()
+`Object.is()`方法判断两个值是否为同一个值。
+- **语法**
+  ```js
+  Object.is(value1, value2);
+  ```
+- **参数**
+  - value1: 被比较的第一个值。
+  - value2: 被比较的第二个值。
+- **返回值**: 一个布尔值，表示两个参数是否是同一个值。
+- 规则，只要满足一下任意条件则说明两个值相等
+  - 都是`undefined`
+  - 都是`null`
+  - 都是`true`或都是`false`
+  - 都是相同长度、相同字符、按相同顺序排列的字符串
+  - 都是相同对象（意味着都是同一个对象的值引用）
+  - 都是数字且
+    - 都是`+0`
+    - 都是`-0`
+    - 都是`NaN`
+    - 都是同一个值，非零且都不是`NaN`
+
+```js
+// Case 1: Evaluation result is the same as using ===
+Object.is(25, 25);                // true
+Object.is('foo', 'foo');          // true
+Object.is('foo', 'bar');          // false
+Object.is(null, null);            // true
+Object.is(undefined, undefined);  // true
+Object.is(window, window);        // true
+Object.is([], []);                // false
+var foo = { a: 1 };
+var bar = { a: 1 };
+Object.is(foo, foo);              // true
+Object.is(foo, bar);              // false
+
+// Case 2: Signed zero
+Object.is(0, -0);                 // false
+Object.is(+0, -0);                // false
+Object.is(-0, -0);                // true
+Object.is(0n, -0n);               // true
+
+// Case 3: NaN
+Object.is(NaN, 0/0);              // true
+Object.is(NaN, Number.NaN)        // true
+```

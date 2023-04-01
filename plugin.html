@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <p>{{ message }}</p>
+    <component :is="cButton" :message="message">12311</component>
+  </div>
+  <script type="module">
+    import { createApp, ref, defineAsyncComponent } from 'vue'
+    const app = createApp({
+      setup() {
+        const message = ref('hello vue3')
+        const cButton = defineAsyncComponent(() => import('./button-async.js'))
+        return {
+          message,
+          cButton
+        }
+      }
+    })
+    app.mount('#app')
+  </script>
+
+
+  <!-- 动态操作import-map -->
+  <script>
+    // 获取当前import map
+    const importMapEl = document.querySelector('script[type="importmap"]')
+    const importMap = JSON.parse(importMapEl.textContent);
+
+    // 添加新的依赖项
+    importMap.imports['my-dependency'] = './path/to/my/dependency.js';
+
+    // 将更新后的import map写回文档中
+    importMapEl.textContent = JSON.stringify(importMap, null, 2);
+  </script>
+</body>
+</html>
