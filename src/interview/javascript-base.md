@@ -6766,70 +6766,60 @@ Math.round(3.54) // 4
 
 
 ## 190、什么是 XSS 攻击？如何防范 XSS 攻击？
-Cross-Site Scripting（跨站脚本攻击）简称`XSS`，是一种在web应用中的计算机安全漏洞，它允许恶意web用户将代码植入到提供给其它用户使用的页面中。
-> XSS的本质是：恶意代码未经过滤，与网站正常的代码混在一起；浏览器无法分辨哪些脚本是可信的，导致恶意脚本被执行。
+Cross-Site Scripting（跨站脚本攻击）简称`XSS`，是一种在web应用中的计算机安全漏洞，攻击者通过在网页中注入恶意脚本代码，从而窃取用户的敏感信息或者篡改页面内容，达到攻击目的。
 
 **XSS攻击有哪几种类型？**
-常见的 XSS 攻击有三种：`反射型XSS攻击`、`DOM-based型XXS攻击`以及`存储型XSS攻击`。
-- 反射型XSS攻击
-  > 反射型 XSS 一般是攻击者通过特定手法（如电子邮件），诱使用户去访问一个包含恶意代码的 URL，当受害者点击这些专门设计的链接的时候，恶意代码会直接在受害者主机上的浏览器执行。反射型XSS通常出现在网站的搜索栏、用户登录口等地方，常用来窃取客户端 Cookies 或进行钓鱼欺骗。
-- DOM-based型XXS攻击
-  > 基于 DOM 的 XSS 攻击是指通过恶意脚本修改页面的 DOM 结构，是纯粹发生在客户端的攻击。DOM 型 XSS 攻击中，取出和执行恶意代码由浏览器端完成，属于前端 JavaScript 自身的安全漏洞。
-- 存储型XSS攻击
-  > 也叫持久型XSS，主要将XSS代码提交存储在服务器端（数据库，内存，文件系统等），下次请求目标页面时不用再提交XSS代码。当目标用户访问该页面获取数据时，XSS代码会从服务器解析之后加载出来，返回到浏览器做正常的HTML和JS解析执行，XSS攻击就发生了。存储型 XSS 一般出现在网站留言、评论、博客日志等交互处，恶意脚本存储到客户端或者服务端的数据库中。
+常见的 XSS 攻击有三种：`反射型XSS攻击`、`存储型XSS攻击`。
+- 反射型 XSS 攻击：攻击者通过给用户发送带有恶意链接的电子邮件、短信等方式，引导用户点击该链接，服务器接收到请求后将恶意脚本代码反射回浏览器执行，从而实现攻击目的。
+- 存储型 XSS 攻击：攻击者通过提交带有恶意脚本代码的表单数据等方式，将脚本代码存储在服务器端，当其他用户访问该页面时，服务器将恶意脚本代码返回浏览器执行，从而实现攻击目的。
 
 **如何防御XSS攻击？**
-1. 对输入内容的特定字符进行编码，例如表示 html标记的 < > 等符号。
-2. 对重要的 cookie设置 httpOnly, 防止客户端通过document.cookie读取 cookie，此 HTTP头由服务端设置。
-3. 将不可信的值输出 URL参数之前，进行 URLEncode操作，而对于从 URL参数中获取值一定要进行格式检测（比如你需要的时URL，就判读是否满足URL格式）。
-4. 不要使用 Eval来解析并运行不确定的数据或代码，对于 JSON解析请使用 JSON.parse() 方法。
-5. 后端接口也应该要做到关键字符过滤的问题。
+1. 对用户输入进行过滤和转义。在保存用户输入时，对输入内容进行过滤和转义，避免恶意脚本代码被存储在服务器端或者反射回浏览器执行。
+2. 使用 HTTP 头中的`Content-Security-Policy（CSP）`字段来限制页面中能够执行的脚本代码来源。CSP可以限制页面中的 JavaScript 脚本只能从指定的来源加载，防止恶意脚本执行。
+3. 避免使用`eval()、setTimeout()`等可执行字符串的函数。这些函数可以执行任意字符串代码，容易被攻击者利用进行 XSS 攻击。
+4. 使用`HttpOnly`属性设置`Cookie`。`HttpOnly`属性可以防止 JavaScript 访问`Cookie`，有效防止 XSS 攻击窃取`Cookie`。
+5. 对于高风险的操作（如支付、修改密码等），需要在服务端进行二次确认，避免被恶意脚本误导用户执行高风险操作。
 
 
 ## 191、什么是 CSRF 攻击？如何防范 CSRF 攻击？
-CSRF 攻击指的是跨站请求伪造攻击，攻击者诱导用户进入一个第三方网站，然后该网站向被攻击网站发送跨站请求。如果用户在被攻击网站中保存了登录状态，那么攻击者就可以利用这个登录状态，绕过后台的用户验证，冒充用户向服务器执行一些操作。
-> CSRF 攻击的本质是利用了`cookie`会在同源请求中携带发送给服务器的特点，以此来实现用户的冒充。
+CSRF（Cross-Site Request Forgery）攻击是一种常见的Web安全漏洞，攻击者利用用户已登录的状态，在用户不知情的情况下，伪造合法请求，从而达到攻击目的。
 
 **CSRF原理**
-- 1、用户C打开浏览器，访问受信任网站A，输入用户名和密码请求登录网站A；
-- 2、在用户信息通过验证后，网站A产生Cookie信息并返回给浏览器，此时用户登录网站A成功，可以正常发送请求到网站A；
-- 3、用户未退出网站A之前，在同一浏览器中，打开一个TAB页访问网站B；
-- 4、网站B接收到用户请求后，返回一些攻击性代码，并发出一个请求要求访问第三方站点A；
-- 5、浏览器在接收到这些攻击性代码后，根据网站B的请求，在用户不知情的情况下携带Cookie信息，向网站A发出请求。网站A并不知道该请求其实是由B发起的，所以会根据用户C的Cookie信息以C的权限处理该请求，导致来自网站B的恶意代码被执行。
-
-CSRF 攻击的三个条件 :
-1. 用户已经登录了站点 A，并在本地记录了 cookie
-2. 在用户没有登出站点 A 的情况下（也就是 cookie 生效的情况下），访问了恶意攻击者提供的引诱危险站点 B (B 站点要求访问站点A)。
-3. 站点 A 没有做任何 CSRF 防御
-
-**CSRF攻击类型**
-- 第一种是 GET 类型的 CSRF 攻击，比如在网站中的一个 img 标签里构建一个请求，当用户打开这个网站的时候就会自动发起提
-交。
-- 第二种是 POST 类型的 CSRF 攻击，比如说构建一个表单，然后隐藏它，当用户进入页面时，自动提交这个表单。
-- 第三种是链接类型的 CSRF 攻击，比如说在 a 标签的 href 属性里构建一个请求，然后诱导用户去点击。
+- 1、用户在浏览器中登录了某个网站，并保持了登录状态。
+- 2、用户在进行其他操作时（如点击链接、提交表单等），浏览器自动发送一个请求给服务器。
+- 3、攻击者伪造一个请求，该请求中包含了对目标网站的恶意操作。
+- 4、攻击者通过各种手段诱导用户访问该恶意请求，从而实现攻击目的。
 
 **如何防御**
-> CSRF的防御可以从服务端和客户端两方面着手，防御效果是从服务端着手效果比较好，现在一般的 CSRF 防御也都在服务端进行。
-
-CSRF攻击防御现在主要分为3种方法：
-- 1、验证 HTTP Referer 字段；
-- 2、添加token验证；
-- 3、在 HTTP 头中自定义属性并验证。
+- 1、在敏感操作时增加验证码验证。验证码可以防止攻击者通过自动化程序发起恶意请求。
+- 2、检查 HTTP Referer 头部信息。Referer 头部信息记录了请求来源，可以检查请求是否来自当前域名，避免跨站点伪造请求。
+- 3、使用随机令牌（Token）验证。在每个表单提交或者请求中设置一个随机生成的 Token，服务器收到请求时验证 Token 是否正确，从而避免恶意请求。
+- 4、设置 SameSite Cookie 属性。SameSite 属性可以限制 Cookie 只能在同站点请求中发送，并防止跨站点访问。
 
 
 ## 192、什么是 CSP？
-CSP指的是内容安全策略(Content security policy)，它的本质是建立一个白名单，告诉浏览器哪些外部资源可以加载和执行。我们只需要配置规则，如何拦截由浏览器自己来实现。
+CSP（Content Security Policy）是一种 Web 安全策略，它可以帮助网站管理员减少跨站点脚本攻击（XSS）、数据注入等安全漏洞的风险。CSP 通过白名单的方式来限制页面能够加载和执行的资源，包括 JavaScript、CSS、图片、字体等，从而防止恶意代码的执行。
 
-通常有两种方式来开启CSP：**CSP也是解决 XSS 攻击的一个强力手段**
-- 一种是设置 HTTP 首部中的`Content-Security-Policy`
-- 一种是设置 meta 标签的方式`<meta http-equiv="Content-Security-Policy">`
+CSP 的主要作用有以下几个方面：
+- 防止 XSS 攻击：通过限制页面中可以执行的脚本来源，防止恶意脚本代码的注入和执行。
+- 防止数据注入攻击：通过限制页面中可以加载的外部资源，防止恶意资源的注入和执行。
+- 提高安全性：通过 CSP 可以将安全策略集成到 HTTP 头中，从而提高 Web 应用程序的安全性。
+
+CSP 的实现方法包括两种：
+- 直接在 HTTP 头中设置 CSP 策略，如下所示：
+  ```js
+  Content-Security-Policy: default-src 'self' https://example.com; img-src *; media-src mediaserver.example.com
+  ```
+- 在网页中使用`<meta>`标签设置 CSP 策略，如下所示：
+  ```html
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://example.com; img-src *; media-src mediaserver.example.com">
+  ```
 
 
-## 193、什么是`Samesite Cookie`属性？
-`Samesite Cookie`表示同站`cookie`，避免`cookie`被第三方所利用。
-- 将`Samesite`设为`strict`，这种称为严格模式，表示这个`cookie`在任何情况下都不可能作为第三方`cookie`。
-- 将`Samesite`设为`Lax`，这种模式称为宽松模式，如果这个请求是个`GET`请求，并且这个请求改变了当前页面或者打开了新的页面，那么这个`cookie`可以作为第三方`cookie`，其余情况下都不能作为第三方`cookie`。<br>
-  缺点：因为它不支持子域，所以子域没有办法与主域共享登录信息，每次转入子域的网站，都回重新登录。还有一个问题就是它的兼容性不够好。
+## 193、什么是Samesite Cookie属性？
+`Samesite Cookie`属性是一种用于增强网络安全的`cookie`机制，它限制了`cookie`的跨站点传输行为。
+- 设置为`Samesite=Strict`时，此`cookie`仅在用户通过单击链接或提交表单等与当前站点完全相同的方式访问网站时才会发送到服务器。
+  > 如果是其他来源或跳转，例如从另一个域或者来自跨站点请求，则此`cookie`不会被发送。这有助于防范跨站点请求伪造（CSRF）攻击和其他安全漏洞。
 
 
 ## 194、什么是点击劫持？如何防范点击劫持？
@@ -6841,7 +6831,7 @@ CSP指的是内容安全策略(Content security policy)，它的本质是建立�
 SQL注入攻击指的是攻击者在 HTTP 请求中注入恶意的`SQL`代码，服务器使用参数构建数据库`SQL`命令时，恶意`SQL`被一起构造，破坏原有`SQL`结构，并在数据库中执行，达到编写程序时意料之外结果的攻击行为。
 
 
-## 196、`Object.assign()`
+## 196、Object.assign()
 `Object.assign()`方法用于将所有可枚举属性的值从一个或多个源对象复制到目标对象。它将返回目标对象。
 ```js
 var a = {
@@ -7344,17 +7334,21 @@ error 统计使用浏览器的`window.onerror`事件。
 
 
 ## 215、单例模式模式是什么？
-一个类只有一个实例，并提供全局访问点给该实例。在 JavaScript 中，单例模式通常在一个对象字面量中实现。这种模式适用于全局缓存、线程池以及需要强制实例化的场景。
+单例模式也称为单体模式，保证一个类仅有一个实例，并提供一个访问它的全局访问点。在没有对象的情况下，这个方法会创建一个新的实例对象。如果对象存在，则只返回对象的引用地址。
+> 常见使用场景: 登录弹窗、购物车、命名空间、vuex-store、jquery等等
 
 在 JavaScript 中实现单例模式可以使用以下两种方式：
-1. **使用对象字面量**
+- 1、**使用对象字面量**
+  > 利用ES6的let不允许重复声明的特性，刚好符合这两个特点
   ```js
-  const SingletonObject = {
-    // 单例对象的属性和方法
-  };
+  //举个栗子
+  let obj = {
+    name:"我是单例模式",
+    getName:function(){}
+  }
   ```
   在上面的示例中，`SingletonObject`表示一个单例对象，由于 JavaScript 中对象字面量总是返回同一个对象，因此可以直接将其作为单例对象使用。
-2. **使用闭包**
+- 2、**使用闭包**
   ```js
   const Singleton = (function() {
     let instance;
@@ -7395,251 +7389,249 @@ error 统计使用浏览器的`window.onerror`事件。
 
 
 ## 216、策略模式是什么？
-策略模式主要是用来将方法的实现和方法的调用分离开，外部通过不同的参数可以调用不同的策略。我主要在 MVP 模式解耦的时候用来将视图层的方法定义和方法调用分离。策略模式通常包含以下几个角色：
-1. 环境（Context）：负责维护一个对策略对象的引用，并将具体的任务委托给策略对象进行处理。
-2. 抽象策略（Strategy）：定义了所有支持的算法所需实现的公共接口，以便将来可以在不改变环境类的情况下动态地添加、删除或更换具体策略。
-3. 具体策略（Concrete Strategy）：实现了抽象策略中定义的接口，提供了具体的算法实现。
+定义一系列的算法，把它们一个个封装起来，并且使它们可以相互替换。
+> 常见使用场景: 表单验证、商品打折、排序算法等等
+
+以年终奖的计算为例：很多公司的年终奖是根据员工的工资基数和年底绩效情况来发放的。
+> 例如，绩效为A的人年终奖有4倍工资，绩效为B的人年终奖有3倍工资，而绩效为C的人年终奖是2倍工资
 ```js
-// 使用策略模式来计算支付金额
-class PaymentContext {
-  constructor(paymentStrategy) {
-    this.paymentStrategy = paymentStrategy;
-  }
-
-  pay(amount) {
-    return this.paymentStrategy.pay(amount);
-  }
-}
-
-class PaymentStrategy {
-  pay(amount) {}
-}
-
-class CreditCardPayment extends PaymentStrategy {
-  constructor(cardNumber, expirationDate, cvv) {
-    super();
-    this.cardNumber = cardNumber;
-    this.expirationDate = expirationDate;
-    this.cvv = cvv;
-  }
-
-  pay(amount) {
-    console.log(`Paying $${amount} with credit card ${this.cardNumber}...`);
-    // 实现具体的支付逻辑
-  }
-}
-
-class PayPalPayment extends PaymentStrategy {
-  constructor(email, password) {
-    super();
-    this.email = email;
-    this.password = password;
-  }
-
-  pay(amount) {
-    console.log(`Paying $${amount} with PayPal account ${this.email}...`);
-    // 实现具体的支付逻辑
-  }
-}
-
-// 创建环境对象，并设置支付策略
-const context = new PaymentContext(new CreditCardPayment('1234 5678 9012 3456', '12/22', '123'));
-
-// 调用支付方法进行支付
-context.pay(100);
-
-// 动态地更换支付策略
-context.paymentStrategy = new PayPalPayment('example@example.com', 'password');
-context.pay(50);
+var obj = {
+  "A": function(salary) {
+    return salary * 4;
+  },
+  "B" : function(salary) {
+    return salary * 3;
+  },
+  "C" : function(salary) {
+    return salary * 2;
+  } 
+};
+var calculateBouns =function(level,salary) {
+  return obj[level](salary);
+};
+console.log(calculateBouns('A',10000)); // 40000
 ```
 
 
 ## 217、代理模式是什么？
-代理模式是一种常用的设计模式，它可以在不改变原始对象的情况下，增加一层代理对象来控制对原始对象的访问。代理模式通常包含以下几个角色：
-1. 抽象主题（Subject）：定义了真实主题和代理主题之间的公共接口，使得代理主题可以在任何时候替代真实主题。
-2. 真实主题（Real Subject）：定义了代理所代表的真实对象。
-3. 代理主题（Proxy）：保存对真实主题的引用，并实现了与真实主题相同的接口，从而可以在客户端中使用代理来代替真实对象。
+为一个对象提供一个代理对象或占位符，以便控制对它的访问。
+> 常见的使用场景: 网页事件代理、ES的Proxy等等
 ```js
-// 使用代理模式来实现图片的懒加载
-class Image {
-  constructor(url) {
-    this.url = url;
-    this._loadImage();
+class ReadImg {
+  constructor(fileName) {
+    this.fileName = fileName;
+    this._loadFromDisk(); // 初始化即从硬盘中加载，模拟
   }
-
-  _loadImage() {
-    console.log(`Loading image from ${this.url}...`);
+  _loadFromDisk() {
+    console.log('loading...' + this.fileName);
   }
-
+  // display 对外提供一个方法
   display() {
-    console.log(`Displaying image from ${this.url}.`);
+    console.log('display...' + this.fileName);
   }
 }
-
-class ImageProxy {
-  constructor(url) {
-    this.url = url;
-    this.image = null;
+// 代理
+class ProxyImg {
+  constructor(fileName) {
+    this.realImg = new ReadImg(fileName)
   }
-
   display() {
-    if (!this.image) {
-      this.image = new Image(this.url);
-    }
-    this.image.display();
+    this.realImg.display()
   }
 }
-
-// 创建代理对象
-const proxy = new ImageProxy('https://example.com/image.jpg');
-
-// 页面滚动后加载图片
-document.addEventListener('scroll', () => {
-  const windowHeight = window.innerHeight;
-  const documentHeight = document.documentElement.scrollHeight;
-  const scrollTop = document.documentElement.scrollTop;
-
-  if (scrollTop + windowHeight > documentHeight * 0.75) {
-    console.log('Loading image...');
-    proxy.display();
-  }
-});
+// test
+let proxyImg = new ProxyImg('1.png')
+proxyImg.display() // 打印结果为 1. loading...1.png   2. display...1.png
 ```
 
 
 ## 218、中介者模式是什么？
-中介者模式指的是，多个对象通过一个中介者进行交流，而不是直接进行交流，这样能够将通信的各个对象解耦。中介者模式通常包含以下几个角色：
-1. 中介者（Mediator）：定义了各个对象之间交互的接口，并负责协调各个对象之间的关系。
-2. 同事对象（Colleague）：表示需要参与到中介者模式中的对象，每个同事对象都知道中介者对象并可以直接与其交互。
+对象和对象之间借助第三方中介者进行通信。解除对象之间的耦合关系。
+> 常见使用场景: 组件通信、事件管理、路由管理等等
 ```js
-// 使用中介者模式来实现三个按钮之间的联动效果
 class Mediator {
   constructor() {
-    this.buttons = [];
+    this.colleagues = [];
   }
-
-  addButton(button) {
-    this.buttons.push(button);
-    button.setMediator(this);
+  register(colleague) {
+    this.colleagues.push(colleague);
   }
-
-  clickButton(button) {
-    if (button === this.buttons[0]) {
-      // 点击第一个按钮时，设置第二个按钮的禁用状态为 false
-      this.buttons[1].setDisabled(false);
-    } else if (button === this.buttons[1]) {
-      // 点击第二个按钮时，设置第三个按钮的文本内容为 Hello World！
-      this.buttons[2].setText('Hello World!');
-    }
-  }
-}
-
-class Button {
-  constructor(text, disabled = true) {
-    this.text = text;
-    this.disabled = disabled;
-    this.mediator = null;
-  }
-
-  setMediator(mediator) {
-    this.mediator = mediator;
-  }
-
-  setText(text) {
-    this.text = text;
-  }
-
-  setDisabled(disabled) {
-    this.disabled = disabled;
-  }
-
-  onClick() {
-    if (this.mediator) {
-      this.mediator.clickButton(this);
-    }
-  }
-}
-
-// 创建中介者对象
-const mediator = new Mediator();
-
-// 创建三个按钮，并添加到中介者对象中
-const button1 = new Button('Button 1');
-mediator.addButton(button1);
-
-const button2 = new Button('Button 2', true);
-mediator.addButton(button2);
-
-const button3 = new Button('Button 3', false);
-mediator.addButton(button3);
-
-// 页面渲染后绑定按钮点击事件
-document.addEventListener('DOMContentLoaded', () => {
-  const containerEl = document.querySelector('.button-container');
-
-  [button1, button2, button3].forEach((button) => {
-    const buttonEl = document.createElement('button');
-    buttonEl.innerText = button.text;
-    buttonEl.disabled = button.disabled;
-
-    buttonEl.addEventListener('click', () => {
-      button.onClick();
+  send(message, sender) {
+    this.colleagues.forEach(colleague => {
+      if (colleague !== sender) {
+        colleague.receive(message);
+      }
     });
+  }
+}
 
-    containerEl.appendChild(buttonEl);
-  });
-});
+class Colleague {
+  constructor(name, mediator) {
+    this.name = name;
+    this.mediator = mediator;
+    this.mediator.register(this);
+  }
+  send(message) {
+    console.log(`${this.name} sends message: ${message}`);
+    this.mediator.send(message, this);
+  }
+  receive(message) {
+    console.log(`${this.name} receives message: ${message}`);
+  }
+}
+
+let mediator = new Mediator();
+let colleague1 = new Colleague("Colleague 1", mediator);
+let colleague2 = new Colleague("Colleague 2", mediator);
+let colleague3 = new Colleague("Colleague 3", mediator);
+
+colleague1.send("Hello World!");
+// "Colleague 1 sends message: Hello World!"
+// "Colleague 2 receives message: Hello World!"
+// "Colleague 3 receives message: Hello World!"
 ```
 
 
 ## 219、适配器模式是什么？
-可以将一个对象的接口转换成另一个对象所期望的接口，从而使得原本不兼容的对象能够协同工作。适配器模式通常包含以下几个角色：
-1. 目标（Target）：定义客户端所期望的接口。
-2. 源对象（Adaptee）：需要被适配的对象。
-3. 适配器（Adapter）：实现目标接口，并持有源对象的引用，将目标接口转换成源对象所支持的接口。
-
-使用适配器模式可以实现多种功能
-1. 将一个类库的接口转换成客户端所期望的接口，从而不需要修改客户端代码，减少耦合度。
-2. 将两个不兼容的对象进行适配，使它们能够协同工作，提高代码的灵活性和可复用性。
+可以将一个对象的接口转换成另一个对象所期望的接口，从而使得原本不兼容的对象能够协同工作。
+> 常见使用场景: 地图渲染、计算属性，现实中的适配器: 电源适配器、USB 转接口。
 ```js
-// 将一个对象的属性名进行重新命名，以符合另一个对象的接口
-// 源对象
-const oldData = {
-  firstName: 'John',
-  lastName: 'Doe',
-  age: 30,
-};
-
-// 目标接口
-class NewData {
-  constructor(firstName, lastName, years) {
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.years = years;
+var googleMap = {
+  show: function() {
+    console.log('开始渲染谷歌地图')
   }
 }
-// 适配器
-class DataAdapter {
-  constructor(data) {
-    this.firstName = data.firstName;
-    this.lastName = data.lastName;
-    this.years = data.age;
-  }
-
-  getData() {
-    return new NewData(this.firstName, this.lastName, this.years);
+var baiduMap = {
+  show: function() {
+    console.log('开始渲染百度地图')
   }
 }
-// 使用适配器
-const newData = new DataAdapter(oldData).getData();
-console.log(newData); // {firstName: "John", lastName: "Doe", years: 30}
+var renderMapAdapter = function(map) {
+  if (map.show instanceof Function) {
+    map.show()
+  }
+}
+renderMapAdapter(googleMap) // 输出:开始渲染谷歌地图
+renderMapAdapter(baiduMap) // 输出:开始渲染百度地图
 ```
 
 
 ## 220、观察者模式和发布订阅模式有什么不同？
-发布订阅模式其实属于广义上的观察者模式。<br>
-在观察者模式中，观察者需要直接订阅目标事件。在目标发出内容改变的事件后，直接接收事件并作出响应。<br>
-而在发布订阅模式中，发布者和订阅者之间多了一个调度中心。调度中心一方面从发布者接收事件，另一方面向订阅者发布事件，订阅者需要在调度中心中订阅事件。通过调度中心实现了发布者和订阅者关系的解耦。使用发布订阅者模式更利于我们代码的可维护性。
+**观察者模式**
+> 它定义了对象间的一种一对多的依赖关系，使得当一个对象状态发生改变时，所有依赖于它的对象都会得到通知并自动更新。
+```js
+// Subject: 被观察者
+class Subject {
+  constructor () {
+    this.observers = []
+  }
+  add (observer) {
+    this.observers.push(observer)
+  }
+  remove (observer) {
+    const index = this.observers.findIndex(el => el === observer)
+    if (index > -1) {
+      this.observers.splice(index, 1)
+    }
+  }
+  notify () {
+    for (let i = 0 ; i < this.observers.length; i++) {
+      this.observers[i].update()
+    }
+  }
+}
+
+// 观察者
+class Observer {
+  update () {
+    console.log('update')
+  }
+}
+
+// 创建一个被观察者
+const subject = new Subject()
+// 创建多个观察者
+const observer1 = new Observer()
+const observer2 = new Observer()
+// 将观察者添加到被观察者的观察者列表中
+subject.add(observer1)
+subject.add(observer2)
+
+// 通知所有观察者更新
+subject.notify()
+```
+
+
+**发布订阅模式**
+> 订阅者（Subscriber）把自己想订阅的事件注册（Subscribe）到调度中心（Topic），当发布者（Publisher）发布该事件（Publish topic）到调度中心，也就是该事件触发时，由调度中心统一调度（Fire Event）订阅者注册到调度中心的处理代码。
+```js
+class EventBus {
+  constructor () {
+    this.hanlders = {}
+  }
+  // 订阅事件
+  on (eventType, handle) {
+    if (!this.hanlders[eventType]) {
+      this.hanlders[eventType] = []
+    }
+    this.hanlders[eventType].push(handle)
+  }
+  // 发布事件
+  emit (eventType, ...args) {
+    if (this.hanlders[eventType]) {
+      this.hanlders[eventType].forEach((item, index) => {
+        item(...args)
+      })
+    }
+  }
+  // 取消订阅
+  off (eventType, handle) {
+    if (this.hanlders[eventType]) {
+      this.hanlders[eventType].forEach((item, index, arr) => {
+        if (item == handle) {
+          arr.splice(index, 1)
+        }
+      })
+    }
+  }
+}
+
+const eventBus = new EventBus()
+// 发布者
+const publisher = {
+  offwork (...args) {
+    eventBus.emit('offwork', ...args)
+  },
+  onwork (...args) {
+    eventBus.emit('onwork', ...args)
+  }
+}
+// 订阅者
+const subscriber = {
+  onworkHandler (...args) {
+    console.log('上班了', args)
+  },
+  offworkHandler (...args) {
+    console.log('下班了', args)
+  },
+  onwork () {
+    eventBus.on('onwork', this.onworkHandler)
+  },
+  offwork () {
+    eventBus.on('offwork', this.offworkHandler)
+  },
+  cancelOffwork () {
+    eventBus.off('offwork', this.offworkHandler)
+  }
+}
+
+subscriber.onwork() // 订阅onwork
+subscriber.offwork() // 订阅offwork
+publisher.onwork('09:00', '记得打卡') // 上班了 ['09:00', '记得打卡']
+publisher.offwork('18:00', '记得打卡') // 下班了 ['18:00', '记得打卡']
+subscriber.cancelOffwork() // 取消订阅
+publisher.offwork('18:00', '记得打卡') // 无输出
+```
 
 
 ## 221、开发中常用的几种`Content-Type`？
@@ -8689,7 +8681,7 @@ const getJSON = function(url) {
 };
 getJSON("/posts.json").then(function(json) {
   console.log('Contents: ' + json);
-}, function(error) {
+}).catch(function(error) {
   console.error('出错了', error);
 });
 ```

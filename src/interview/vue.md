@@ -3605,11 +3605,7 @@ Vue组件的设计原则包括以下几点：
 
 
 ## 105、对于Vue是一套渐进式框架的理解？
-**什么是渐进式？**
-> 没有多做职责之外的事。简单地说，渐进式的概念是分层设计，每层可选，不同层可以灵活接入其他方案架构模式。`"渐进式框架"`就是用你想用或者能用的功能特性，你不想用的部分功能可以先不用。vue不强求你一次性接受并使用它的全部功能特性(例如你可以选择使用`vue-router`或者使用自己的`router`)。
-
-例子：我们要买一台电脑，店家给我们提供了一个IBM。官方可能会提供windows作为可选，我们也可以在电脑上安装我们自己喜欢的Ubuntu。装完系统后，官方可能还提供了一系列的“装机必备”，浏览器、编辑器、播放器等等，我们可以选择使用，也可以不用，然后在应用市场选择我们喜欢的软件安装。
-> **渐进式的最大好处就是灵活，可以根据不同场景做定制。**
+Vue是一套渐进式框架，这意味着它可以逐步应用到现有项目中，并且具有可定制性和灵活性。开发者可以根据具体需求选择使用Vue的部分功能，例如只使用Vue的模板语法或只使用Vue的状态管理库Vuex。此外，Vue还提供了许多插件和第三方库以满足不同场景下的需求。
 
 **那么Vue分为哪几层呢？**
 - declarative rendering（声明式渲染）
@@ -4393,6 +4389,43 @@ canScroll(){
 6. **开启gzip压缩**：开启服务器端的gzip压缩功能可以减小传输体积，提高页面加载速度。
 7. **前端性能监控**：使用前端性能监控工具对页面进行分析，找到影响页面性能的瓶颈，并做出相应的优化措施。
 
+vue 首页白屏是什么问题引起的？
+- 第一种，打包后文件引用路径不对，导致找不到文件报错白屏<br>
+  解决办法：修改一下config下面的index.js中bulid模块导出的路径。因为index.html里边的内容都是通过script标签引入的，而你的路径不对，打开肯定是空白的。先看一下默认的路径。
+- 第二种，由于把路由模式mode设置影响<br>
+  解决方法：路由里边router/index.js路由配置里边默认模式是hash，如果你改成了history模式的话，打开也会是一片空白。所以改为hash或者直接把模式配置删除，让它默认的就行 。如果非要使用history模式的话，需要你在服务端加一个覆盖所有的情况的候选资源：如果URL匹配不到任何静态资源，则应该返回一个index.html，这个页面就是你app依赖页面。<br>
+  所以只要删除mode或者把mode改成hash就OK了。
+- 第三种，项目中使用了es6的语法，一些浏览器不支持es6，造成编译错误不能解析而造成白屏<br>
+  安装`npm install --save-dev babel-preset-es2015`<br>
+  安装`npm install --save-dev babel-preset-stage-3`<br>
+  在项目根目录创建一个.babelrc文件 里面内容 最基本配置是：
+  ```js
+  {
+    // 此项指明，转码的规则
+    "presets": [
+        // env项是借助插件babel-preset-env，下面这个配置说的是babel对es6,es7,es8进行转码，并且设置amd,commonjs这样的模块化文件，不进行转码
+        ["env", {
+            "modules": false
+        }],
+        // 下面这个是不同阶段出现的es语法，包含不同的转码插件
+        "stage-2"
+    ],
+    // 下面这个选项是引用插件来处理代码的转换，transform-runtime用来处理全局函数和优化babel编译
+    "plugins": ["transform-runtime"],
+    // 下面指的是在生成的文件中，不产生注释
+    "comments": false,
+    // 下面这段是在特定的环境中所执行的转码规则，当环境变量是下面的test就会覆盖上面的设置
+    "env": {
+        // test 是提前设置的环境变量，如果没有设置BABEL_ENV则使用NODE_ENV，如果都没有设置默认就是development
+        "test": {
+            "presets": ["env", "stage-2"],
+            // instanbul是一个用来测试转码后代码的工具
+            "plugins": ["istanbul"]
+        }
+    }
+  }
+  ```
+
 
 ## 119、Vue打包命令是什么？
 打包命令其实是自己在`package.json`中配置的命令
@@ -4473,14 +4506,10 @@ export default defineConfig({
 
 
 ## 125、批量异步更新策略及nextTick原理？
-当数据发生变化时，Vue 会将更新操作异步地加入一个队列中，然后在下一个事件循环周期统一执行这个队列中的更新操作。
-> 批量异步更新策略是 Vue 中一种非常有效的优化策略，可以提高页面渲染性能、保证页面稳定性，同时也简化了开发者的工作。
+在Vue.js中，当多次修改数据时，Vue.js会将这些修改操作放入一个队列中，并在下一个"事件循环(event loop)"周期中批量异步更新视图。这个策略被称为"批量异步更新(Batched Asynchronous Updates)"，它可以避免不必要的DOM操作，提高性能和效率。
+> 具体来说，在每次修改数据时，Vue.js会将该修改操作包装成一个"Watcher"对象，并将其推入一个队列中。然后，Vue.js会调用"nextTick"方法，在下一个"事件循环(event loop)"周期中异步地执行队列中的所有Watcher对象，从而更新视图。
 
-这种批量异步更新策略有以下几个好处：
-1. **提高性能**：由于将多个更新操作合并到一个事件循环周期中执行，可以减少 DOM 操作和重绘的次数，从而提高页面渲染性能。
-2. **避免重复更新**：如果在同一个事件循环周期内多次修改同一个数据，Vue 只会将最后一次修改操作添加到更新队列中，避免了重复更新带来的性能损失。
-3. **稳定性**：批量异步更新策略可以保证在更新过程中不会出现因为数据的不一致性导致的异常情况。
-4. **简化开发**：使用批量异步更新策略可以使得开发者不需要手动控制更新时机，从而简化了代码编写和维护的难度。
+"nextTick"方法的实现原理基于两种机制：微任务(microtask)和宏任务(macrotask)。在浏览器中，"Promise"对象和"MutationObserver"对象都属于微任务，而"setTimeout"和"setImmediate"等对象则属于宏任务。Vue.js会首先尝试使用微任务执行队列中的Watcher对象，如果当前环境不支持微任务，则会使用宏任务。
 
 
 ## 126、Vue中如何实现proxy代理？
@@ -4956,10 +4985,11 @@ export default {
 
 
 ## 132、vue 的渲染机制
-Vue 的渲染机制是基于 Virtual DOM（虚拟 DOM）的。
-> 当 Vue 实例中的数据发生变化时，Vue 会先生成一颗新的 Virtual DOM 树。然后，Vue 会将新旧两颗 Virtual DOM 树进行比较，找出需要更新的部分。最后，Vue 只更新这些部分的真实 DOM，从而避免了不必要的 DOM 操作，提高了性能。
-
-此外，Vue 还实现了异步更新队列和`nextTick`函数，以保证数据变化后的 DOM 更新在下一个事件循环周期中执行，从而避免了频繁的更新操作对性能的影响。
+在Vue.js中，DOM渲染的过程是基于虚拟DOM(Virtual DOM)的。当数据发生变化时，Vue.js会首先生成新的虚拟DOM树，然后将其与旧的虚拟DOM树进行比较，并仅更新差异部分，从而避免不必要的DOM操作，提高性能和效率。这个过程涉及两个重要的算法：diff算法和patch算法。
+- **diff算法**
+  - diff算法用于比较两棵虚拟DOM树的差异，并生成一组最小的DOM操作指令。具体来说，diff算法会按照深度优先的顺序遍历新的虚拟DOM树，同时对比旧的虚拟DOM树，找出不同之处。在比较过程中，diff算法会尽可能地复用旧的DOM节点，以减少创建和销毁DOM节点的开销。diff算法的核心思想是“相同则不更新”，即如果两个节点的标签名、属性和子元素都相同，则认为它们是相同的，不需要更新；否则需要进行相应的更新操作。
+- **patch算法**
+  - patch算法用于执行生成的DOM操作指令，将变更应用到真实的DOM树上。具体来说，patch算法会按照指令列表中的顺序执行增加、更新和删除操作，从而将DOM树更新到与虚拟DOM树相同的状态。在执行更新操作时，patch算法会尽可能地复用旧的DOM节点，以减少创建和销毁DOM节点的开销。patch算法的核心思想是“最小化变更”，即尽可能地减少对DOM树的操作次数，从而提高性能和效率。
 
 
 ## 133、如何让 CSS 只在当前组件中起作用
@@ -4967,7 +4997,30 @@ Vue 的渲染机制是基于 Virtual DOM（虚拟 DOM）的。
 
 
 ## 135、你们vue项目是打包了一个js文件，一个css文件，还是有多个文件？
-多个文件。
+多个文件。Vite 默认会将你的应用程序打包为单个 JavaScript 文件，但你可以通过在`vite.config.js`中配置`build.rollupOptions.output`来控制如何生成输出文件。
+```js
+// 要将输出文件拆分为多个文件，可以像下面这样配置
+// vite.config.js
+export default {
+  build: {
+    rollupOptions: {
+      output: {
+        // 将代码拆分成多个 chunk
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
+        // 指定输出文件名格式
+        format: 'es',
+        chunkFileNames: '[name]-[hash].js'
+      }
+    }
+  }
+}
+```
+上述配置中，我们通过`manualChunks`方法指定了一个自定义的拆分规则，当模块路径中包含`node_modules`字符串时，将其拆分到一个名为`vendor.js`的`chunk`中。然后，我们使用`chunkFileNames`指定了输出文件的命名格式，其中`[name]`表示`chunk`的名称，`[hash]`则是根据文件内容生成的`hash`值。
+> 如果需要进一步控制打包结果，还可以使用其他配置项来定制`rollup`的行为，例如`input、external、plugins`等。具体请参考 Vite 官方文档。
 
 
 ## 136、vue遇到的坑，如何解决的？
@@ -5942,53 +5995,8 @@ methodsToPatch.forEach(function(method) {
 ```
 
 
-
-## 147、vue 如何优化首页的加载速度？vue 首页白屏是什么问题引起的？如何解决呢？
-vue 如何优化首页的加载速度？
-- 路由懒加载
-- ui框架按需加载
-- gzip压缩
-
-vue 首页白屏是什么问题引起的？
-- 第一种，打包后文件引用路径不对，导致找不到文件报错白屏<br>
-  解决办法：修改一下config下面的index.js中bulid模块导出的路径。因为index.html里边的内容都是通过script标签引入的，而你的路径不对，打开肯定是空白的。先看一下默认的路径。
-- 第二种，由于把路由模式mode设置影响<br>
-  解决方法：路由里边router/index.js路由配置里边默认模式是hash，如果你改成了history模式的话，打开也会是一片空白。所以改为hash或者直接把模式配置删除，让它默认的就行 。如果非要使用history模式的话，需要你在服务端加一个覆盖所有的情况的候选资源：如果URL匹配不到任何静态资源，则应该返回一个index.html，这个页面就是你app依赖页面。<br>
-  所以只要删除mode或者把mode改成hash就OK了。
-- 第三种，项目中使用了es6的语法，一些浏览器不支持es6，造成编译错误不能解析而造成白屏<br>
-  安装`npm install --save-dev babel-preset-es2015`<br>
-  安装`npm install --save-dev babel-preset-stage-3`<br>
-  在项目根目录创建一个.babelrc文件 里面内容 最基本配置是：
-  ```js
-  {
-    // 此项指明，转码的规则
-    "presets": [
-        // env项是借助插件babel-preset-env，下面这个配置说的是babel对es6,es7,es8进行转码，并且设置amd,commonjs这样的模块化文件，不进行转码
-        ["env", {
-            "modules": false
-        }],
-        // 下面这个是不同阶段出现的es语法，包含不同的转码插件
-        "stage-2"
-    ],
-    // 下面这个选项是引用插件来处理代码的转换，transform-runtime用来处理全局函数和优化babel编译
-    "plugins": ["transform-runtime"],
-    // 下面指的是在生成的文件中，不产生注释
-    "comments": false,
-    // 下面这段是在特定的环境中所执行的转码规则，当环境变量是下面的test就会覆盖上面的设置
-    "env": {
-        // test 是提前设置的环境变量，如果没有设置BABEL_ENV则使用NODE_ENV，如果都没有设置默认就是development
-        "test": {
-            "presets": ["env", "stage-2"],
-            // instanbul是一个用来测试转码后代码的工具
-            "plugins": ["istanbul"]
-        }
-    }
-  }
-  ```
-
-
 ## 148、在 Vue 中，子组件为何不可以修改父组件传递的 Prop，如果修改了，Vue 是如何监控到属性的修改并给出警告的。
-在组件进行`initProps`方法的时候，会执行`defineReactive`方法，这个方法就是运行`Object.defineProperty`对传入的`object`绑定`get/set`，传入的第四个参数是触发`set`的回调。所以`props`被修改时，就会查看是不是根组件、是不是更新子组件，那说明是子组件在修改`props`，给出`warn`警告。
+在组件进行`initProps`方法的时候，会执行`defineReactive`方法，这个方法就是运行`Object.defineProperty`对传入的`object`绑定`get/set`，传入的第四个参数是触发`set`的回调。具体来说，Vue 会在子组件中使用`Object.defineProperty()`定义一个自定义的`setter`函数，用来监测`Prop`值的修改。当你试图修改 `Prop`的值时，Vue就会检测到这个变化，并给出警告信息，告诉你不应该在子组件内部改变`Prop`。
 
 
 ## 149、说说Vue的MVVM实现原理
@@ -6282,7 +6290,8 @@ export default{
 
 
 ## 169、Vue的数据为什么频繁变化但只会更新一次
-或者这样问：Vue在一个tick中多次更新数据页面只会更新一次（主线程的执行过程就是一个tick）
+Vue在渲染组件视图时，会将组件数据中出现的所有变量都转换成getter/setter形式，并跟踪所有对这些变量的修改，在变量被修改时自动更新视图。当数据频繁变化时，引起的视图更新可能导致性能问题，但是Vue通过合并异步更新队列来优化性能。
+> 具体地，Vue会将同一事件循环中所有的数据变化都缓存起来，然后在下一个事件循环中批量进行更新，从而避免了频繁的DOM操作和重复渲染。这个过程被称为“异步批量更新”。
 
 Vue在监听到数据有变化的时候分为四步:
 - 检测到数据变化
@@ -6296,16 +6305,17 @@ Vue在监听到数据有变化的时候分为四步:
 
 
 ## 170、你知道vue的模板语法用的是哪个web模板引擎的吗？说说你对这模板引擎的理解
-vue使用的是`mustache`。
+vue前期使用的是`mustache`。后期则是使用的自己内部的模板语法。
 
 模板引擎的理解: 
-> 模板引擎是将数据要变为视图最优雅的解决方案。双花括号语法，负责组装数据，以另外一种形式或外观展示数据。
+> 模板引擎是将数据要变为视图最优雅的解决方案。双花括号(`{{}}`)语法，负责组装数据，以另外一种形式或外观展示数据。
 
-具有如下优点:
-- 可维护性（后期改起来方便）；
-- 可扩展性（想要增加功能，增加需求方便）；
-- 开发效率提高（程序逻辑组织更好，调试方便）；
-- 看起来舒服（不容易写错）
+Vue使用的是自己独有的模板语法，并不是基于任何已知的Web模板引擎。Vue的模板语法基于HTML，但是添加了一些特殊的指令和表达式，例如`v-bind、v-html、v-if `等等，这些指令都是Vue所提供的。
+
+与常见的Web模板引擎相比，Vue的模板语法更为简单易懂，并且非常灵活，可以方便地应对各种场景的需求。通过在模板中使用Vue提供的指令和表达式，我们可以轻松地实现数据绑定、条件渲染、列表循环、事件处理等功能。
+
+此外，Vue还提供了`template`标签，可以用来定义组件的模板，也可以作为一个可复用的模板片段，使用时只需传入相应的数据即可生成相应的DOM元素，使得组件的设计和复用更加方便。
+
 
 
 ## 171、你有使用过vue开发多语言项目吗？说说你的做法？
@@ -6314,14 +6324,42 @@ vue使用的是`mustache`。
 
 
 ## 172、在使用计算属性的时，函数名和data数据源中的数据可以同名吗？
-不可以，因为初始化`vm`的过程，会先把`data`绑定到`vm`,再把`computed`的值绑定到`vm`，会把`data`覆盖了。
+可以，在Vue中计算属性的函数名和`data`数据源中的数据可以同名，但是不推荐这么做。因为初始化`vm`的过程，会先把`data`绑定到`vm`，再把`computed`的值绑定到`vm`，会把`data`覆盖了。
+
+在组件实例创建过程中，props、computed、data和methods的初次执行顺序可以概括为以下步骤：
+1. `props`：父组件传递给子组件的属性，在组件实例化时被解析和验证，因此是最先被初始化的选项。
+2. `data`：组件内部的数据对象，在组件实例化时被初始化。
+3. `computed`：计算属性，会在组件实例化时被初始化，并且在依赖的响应式数据发生变化时自动更新。
+4. `methods`：方法选项，也会在组件实例化时被初始化，用于定义组件的行为。
+5. `watch`：观察选项，用于监听指定的数据变化，当被监听的数据发生变化时，执行相应的回调函数。
+
+```html
+<template>
+  <div>
+    <p>{{ showMsg }}</p>
+  </div>
+</template>
+<script lang="ts">
+export default {
+  data () {
+    return {
+      showMsg: '哈哈',
+      count: 1
+    }
+  },
+  computed: {
+    showMsg () {
+      return 'haha' + this.count
+    }
+  }
+}
+</script>
+```
+可以看到页面上输出的内容是`haha1`，而不是`哈哈`，是因为被覆盖。
 
 
 ## 173、vue中data的属性可以和methods中的方法同名吗？为什么？
-不可以，vue会把`methods`和`data`的东西，全部代理到vue生成对象中。会产生覆盖所以最好不要同名。
-> 如果非要同名，控制栏会报出警告: `Method "showMsg" has already been defined as a data property.`，并且调用该方法会报错: `Error in v-on handler: "TypeError: _vm.showMsg is not a function"`
-
-Vue组件实例属性挂载过程: `props > methods > data > computed > watch`
+不可以，如果在`data`和`methods`选项中都定义了同名的属性或方法，那么在模板中调用该方法时，会优先调用`data`中的同名属性，而不是`methods`中的方法。因此，当你尝试调用一个在`data`中定义的同名属性时，就会报错，提示该属性不是一个方法。
 
 
 ## 174、怎么给vue定义全局的方法？
@@ -6505,11 +6543,14 @@ Vue 项目打包后静态文件图片失效的常见问题有以下几种可能:
 **什么是SEO**
 > 搜索引擎优化（Search engine optimization，简称SEO），指为了提升网页在搜索引擎自然搜索结果中（非商业性推广结果）的收录数量以及排序位置而做的优化行为，是为了从搜索引擎中获得更多的免费流量，以及更好的展现形象。
 
-**什么是SEM**
-> 搜索引擎营销SEM（Search engine marketing），则既包括了SEO，也包括了付费的商业推广优化。
-
-::: tip Vue单页项目的SEO
-目前，对于SEO支持比较好的项目方案是采用服务端渲染。所以如果项目有SEO需求，那么比较好的方案是服务端渲染。
+使用 Vue 开发的单页应用通常使用 AJAX 技术，通过 JavaScript 动态生成 DOM 元素来展示内容，这样会导致搜索引擎不能正确爬取页面内容。为了让搜索引擎能够正确地识别和索引你的应用程序，需要做一些 SEO 优化。
+1. 使用服务端渲染（SSR）：将 Vue 应用程序进行服务端渲染，可以让搜索引擎能够正确地读取和索引应用程序中的内容，提高网站的 SEO 性能。
+2. 添加 meta 标签：为每个页面添加合适的 meta 标签，包括 title、description、keywords 等，以便搜索引擎正确解析页面内容，并显示正确的搜索结果。
+3. 添加静态页面：对于一些重要的页面或信息，可以添加静态页面，以便搜索引擎能够正确地识别和索引它们。例如，可以单独为某些关键字或分类建立页面，以便让用户更容易找到它们。
+4. 提供 sitemap.xml 文件：创建一个 sitemap 文件，列出应用程序中的所有页面，并提交给搜索引擎，以便让搜索引擎更好地了解应用程序中的内容结构。
+5. 避免使用 iframe 和 JavaScript 跳转：搜索引擎无法正确解析 iframe 中的内容和 JavaScript 跳转，因此应该尽量避免使用这些技术。
+6. 合理使用 H 标签：使用合适的 H 标签来标记页面中不同级别的标题，可以让搜索引擎更好地了解和索引页面结构。
+7. 添加 alt 属性：为所有图片添加 alt 属性，以便让搜索引擎正确识别和索引图片内容。
 
 如果你已经采用了前后分离的单页项目，而你的网站内容不需要AJAX去获取内容和展示内容，那么可以试试`prerender-spa-plugin`这个插件，这个插件是一个`webpack`插件，可以帮助你在打包过程中通过无头浏览器去渲染你的页面，并生成对应的HTML。当然这个方案适合你的路由是静态的，并且路由数量非海量。
 
@@ -6810,8 +6851,10 @@ Vue.config.errorHandler = (error, vm, info) => {
 
 
 ## 193、在.vue文件中style是必须的吗？那script是必须的吗？为什么？
-在`.vue`文件中，`template`是必须的，而`script`与`style`都不是必须的。
-> 如果没有`template`，则`[Vue warn]: Failed to mount component: template or render function not defined.`
+在 Vue 单文件组件中，`<style>`、`<script>`和`<template>`标签都是可选的，但它们分别对应了单文件组件的不同部分。
+1. `<style>`标签用于定义组件的样式，如果不需要定义样式，则可以省略该标签。
+2. `<script>`标签用于定义组件的逻辑和行为，如果不需要定义逻辑和行为，则可以省略该标签。
+3. `<template>`标签用于定义组件的模板，如果不需要显示任何内容，则可以省略该标签。如果省略了`<template>`还可以使用`render`函数替代。
 
 
 ## 194、vue怎么实现强制刷新组件？
@@ -6975,9 +7018,7 @@ export default {
 
 
 ## 198、vue使用v-for遍历对象时，是按什么顺序遍历的？如何保证顺序？
-- 1、会先判断是否有`iterator`接口，如果有循环执行`next()`方法
-- 2、没有`iterator`的情况下，会调用`Object.keys()`方法，在不同浏览器中，JS引擎不能保证输出顺序一致
-- 3、保证对象的输出顺序可以把对象放在数组中，作为数组的元素
+在使用`v-for`遍历对象时，Vue.js 会使用 JavaScript 对象的`Object.keys()`方法获取对象中所有属性名，并按照它们在对象中出现的顺序进行遍历。但是，请注意，JavaScript 对象本身就不保证属性的顺序，因此在某些情况下，对象属性的遍历顺序可能并不是您期望的顺序。
 
 
 ## 199、vue如果想扩展某个现有的组件时，怎么做呢？
@@ -7179,7 +7220,10 @@ export default {
 
 
 ## 204、vue为什么要求组件模板只能有一个根元素？
-因为Vue组件的渲染是通过模板编译来实现的，模板编译器需要将模板编译成一个`render`函数，这个函数需要返回一个`虚拟DOM树`。而虚拟DOM树是通过一个根节点来包裹所有子元素的，如果一个组件有多个根元素，那么在编译模板时，Vue就无法确定哪个元素应该作为根节点，这会导致**编译错误**，
+Vue要求组件模板只能有一个根元素，这是因为Vue的渲染机制是基于虚拟DOM实现的，每个组件都需要转化为一个虚拟DOM节点进行管理和渲染。而且在HTML中，每个节点都必须有一个父节点，多个根元素会导致无法通过单个父节点来包含所有子节点，从而破坏了虚拟DOM的结构性和合理性。因此，Vue限制组件模板只能有一个根元素，以保证虚拟DOM能够正确地表示组件的结构和内容。
+
+Vue3中支持多个根节点的原因:
+> Vue 3 之所以可以支持多个根元素，是因为 Vue 3 中采用了`Fragments`（片段）的概念。`Fragments`可以让开发者在组件模板中使用多个根元素而不会出现渲染错误。**`Fragments`是一种虚拟 DOM 的节点，它不会被渲染成真正的 DOM 节点，只是作为一个占位符存在，让多个子元素可以被渲染到同一个父级节点下**。
 
 
 ## 205、EventBus注册在全局上时，路由切换时会重复触发事件，如何解决呢？
@@ -7292,9 +7336,73 @@ jsx不是一门新的语言，是一种新的语法糖。让我们在js中可以
 
 
 ## 212、怎么配置使vue2.0+支持TypeScript写法？
-1. 配置`ts-loader`，`tsconfig`
-2. 增加类型扩展，让ts识别vue文件
-3. vue文件中script里面换成`ts`写法， 需要增加几个ts扩展的`package`， 比如`vue-property-decorator`
+1. 安装必要依赖：
+  ```bash
+  npm install --save-dev typescript ts-loader @types/vue
+  ```
+2. 创建`tsconfig.json`文件：在项目根目录下创建`tsconfig.json`文件，并添加以下内容：
+  ```json
+  {
+    "compilerOptions": {
+      "target": "es5",
+      "module": "es2015",
+      "strict": true,
+      "esModuleInterop": true,
+      "experimentalDecorators": true,
+      "sourceMap": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "noImplicitAny": false,
+      "allowSyntheticDefaultImports": true,
+      "lib": ["esnext", "dom"]
+    },
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "exclude": ["node_modules"]
+  }
+  ```
+3. 配置webpack：在Webpack配置文件中，添加以下规则来加载`.ts`和`.tsx`文件，并将`vue-loader`设置为允许 TypeScript 组件：
+  ```js
+  module.exports = {
+    //...
+    module: {
+      rules: [
+        {
+          test: /\.tsx?$/,
+          loader: 'ts-loader',
+          options: { appendTsSuffixTo: [/\.vue$/] },
+          exclude: /node_modules/,
+        },
+        {
+          test: /\.vue$/,
+          loader: 'vue-loader',
+          options: {
+            loaders: {
+              ts: 'ts-loader!eslint-loader',
+              tsx: 'ts-loader!eslint-loader',
+            },
+          },
+        },
+      ],
+    },
+  };
+  ```
+4. 编写Vue组件：在 Vue 单文件组件`<script>`标签中，添加`lang="ts"`属性以指定 TypeScript：
+  ```html
+  <template>
+    <div>
+      <!-- ... -->
+    </div>
+  </template>
+
+  <script lang="ts">
+  import Vue from 'vue';
+
+  export default Vue.extend({
+    // ...
+  });
+  </script>
+  ```
+5. 编写TypeScript模块：创建`.ts`或`.tsx`文件，并按常规方式编写 TypeScript 模块。
 
 
 ## 213、vue的is这个特性你有用过吗？主要用在哪些方面？

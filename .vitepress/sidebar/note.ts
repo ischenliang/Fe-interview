@@ -57,10 +57,10 @@ const jsSidebar = [
   {
     text: 'DOM对象',
     items: [
-      { text: 'Document', link: '/note/dom-document' },
-      { text: '元素对象', link: '/note/dom-element' },
-      { text: '属性对象', link: '/note/dom-attribute' },
-      { text: '事件对象', link: '/note/dom-event' }
+      { text: 'Document', link: 'dom-document' },
+      { text: '元素对象', link: 'dom-element' },
+      { text: '属性对象', link: 'dom-attribute' },
+      { text: '事件对象', link: 'dom-event' }
     ]
   },
   {

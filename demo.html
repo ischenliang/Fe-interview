@@ -7,30 +7,54 @@
   <title>Document</title>
 </head>
 <body>
-  <button id="btn">添加图片</button>
-  <div class="container"></div>
   <script>
-    const images = [
-      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/1.png',
-      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/2.png',
-      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/2.png'
-    ];
-    function preload() {
-      images.forEach(src => {
-        const img = new Image();
-        img.src = src;
-      });
+    const obj = {
+      name: '张三',
+      info: {
+        class: '软工1班'
+      }
     }
-    function addImages() {
-      const container = document.querySelector('.container');
-      images.forEach(src => {
-        const img = new Image();
-        img.src = src;
-        container.appendChild(img);
-      });
+    function reactive(obj) {
+      // 判断传入的参数是否为对象
+      if (typeof obj !== 'object' || obj === null) {
+        return obj
+      }
+
+      // 定义 Proxy 处理器对象
+      const handler = {
+        get(target, key, receiver) {
+          console.log(`get ${key}`)
+          // 使用 Reflect.get 方法获取对象属性值
+          const res = Reflect.get(target, key, receiver)
+          // 如果该属性值是对象，则递归调用 reactive 函数进行转换
+          return reactive(res)
+        },
+        set(target, key, value, receiver) {
+          console.log(`set ${key} ${value}`)
+          // 使用 Reflect.set 方法设置对象属性值
+          const res = Reflect.set(target, key, value, receiver)
+          // 触发更新操作，这里暂且留空
+          return res
+        },
+        deleteProperty(target, key) {
+          console.log(`delete ${key}`)
+          // 使用 Reflect.deleteProperty 方法删除对象属性
+          const res = Reflect.deleteProperty(target, key)
+          // 触发更新操作，这里暂且留空
+          return res
+        }
+      }
+
+      // 使用 Proxy 对象包装原始对象，返回代理对象
+      const observed = new Proxy(obj, handler)
+      return observed
     }
-    window.addEventListener('load', preload);
-    document.querySelector('#btn').addEventListener('click', addImages);
+
+
+    const proxy = reactive(obj)
+    proxy.name = '李四'
+    proxy.info.class = '信工1班'
+    console.log(proxy.info)
   </script>
 </body>
 </html>
