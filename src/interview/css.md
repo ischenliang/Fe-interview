@@ -716,7 +716,21 @@ div#app.child[name="appName"] = 标签选择器 + id选择器 + 类选择器 + �
 ## 27、display的block、inline和inline-block的区别
 - **block**：元素会独占一行，多个元素会令其一行，可以设置width、height、margin和padding属性；
 - **inline**：元素不会独占一行，设置width、height属性无效，但可以设置水平方向的margin和padding属性，垂直方向设置无效；
-- **inline-block**：将元素设置为inline元素，但元素的内容作为block元素呈现，之后的内联元素会被排在同一行；
+- **inline-block**：允许元素像`inline`元素一样被定位，但同时也可以设置高度、宽度、内边距和外边距，就像`block`元素一样。
+  ```html
+  <style>
+    .container {
+      display: inline-block;
+      height: 100px;
+      background: red;
+    }
+  </style>
+  <span class="container">
+    <span>item1</span>
+    <span>item2</span>
+    <span>item3</span>
+  </span>
+  ```
 
 对于行内元素和块级元素，特点如下：
 - **行内元素**
@@ -1600,105 +1614,74 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序，默认元素�
 ### 三栏布局(圣杯布局、双飞翼布局)
 特征：**中间列自适应宽度，旁边两侧固定宽度**，主要实现方式有如下几种：
 #### 圣杯布局
-- **特点**: 比较特殊的三栏布局，同样也是两边固定宽度，中间自适应，唯一区别是dom结构必须是先写中间列部分，这样实现中间列可以优先加载。
+> 比较特殊的三栏布局，同样也是两边固定宽度，中间自适应，唯一区别是dom结构必须是先写中间列部分，这样实现中间列可以优先加载。
 ```html
-<article class="container">
-  <div class="center">
-    <h2>圣杯布局</h2>
-  </div>
+<div class="container">
+  <div class="center"></div>
   <div class="left"></div>
   <div class="right"></div>
-</article>
+</div>
 ```
 ```css
 .container {
-  padding-left: 220px;//为左右栏腾出空间
-  padding-right: 220px;
+  display: flex;
+}
+.center,
+.left,
+.right {
+  height: 200px;
+  position: relative;
+}
+.center {
+  flex: 1;
+}
+.left,
+.right {
+  width: 200px;
 }
 .left {
-  float: left;
-  width: 200px;
-  height: 400px;
-  background: red;
   margin-left: -100%;
-  position: relative;
-  left: -220px;
+  right: 200px;
+}
+.right {
+  margin-right: -200px;
+}
+```
+
+#### 双飞翼布局
+> 同样也是三栏布局，在圣杯布局基础上进一步优化，解决了圣杯布局错乱问题，实现了内容与布局的分离。而且任何一栏都可以是最高栏，不会出问题。
+```html
+<div class="container">
+  <div class="center">
+    <div class="content"></div>
+  </div>
+  <div class="left"></div>
+  <div class="right"></div>
+</div>
+```
+```css
+.container {
+  margin: 0 auto;
 }
 .center {
   float: left;
   width: 100%;
-  height: 500px;
-  background: yellow;
+}
+.content {
+  margin: 0 200px;
+  height: 200px;
+}
+.left {
+  float: left;
+  width: 200px;
+  margin-left: -100%;
 }
 .right {
   float: left;
   width: 200px;
-  height: 400px;
-  background: blue;
   margin-left: -200px;
-  position: relative;
-  right: -220px;
 }
 ```
-- **实现步骤**:
-  - 三个部分都设定为左浮动，**否则左右两边内容上不去，就不可能与中间列同一行**。然后设置center的宽度为100%(**实现中间列内容自适应**)，此时，left和right部分会跳到下一行
-    ![202302251609287.png](http://img.itchenliang.club/img/202302251609287.png)
-  - 通过设置margin-left为负值让left和right部分回到与center部分同一行
-    ![2023022516095310.png](http://img.itchenliang.club/img/2023022516095310.png)
-  - 通过设置父容器的padding-left和padding-right，让左右两边留出间隙。
-    ![202302251610103.png](http://img.itchenliang.club/img/202302251610103.png)
-  - 通过设置相对定位，让left和right部分移动到两边。
-    ![202302251610255.png](http://img.itchenliang.club/img/202302251610255.png)
-- **缺点**: 
-  - center部分的最小宽度不能小于left部分的宽度，否则会left部分掉到下一行
-  - 如果其中一列内容高度拉长(如下图)，其他两列的背景并不会自动填充。(借助等高布局正padding+负margin可解决，下文会介绍)
-  ![202302251612099.png](http://img.itchenliang.club/img/202302251612099.png)
-
-#### 双飞翼布局
-- **特点**: 同样也是三栏布局，在圣杯布局基础上进一步优化，解决了圣杯布局错乱问题，实现了内容与布局的分离。而且任何一栏都可以是最高栏，不会出问题。
-  ```html
-  <article class="container">
-    <div class="center">
-        <div class="inner">双飞翼布局</div>
-    </div>
-    <div class="left"></div>
-    <div class="right"></div>
-  </article>
-  ```
-  ```css
-  .container {
-    min-width: 600px;//确保中间内容可以显示出来，两倍left宽+right宽
-  }
-  .left {
-    float: left;
-    width: 200px;
-    height: 400px;
-    background: red;
-    margin-left: -100%;
-  }
-  .center {
-    float: left;
-    width: 100%;
-    height: 500px;
-    background: yellow;
-  }
-  .center .inner {
-    margin: 0 200px; //新增部分
-  }
-  .right {
-    float: left;
-    width: 200px;
-    height: 400px;
-    background: blue;
-    margin-left: -200px;
-  }
-  ```
--  **实现步骤**: (前两步与圣杯布局一样)
-  - 三个部分都设定为左浮动，然后设置center的宽度为100%，此时，left和right部分会跳到下一行；
-  - 通过设置margin-left为负值让left和right部分回到与center部分同一行；
-  - center部分增加一个内层div，并设margin: 0 200px；
-- **缺点**: 
-  - 多加一层 dom 树节点，增加渲染树生成的计算量。
 
 **两种布局实现方式对比**:
 - 两种布局方式都是把主列放在文档流最前面，使主列优先加载。
@@ -1955,8 +1938,28 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序，默认元素�
 > 在引用 css 的过程中，如果方法不当或者位置引用不对，会导致某些页面在 windows 下的 ie 出现一些奇怪的现象，以无样式显示页面内容的瞬间闪烁，这种现象称之为文档样式短暂失效，简称 FOCU。
 
 原因大致为：
-- 使用 import 方法导入样式表
+- 使用`import`方法导入样式表
+  ```html
+  <link rel="stylesheet" href="./style.css">
+  <!-- style.css -->
+  @import url('./other-style.css');
+  .container {
+    display: inline-block;
+    height: 100px;
+    background: red;
+  }
+  ```
 - 将样式表放在页面底部
+  ```html
+  <span class="container">
+    <span>item1</span>
+    <span>item2</span>
+    <span>item3</span>
+  </span>
+  <style>
+    @import url('./style.css');
+  </style>
+  ```
 - 有几个样式表，放在 html 结构的不同位置。
 
 原理很清楚：当样式表晚于结构性 html 加载，当加载到此样式表时，页面将停止之前的渲染。此样式表被下载和解析后，将重新渲染页面，也就出现了短暂的花屏现象。
@@ -2258,6 +2261,8 @@ float定位的工作原理如下：
 
 
 ## 85、你有没有使用过视网膜分辨率的图形？当中使用什么技术？
+> 视网膜分辨率的图形是指在视网膜屏幕上显示的图像，它们通常具有比普通屏幕更高的像素密度。由于物理尺寸和像素密度之间的关系，视网膜屏幕可以在相同的物理尺寸下显示更多的像素，从而提供更清晰、更锐利的图像。
+
 我倾向于使用更高分辨率的图形（显示尺寸的两倍）来处理视网膜显示。更好的方法是使用媒体查询，像`@media only screen and (min-device-pixel-ratio: 2) { ... }`，然后改变`background-image`。
 > 对于图标类的图形，我会尽可能使用`svg`和`图标字体`，因为它们在任何分辨率下，都能被渲染得十分清晰。
 
@@ -2732,7 +2737,7 @@ animation:mymove 5s infinite;
 
 
 ## 103、什么是包含块，对于包含块的理解?
-在CSS中，每个元素都会被放置在一个“包含块”（containing block）内。包含块是一个元素的位置和大小计算基础，用于确定该元素的布局和定位。
+在 CSS 中，"包含块"（containing block）是指用于计算元素的定位、大小和边距的父容器。在确定一个元素的位置时，CSS 会将该元素相对于其包含块进行定位。
 - 祖先元素的内容区域：如果一个元素没有指定`position`属性，则其包含块通常为最近的祖先元素的内容区域，也就是祖先元素的`padding box`。
 - 祖先元素的定位元素：如果一个元素的`position`属性为`absolute`或`fixed`，则其包含块为最近的祖先元素的定位元素，即满足下列条件之一的元素：
   - `position`属性为`absolute`或`fixed`。
@@ -2872,8 +2877,9 @@ CSS后处理器是对CSS进行处理，并最终生成CSS的预处理器，它�
 
 
 ## 118、min-width/max-width 和 min-height/max-height 属性间的覆盖规则？
-- （1）max-width会覆盖width，即使width是行类样式或者设置了!important。
-- （2）min-width会覆盖max-width，此规则发生在min-width和max-width冲突的时候。
+- 如果一个元素同时指定了 min-width 和 max-width 属性（或者 min-height 和 max-height 属性），那么它们之间的关系由更限制元素的属性来确定。
+- 如果一个元素只指定了其中一个属性，那么另一个属性将默认为 none。
+- 如果一个元素同时包含多个约束条件，并且这些条件具有相同的级别，那么按照以下顺序解决冲突：max-width、min-width、max-height、min-height。也就是说，如果 max-width 和 min-width 之间存在冲突，那么 max-width 将优先于 min-width 生效；如果 max-height 和 min-height 之间存在冲突，那么 max-height 将优先于 min-height 生效。
 
 
 ## 119、内联盒模型基本概念
@@ -2885,7 +2891,7 @@ CSS后处理器是对CSS进行处理，并最终生成CSS的预处理器，它�
 
 
 ## 120、什么是幽灵空白节点？
-“幽灵空白节点”是内联盒模型中非常重要的一个概念，具体指的是：在HTML5文档声明中，内联元素的所有解析和渲染表现就如同每个行框盒子的前面有一个“空白节点”一样。这个“空白节点”永远透明，不占据任何宽度，看不见也无法通过脚本获取，就好像幽灵一样，但又确确实实地存在，表现如同文本节点一样，因此，我称之为“幽灵空白节点”。
+幽灵空白节点（Ghost Empty Element）指的是HTML标记语言中的一种元素，它是一个自闭合标签，没有任何内容或子元素，并且没有结束标记。它在HTML5规范中被称为“void元素”，包括常见的标记如`<br>、<img>和<input>`等。这些元素是用来插入特定类型的内容而不需要任何文本或元素包裹的情况下使用的。例如，`<br>`用于在段落中创建换行符。
 
 
 ## 121、什么是替换元素？

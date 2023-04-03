@@ -1927,8 +1927,11 @@ const断言，typescript会为变量添加一个自身的字面量类型
 ```ts
 // type '"hello"'
 let x = "hello" as const
+x = 'wahaha' // 不能将类型“"wahaha"”分配给类型“"hello"”
+
 // type 'readonly [10, 20]'
 let y = [10, 20] as const
+
 // type '{ readonly text: "hello" }'
 let z = { text: "hello" } as const
 ```
@@ -1948,10 +1951,14 @@ let z = { text: "hello" } as const
 
 ## 83、如何在 window 扩展类型
 ```ts
-declare global {
-  interface Window {
-    myCustomFn: () => void;
-  }
+// @types/type.d.ts
+interface Window {
+  myCustomFn: () => void;
+}
+
+// main.ts
+window.myCustomFn = () => {
+  console.log('123')
 }
 ```
 
@@ -1961,7 +1968,8 @@ declare global {
 
 
 ## 85、.d.ts和.ts文件的区别
-`TypeScript`是`JavaScript`类型的超集，它的扩展名是`.ts`，`TypeScript`可以将大量变量的类型声明统一提取到单独的文件，此类文件被称为**类型定义文件/描述文件**，它的文件扩展名是`.d.ts`，它可以被`TypeScript`解释器读取，并且能直观地表示出各种变量的使用方式。
+`.d.ts`文件是 TypeScript 的类型定义文件，用于描述 JavaScript 模块、库或框架的类型信息，不包含实现逻辑。而`.ts`文件则是 TypeScript 的源代码文件，它包含了 TypeScript 的语言特性和编写的实现逻辑，需要经过编译后才能生成 JavaScript 代码。`.d.ts`文件通常用于在 TypeScript 项目中使用 JavaScript 模块，以便在编译时进行类型检查和类型推断。
+
 `npm`仓库里有一个`@types`组织，专门用来存放库的声明文件，引用时只需要安装`npm install --save-dev @types/库名`即可，比如在使用`jquery`的时候，最好同时安装`npm install @types/jquery`来实现代码的智能提示。
 
 ### 用法
