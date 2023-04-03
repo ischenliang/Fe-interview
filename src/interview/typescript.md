@@ -1778,14 +1778,25 @@ type ExcludeKeys<T, U> = Exclude<keyof T, keyof U>;
 1. `Exclude<T, U>`：从类型T中排除可以赋值给类型U的部分。
 2. `Extract<T, U>`：从类型T中提取可以赋值给类型U的部分。
   ```ts
-  type MyType = string | number | boolean;
-  type MyStringType = Exclude<MyType, number | boolean>; // MyStringType 的值为 string。
-  type MyNumberType = Extract<MyType, number | Object>; // MyNumberType 的值为 number。
+  type Type = string | number | boolean
+  type Type1 = Exclude<Type, number | string>
+  type Type2 = Extract<Type, number | string>
+
+  let p: Type1 = false
+  p = 'aa' // 不能将类型“string”分配给类型“Type1”
+
+  let p1: Type2 = 1
+  p1 = 'aa'
+  p1 = false // 不能将类型“boolean”分配给类型“Type2”
   ```
 3. `NonNullable<T>`：从类型T中排除null和undefined类型。
   ```ts
-  type MyNullableType = string | null | undefined;
-  type MyNonNullType = NonNullable<MyNullableType>; // MyNonNullType 的值为 string。
+  type Type = string | number | null | undefined
+  type Type1 = NonNullable<Type>
+
+  let p: Type1 = 'aa'
+  p = 11
+  p = null // 不能将类型“null”分配给类型“Type1”
   ```
 4. `ReturnType<T>`：获取函数类型T的返回类型。
   ```ts
@@ -1796,14 +1807,23 @@ type ExcludeKeys<T, U> = Exclude<keyof T, keyof U>;
   ```
 5. `InstanceType<T>`：获取构造函数类型T的实例类型。
   ```ts
-  class MyClass {
-    name: string;
-    constructor(name: string) {
-      this.name = name;
+  class Person {
+    name: string
+    age: number
+    constructor (name: string, age: number) {
+      this.name = name
+      this.age = age
     }
   }
-  type MyInstanceType = InstanceType<typeof MyClass>; // MyInstanceType 的值为 MyClass 类型本身。
-  const myInstance: MyInstanceType = new MyClass("foo"); // 此时 myInstance 是一个 MyClass 的实例。
+
+  type ObjType = InstanceType<typeof Person>
+
+  let obj: ObjType = {
+    name: '张三',
+    age: 1
+  }
+  // 或者
+  let obj1: ObjType = new Person('李四', 12)
   ```
 6. `Parameters<T>`：获取函数类型T的参数类型的元组。
   ```ts

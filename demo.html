@@ -7,30 +7,88 @@
   <title>Document</title>
 </head>
 <body>
-  <button id="btn">添加图片</button>
-  <div class="container"></div>
   <script>
-    const images = [
-      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/1.png',
-      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/2.png',
-      'http://project.itchenliang.club/images/project-image/virtual-simulator/new/2.png'
-    ];
-    function preload() {
-      images.forEach(src => {
-        const img = new Image();
-        img.src = src;
-      });
+    // 解析模板字符串，生成AST
+    function parseTemplate(template) {
+      const stack = [] // 维护一个标签栈
+      let currentParent // 当前节点的父节点
+      let root // AST的根节点
+
+      for (let i = 0; i < template.length; ) {
+        const start = template.indexOf('<', i)
+        if (start === -1) break
+        // 处理注释节点
+        if (template.startsWith('<!--', start)) {
+          const end = template.indexOf('-->', start + 4)
+          if (end === -1) break
+          i = end + 3
+          continue
+        }
+        // 处理开始标签节点
+        const end = template.indexOf('>', start)
+        if (end === -1) break
+
+        const tag = template.slice(start + 1, end).trim()
+        const isClosing = tag.startsWith('/')
+        const tagName = isClosing ? tag.slice(1) : tag
+
+        if (isClosing) {
+          currentParent = stack.pop()
+        } else {
+          const element = { tag: tagName, children: [], parent: currentParent }
+          if (!root) {
+            root = element
+          }
+
+          if (currentParent) {
+            currentParent.children.push(element)
+          }
+
+          if (!['br', 'hr', 'img', 'input', 'link', 'meta'].includes(tagName)) {
+            stack.push(element)
+            currentParent = element
+          }
+        }
+
+        i = end + 1
+      }
+
+      return root
     }
-    function addImages() {
-      const container = document.querySelector('.container');
-      images.forEach(src => {
-        const img = new Image();
-        img.src = src;
-        container.appendChild(img);
-      });
+
+    function compileTemplate(template) {
+      const ast = parseTemplate(template); // 解析模板字符串，生成AST
+      console.log('ast', ast)
+      const code = generateCode(ast); // 将AST转换为字符串形式的JavaScript代码
+      console.log('code', code)
+      const render = new Function(`with(this){ return ${code} }`); // 创建渲染函数
+      return { render }; // 返回包含渲染函数的对象
     }
-    window.addEventListener('load', preload);
-    document.querySelector('#btn').addEventListener('click', addImages);
+    // 将AST转换为字符串形式的JavaScript代码
+    function generateCode(ast) {
+      const code = ast.children.map(generateNodeCode).join('')
+      return `_c('${ast.tag}', null, ${code})`
+    }
+
+    function generateNodeCode(node) {
+      if (node.type === 'text') {
+        return JSON.stringify(node.value)
+      } else {
+        const children = node.children.map(generateNodeCode).join(',')
+        return `_c('${node.tag}', null, [${children}])`
+      }
+    }
+
+    const res = compileTemplate(`
+    <template>
+      <div>
+        <input type="file" @change="handleChange" />
+        <div>
+          <el-button @click="handleClick">上传</el-button>
+        </div>
+      </div>
+    </template>`)
+    console.log(res)
   </script>
 </body>
 </html>

@@ -149,11 +149,32 @@ btnEl.addEventListener('click', () => {
 
 **模板编译原理**
 - 解析模板：将模板字符串解析成抽象语法树（AST）。
+  ```js
+  {
+    tag: 'template',
+    parent: undefined,
+    children: [
+      {
+        tag: 'div',
+        children: [],
+        parent: {tag: 'div', children: Array(1), parent: {…}}
+      }
+    ]
+  }
+  ```
 - 静态分析：对抽象语法树进行静态分析，找出其中的静态节点，即不需要响应式更新的节点。
   - 在AST中找出静态节点并打上标记，即`static`属性设为`true`
   - 在AST中找出静态根节点并打上标记，即`staticRoot`属性设为`true`
-- 代码生成：根据抽象语法树生成渲染函数。渲染函数是一个返回VNode节点的函数，用于描述组件的结构和数据关系。
-  - 递归AST生成可执行的代码字符串，当代码字符串拼接好后，会放在`with`中返回给调用者，即`render`函数接收的参数。
+- 代码生成：根据抽象语法树生成渲染函数代码字符串。
+  - 1、递归AST生成可执行的代码字符串
+    ```js
+    _c('template', null, _c('div', null, [_c('input type="file" @change="handleChange" /', null, [_c('div', null, [_c('el-button @click="handleClick"', null, [])])])]))
+    ```
+  - 2、当代码字符串拼接好后，会放在`with`中返回给调用者，即`render`函数接收的参数。
+    ```js
+    const render = new Function(`with(this){ return ${code} }`);
+    return { render }; // 返回包含渲染函数的对象
+    ```
 - 缓存优化：对模板和渲染函数进行缓存优化，以提升性能。
 
 
@@ -7565,228 +7586,66 @@ Vue.component('my-component', {
 ## 224、你了解什么是高阶组件吗？可否举个例子说明下？
 参考: https://blog.csdn.net/weixin_43392489/article/details/114180179
 
-Vue中是以`mixins`实现代码复用，并且官方文档中也缺少一些高阶组件的概念，因为在vue中实现高阶组很困难，并不像React简单，其实vue中`mixins`也同样和以代替。
+高阶组件（Higher-Order Component，HOC）是一种函数或装饰器，用于接收一个组件作为参数并返回一个新的组件。这个新组件具有与原始组件相同的渲染逻辑和功能，但可能会增加一些额外的功能或数据。
 
-**高阶组件举例**
+举个例子，假设我们有一个名为`BaseComponent`的基本组件，它只显示传递给它的text属性的值。下面是一个简单的示例：
+```html
+<template>
+  <div>{{ text }}</div>
+</template>
+
+<script>
+export default {
+  props: ['text']
+}
+</script>
+```
+现在我们想要添加一些功能（例如记录组件加载时间、处理错误等），但不想修改原始组件。我们可以编写一个HOC来实现这个目的：
+```js
+function withExtraFunctionality(BaseComponent) {
+  return {
+    mounted() {
+      console.log('Component loaded at:', new Date())
+    },
+
+    errorCaptured(err, vm, info) {
+      console.error('An error occurred:', err, vm, info)
+    },
+
+    render() {
+      return <BaseComponent {...this.$props} />
+    }
+  }
+}
+export default withExtraFunctionality(BaseComponent)
+```
+现在我们可以使用`withExtraFunctionality`函数将`BaseComponent`包装起来，并获得一个新的具有额外功能的组件：
 ```html
 <template>
   <div>
-    <p @click="Click">props: {{test}}</p>
+    <h1>Hello world!</h1>
+    <EnhancedComponent :text="message" />
   </div>
 </template>
+
 <script>
+import BaseComponent from './BaseComponent.vue'
+import EnhancedComponent from './EnhancedComponent.vue'
+
 export default {
-  name: 'Base',
-  props: {
-    test: Number
+  components: {
+    EnhancedComponent: withExtraFunctionality(BaseComponent)
   },
-  methods: {
-    Click () {
-      this.$emit('Base-click')
+
+  data() {
+    return {
+      message: 'This is a message.'
     }
   }
 }
 </script>
 ```
-Vue组件主要就是三点：`props、event 以及 slots`。对于`Base组件`组件而言，它接收一个数字类型的`props`即`test`，并触发一个自定义事件，事件的名称是：`Base-click`，没有`slots`。我们会这样使用该组件。
-
-现在我们需要`base-component`组件每次挂载完成的时候都打印一句话：`haha`，同时这也许是很多组件的需求，所以按照`mixins`的方式，我们可以这样做，首先定义个`mixins`
-```js
-export default consoleMixin {
-  mounted () {
-    console.log('haha')
-  }
-}
-```
-然后在`Base组件`中将`consoleMixin`混入：
-```html
-<script>
-export default {
-  ...
-  mixins: [ consoleMixin ],
-  ...
-}
-</script>
-```
-这样使用`Base组件`的时候，每次挂载完成之后都会打印一句`haha`，不过现在我们要使用高阶组件的方式实现同样的功能。
-> **高阶组件的定义：接收一个组件作为参数，返回一个新的组件。**
-
-那么此时我们需要思考的是，在 Vue 中组件是什么？Vue 中组件是函数，不过那是最终结果，比如我们在单文件组件中的组件定义其实就是一个普通的选项对象，如下：
-```js
-export default {
-  name: 'Base',
-  props: {...},
-  mixins: [...]
-  methods: {...}
-}
-```
-这难道不是一个纯对象嘛
-```js
-import Base from './Base.vue'
-console.log(Base)
-```
-这里的`Base`是什么呢?
-> 对就是一个JSON对象，而当以把他加入到一个组件的`components`，Vue最终会以该参数即`option`来构造实例的构造函数，所以Vue中组件就是个函数，但是在引入之前仍只是一个`options`对象，所以这样就很好明白了，Vue中组件开始只是一个对象。
-
-即高阶组件就是**一个函数接受一个纯对象，并且返回一个新纯对象**
-```js
-export default function Console (BaseComponent) {
-  return {
-    template: '<wrapped v-on="$listeners" v-bind="$attrs"/>',
-    components: {
-      wrapped: BaseComponent
-    },
-    mounted () {
-      console.log('haha')
-    }
-  }
-}
-```
-这里`Console`就是一个高阶组件，它接受一个参数`BaseComponent`即传入的组件，返回一个新组件，将`BaseComponent`作为新组件的子组件并且在`mounted`里设置钩子函数`打印haha`，我们可以完成`mixins`同样做到的事，我们并没有修改`子组件Base`，这里的`$listeners $attrs`其实是在透传`props和事件`。
-
-那这样真的就完美解决问题了吗？
-> 不是的，首先`template`选项只有在完整版的`Vue`中可以使用，在运行时版本中是不能使用的，所以最起码我们应该使用渲染函数(render)替代模板(template)
-```js
-export default function Console (BaseComponent) {
-  return {
-    mounted () {
-      console.log('haha')
-    },
-    render (h) {
-      return h(BaseComponent, {
-        on: this.$listeners,
-        attrs: this.$attrs,
-      })
-    }
-  }
-}
-```
-我们将模板改写成了渲染函数，看上去没什么问题，实际还是有问题，上面的代码中`BaseComponent组件`依然收不到`props`，为什么呢，我们不是已经在 `h 函数`的第二个参数中将`attrs`传递过去了吗，怎么还收不到？当然收不到，`attrs`指的是那些没有被声明为`props`的属性，所以在渲染函数中还需要添加`props`参数：
-```js
-export default function Console (BaseComponent) {
-  return {
-    mounted () {
-      console.log('haha')
-    },
-    render (h) {
-      return h(BaseComponent, {
-        on: this.$listeners,
-        attrs: this.$attrs,
-        props: this.$props
-      })
-    }
-  }
-}
-```
-那这样呢 其实还是不行`props`始终是空对象，这里的`props`是高阶组件的对象，但是高阶组件并没有声明`props`所以如此故要再声明一个`props`
-```js
-export default function Console (BaseComponent) {
-  return {
-    mounted () {
-      console.log('haha')
-    },
-    props: BaseComponent.props,
-    render (h) {
-      return h(BaseComponent, {
-        on: this.$listeners,
-        attrs: this.$attrs,
-        props: this.$props
-      })
-    }
-  }
-}
-```
-ok，一个差不多的高阶组件就完成了，但是还没完，我们只实现了`透传props`，`透传事件`，`slot`还未透传，我们修改`Base组件`为其添加一个具名插槽和默认插槽`Base.vue`
-```html
-<template>
-  <div>
-    <span @click="handleClick">props: {{test}}</span>
-    <slot name="slot1"/> <!-- 具名插槽 --></slot>
-    <p>===========</p>
-    <slot><slot/> <!-- 默认插槽 -->
-  </div>
-</template>
- 
-<script>
-export default {
-  ...
-}
-</script>
-
-<template>
-  <div>
-    <Base>
-      <h2 slot="slot1">BaseComponent slot</h2>
-      <p>default slot</p>
-    </Base>
-    <wrapBase>
-      <h2 slot="slot1">EnhancedComponent slot</h2>
-      <p>default slot</p>
-    </wrapBase>
-  </div>
-</template>
-<script>
-  import Base from './Base.vue'
-  import hoc from './Console.js'
-  const wrapBase = Console(Base)
-  export default {
-    components: {
-      Base,
-      wrapBase
-    }
-  }
-</script>
-```
-这里的执行结果就是`wrapBase`里的`slot`都没有了 所以就要改一下高阶组件了
-```js
-function Console (BaseComponent) {
-  return {
-    mounted () {
-      console.log('haha')
-    },
-    props: BaseComponent.props,
-    render (h) {
-      // 将 this.$slots 格式化为数组，因为 h 函数第三个参数是子节点，是一个数组
-      const slots = Object.keys(this.$slots).reduce((arr, key) => arr.concat(this.$slots[key]), [])
- 
-      return h(BaseComponent, {
-        on: this.$listeners,
-        attrs: this.$attrs,
-        props: this.$props
-      }, slots) // 将 slots 作为 h 函数的第三个参数
-    }
-  }
-}
-```
-这时`slot`内容确实渲染出来了，但是顺序不太对，高阶组件的全部渲染到了末尾。其实Vue在处理具名插槽会考虑作用域的因素，首先 Vue 会把模板(`template`)编译成渲染函数(`render`)。
-
-解决办法也很简单，只需要手动设置slot中vnode的context值为高阶组件实例即可
-```js
-function Console (Base) {
-  return {
-    mounted () {
-      console.log('haha')
-    },
-    props: Base.props,
-    render (h) {
-      const slots = Object.keys(this.$slots)
-        .reduce((arr, key) => arr.concat(this.$slots[key]), [])
-        // 手动更正 context
-        .map(vnode => {
-          vnode.context = this._self //绑定到高阶组件上
-          return vnode
-        })
- 
-      return h(WrappedComponent, {
-        on: this.$listeners,
-        props: this.$props,
-        attrs: this.$attrs
-      }, slots)
-    }
-  }
-}
-```
-说明白就是强制把slot的归属权给高阶组件 而不是`父组件`通过当前实例`_self`属性访问当实例本身，而不是直接使用`this`，因为`this`是一个代理对象。
+现在，`EnhancedComponent`具有与`BaseComponent`相同的渲染逻辑和功能，但还具有记录组件加载时间和处理错误的额外功能。
 
 
 ## 225、为什么我们写组件的时候可以写在.vue里呢？可以是别的文件名后缀吗？
