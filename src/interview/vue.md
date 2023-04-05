@@ -2397,8 +2397,9 @@ binding 参数会是一个这样的对象：
 
 
 ## 46、Vue computed实现原理？
-实现原理是基于一个称为“响应式依赖追踪”的技术。当一个计算属性被声明时，Vue会将它的`getter`函数添加到响应式对象的依赖列表中。然后，在每次相关的数据发生变化时，Vue 会重新计算这个计算属性，并更新相关的视图。
-> 具体来说，Vue在初始化时会遍历所有的`data`属性和计算属性，通过`Object.defineProperty`来给它们添加`getter、setter`函数，使得在获取或者修改这些属性的值时，能够触发相应的依赖收集和派发更新操作。
+当我们定义一个`computed`属性时，Vue 会在内部生成一个`Watcher`实例，并将其添加到响应式数据的依赖中。当该属性所依赖的数据发生修改时，`Watcher`实例会通知`computed`进行重新计算。为了提高计算效率，Vue 会缓存`computed`的计算结果，只有当相关数据发生变化时，才会重新计算。
+
+当`computed`属性被访问时，如果该属性尚未被缓存，则会触发之前生成的`Watcher`实例进行计算，并将计算结果缓存，同时返回给访问`computed`属性的用户。在计算完成后，`Watcher`实例会通知订阅该`computed`属性的其他`Watcher`实例进行更新。
 
 
 ## 48、动态给vue的data添加一个新的属性时会发生什么？怎样解决？
@@ -3640,7 +3641,25 @@ Vue是一套渐进式框架，这意味着它可以逐步应用到现有项目�
 ## 106、Vue中v-on可以监听多个方法吗？
 肯定可以的。
 ```html
+<!-- 例子一 -->
 <input type="text" :value="name" @input="onInput" @focus="onFocus" @blur="onBlur" />
+
+<!-- 例子二 -->
+<template>
+  <button v-on:click.stop.prevent="doThis, doThat">Click me!</button>
+</template>
+<script>
+export default {
+  methods: {
+    doThis() {
+      console.log('do this');
+    },
+    doThat() {
+      console.log('do that');
+    }
+  }
+};
+</script>
 ```
 
 

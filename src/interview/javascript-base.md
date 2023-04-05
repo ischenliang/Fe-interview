@@ -6842,6 +6842,8 @@ var b = {
 }
 var c = Object.assign(a, b)
 console.log(c) // {name: '张三', age: 23}
+console.log(a) // {name: '张三', age: 23}
+console.log(c) // {age: 23} 
 ```
 
 
