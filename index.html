@@ -8,141 +8,48 @@
 </head>
 <body>
   <script>
-    class MyPromise {
-      constructor (executor) {
-        this.state = 'pending'
-        this.value = undefined
-        this.reason = undefined
-        this.onFulfilledCallbacks = []
-        this.onRejectedCallbacks = []
+    // 方式一
+    // function Vue () {
 
-        const resolve = (value) => {
-          if (this.state === 'pending') {
-            this.state = 'fulfilled'
-            this.value = value
-            this.onFulfilledCallbacks.forEach(callback => callback(value))
-          }
-        }
+    // }
+    // Vue.use = (plugin, options) => {
+    //   if (typeof plugin === 'function') {
+    //     plugin(Vue, options)
+    //   } else {
+    //     plugin.install(Vue, options)
+    //   }
+    // }
 
-        const reject = (reason) => {
-          if (this.state === 'pending') {
-            this.state = 'rejected'
-            this.reason = reason
-            this.onRejectedCallbacks.forEach(callback => callback(reason))
-          }
-        }
-
-        try {
-          executor(resolve, reject)
-        } catch (error) {
-          reject(error)
+    // 方式二
+    class Vue {
+      constructor () {}
+      static use (plugin, options) {
+        if (typeof plugin === 'function') {
+          plugin(Vue, options)
+        } else {
+          plugin.install(Vue, options)
         }
       }
-
-      // .then() 方法
-      then (onFulfilled, onRejected) {
-        // 如果 onFulfilled 或 onRejected 不是函数，则分别创建一个函数将值或拒因原样传递下去
-        onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : (value) => value;
-        onRejected = typeof onRejected === 'function' ? onRejected : (reason) => { throw reason; };
-
-        return new MyPromise((resolve, reject) => {
-          if (this.state === 'fulfilled') {
-            // 如果 Promise 状态已经是 fulfilled，直接执行 onFulfilled 回调函数
-            setTimeout(() => {
-              try {
-                const result = onFulfilled(this.value)
-                // 处理 onFulfilled 的返回值并决定新 Promise 的状态
-                resolvePromise(result, resolve, reject)
-              } catch (error) {
-                reject(error)
-              }
-            })
-          } else if (this.state === 'pending') {
-            // 如果 Promise 状态是 pending，暂时无法执行 onFulfilled/onRejected 回调函数，则将回调函数存储并在状态变更时执行
-            this.onFulfilledCallbacks.push(() => {
-              setTimeout(() => {
-                try {
-                  const result = onFulfilled(this.value)
-                  // 处理 onFulfilled 的返回值并决定新 Promise 的状态
-                  resolvePromise(result, resolve, reject)
-                } catch (error) {
-                  reject(error)
-                }
-              })
-            })
-            this.onRejectedCallbacks.push(() => {
-              setTimeout(() => {
-                try {
-                  const result = onRejected(this.reason)
-                  // 处理 onRejected 的返回值并决定新 Promise 的状态
-                  resolvePromise(result, resolve, reject)
-                } catch (error) {
-                  reject(error)
-                }
-              })
-            })
-          }
-        })
-      }
-      catch(onRejected) {
-        // 为 catch 方法传入一个 undefined 的 onFulfilled 回调函数，等价于调用 then(undefined, onRejected)
-        return this.then(undefined, onRejected);
-      }
-      finally(onFinally) {
-        // 返回一个新的 Promise 对象，当原 Promise 状态变更时执行 onFinally 回调函数
-        return new Promise((resolve, reject) => {
-          const resolveHandler = () => {
-            try {
-              onFinally(); // 执行 onFinally 回调函数
-              resolve();
-            } catch (error) {
-              reject(error);
-            }
-          };
-          const rejectHandler = () => {
-            try {
-              onFinally(); // 执行 onFinally 回调函数
-              reject();
-            } catch (error) {
-              reject(error);
-            }
-          };
-          if (this.status === 'fulfilled') {
-            setTimeout(resolveHandler);
-          } else if (this.status === 'rejected') {
-            setTimeout(rejectHandler);
-          } else if (this.status === 'pending') {
-            this.onFulfilledCallbacks.push(() => {
-              setTimeout(resolveHandler);
-            });
-            this.onRejectedCallbacks.push(() => {
-              setTimeout(rejectHandler);
-            });
-          }
-        });
-      }
+      component () {}
     }
 
-
-    // 辅助函数，用于处理 then/catch/finally 回调函数的返回值并决定新 Promise 的状态
-    function resolvePromise(result, resolve, reject) {
-      if (result instanceof MyPromise) {
-        result.then(resolve, reject);
-      } else {
-        resolve(result);
+    const plugin1 = {
+      install: (app, options) => {
+        app.prototype.$plugin1 = '哈哈哈'
       }
     }
-  
-    function print () {
-      return new MyPromise((resolve, reject) => {
-        setTimeout(() => {
-          resolve('成功')
-        }, 2000)
-      })
+    const plugin2 = (app, options) => {
+      app.prototype.$plugin2 = 'plugin2'
     }
-    print().then(res => {
-      console.log(res)
+
+    Vue.use(plugin1, {
+      locale: ''
     })
+    Vue.use(plugin2)
+
+    console.log(Vue.prototype.$plugin1)
+    console.log(Vue.prototype.$plugin2)
+    console.log(Vue.prototype)
   </script>
 </body>
 </html>
