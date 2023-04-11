@@ -1614,72 +1614,81 @@ CSS 中的`z-index`属性控制重叠元素的垂直叠加顺序，默认元素�
 ### 三栏布局(圣杯布局、双飞翼布局)
 特征：**中间列自适应宽度，旁边两侧固定宽度**，主要实现方式有如下几种：
 #### 圣杯布局
-> 比较特殊的三栏布局，同样也是两边固定宽度，中间自适应，唯一区别是dom结构必须是先写中间列部分，这样实现中间列可以优先加载。
+> 比较特殊的三栏布局，圣杯布局使用了相对定位和负边距的技巧，中间栏通过设置`padding`来让内容占满整个空间，实现自适应宽度，两侧栏设置固定宽度并通过相对定位脱离文档流和使用负边距向中间栏释放空间。该布局的优点是可以完全兼容所有浏览器，但是实现过程比较复杂。
 ```html
 <div class="container">
-  <div class="center"></div>
   <div class="left"></div>
+  <div class="main"></div>
   <div class="right"></div>
 </div>
 ```
 ```css
 .container {
-  display: flex;
+  padding: 0 150px;
+  margin: 0 auto;
 }
-.center,
-.left,
-.right {
+
+.left, .main, .right {
+  float: left;
   height: 200px;
-  position: relative;
 }
-.center {
-  flex: 1;
-}
-.left,
-.right {
-  width: 200px;
-}
+
 .left {
+  width: 150px;
   margin-left: -100%;
-  right: 200px;
+  position: relative;
+  right: 150px;
 }
+
+.main {
+  width: 100%;
+  padding: 0 200px;
+}
+
 .right {
-  margin-right: -200px;
+  width: 150px;
+  margin-right: -150px;
+  position: relative;
+  left: -150px;
 }
 ```
 
 #### 双飞翼布局
-> 同样也是三栏布局，在圣杯布局基础上进一步优化，解决了圣杯布局错乱问题，实现了内容与布局的分离。而且任何一栏都可以是最高栏，不会出问题。
+> 同样也是三栏布局，双飞翼布局使用了 CSS 的盒子模型和浮动布局，中间栏和两侧栏都使用`div`元素实现，中间栏宽度为`100%`，包含左右两个自定义的`div`元素，作为内容容器。两侧栏使用负边距、相对定位和 div 元素设置边框实现宽度为固定宽度的效果。该布局的优点是实现比较简单，但不兼容 IE6 及以下版本。
 ```html
-<div class="container">
-  <div class="center">
-    <div class="content"></div>
-  </div>
-  <div class="left"></div>
-  <div class="right"></div>
+<div class="container clearfix">
+  <div class="main"></div>
 </div>
+<div class="left"></div>
+<div class="right"></div>
 ```
 ```css
 .container {
-  margin: 0 auto;
+  margin: 0 150px;
 }
-.center {
+
+.main {
   float: left;
   width: 100%;
 }
-.content {
-  margin: 0 200px;
+
+.left, .right {
+  float: left;
+  position: relative;
+  width: 150px;
   height: 200px;
 }
+
 .left {
-  float: left;
-  width: 200px;
   margin-left: -100%;
+  right: 150px;
+  border: 1px solid #ccc;
 }
+
 .right {
-  float: left;
-  width: 200px;
-  margin-left: -200px;
+  margin-right: -150px;
+  left: -150px;
+  border: 1px solid #ccc;
 }
 ```
 

@@ -6478,6 +6478,7 @@ Vue 项目打包后静态文件图片失效的常见问题有以下几种可能:
 - 图片文件路径问题: 打包后图片文件路径与开发时不同，需要在打包后的文件中修改图片路径。
 - 缺少`loader`: 在`webpack`配置文件中缺少图片`loader`，导致无法识别图片文件。
 - `baseUrl`配置问题: 在`vue.config.js`文件中配置了`publicPath`属性，导致图片文件路径错误。
+  > vite中则是配置`publicDir`
 - 图片文件缺失: 打包时图片文件缺失或者没有被正确处理。
 
 解决方案:
@@ -6817,7 +6818,7 @@ babel默认只转换语法，而不转换新的API，如需使用新的API，还
 - errorCaptured: 是组件内部钩子，**捕获一个来自后代组件的错误时被调用**。接收`error、vm、info`三个参数，`return false`后可以阻止错误继续向上抛出。
 - errorHandler: 为全局钩子，使用`Vue.config.errorHandler`配置，接收参数与`errorCaptured`一致，2.6后可捕捉`v-on`与`promise`链的错误，可用于统一错误处理与错误兜底。
 ```html
-<!-- errorCaptured演示 -->
+<!-- errorCaptured演示：在vue3中和onMounted生命周期一样使用 -->
 <!-- App.vue -->
 <template>
   <div id="app">
@@ -6864,6 +6865,7 @@ export default {
 ![202303121626144.png](http://img.itchenliang.club/img/202303121626144.png)
 若想演示`errorHandler`只需将上面`App.vue`中的`errorCaptured`的`return false`改成`return true`，然后在`main.ts`文件中使用如下代码捕获错误:
 ```ts
+// errorHandler演示：在vue3中使用app.config.errorHandler
 Vue.config.errorHandler = (error, vm, info) => {
   console.log(error, vm, info)
 }
@@ -7301,9 +7303,44 @@ beforeDestroy() {
 
 
 ## 206、为什么vue要使用异步更新组件？
-1. 异步组件可以减少打包的结果，会将异步组件分开打包，会采用异步的方式加载组件，可以有效的解决一个组件过大的问题。
-2. 异步组件的核心可以给组件定义变成一个函数，函数里面可以用`import`语法，实现文件的分割加载。`import`语法是`webpack`提供的，采用的就是`jsonp`。
+在Vue中，异步组件是指在需要的时候才会被加载的组件。使用异步组件可以有效地减少初始加载时间和提高应用程序的性能。
+
+异步组件的作用是延迟加载，只有当组件或者路由被访问时才会加载所需的资源，避免了一次性加载所有的组件的情况，减少了初次渲染所需的时间和资源消耗。
 > 在系统功能比较多时，页面首次加载没有必要一次把所有功能代码都下载到客户端，需要把那些非首页的代码按功能拆分为一个个组件，按照用户操作异步下载和渲染。因此，异步组件主要解决的是按需加载的问题，保证系统首屏加载时间不超过3秒，减少用户等待时间，提高系统的用户留存率。
+
+在Vue中可以通过异步组件来提高应用程序的性能和首屏加载速度。通常情况下，异步组件适用于那些很少使用或者用于低优先级任务的组件。例如，某些弹窗组件或者在某些页面内使用频率很小的组件等。
+
+异步组件可以通过以下两种方式来创建：
+1. 使用异步组件工厂函数：
+```js
+Vue.component('my-component', function (resolve, reject) {
+  setTimeout(function () {
+    resolve({ /* 组件定义对象 */ })
+  }, 1000)
+})
+```
+2. 使用动态 import：
+```js
+Vue.component('my-component', () => import('../views/MyComponent.vue'))
+```
+以上两种方式的本质相同，即返回一个函数，函数内部的逻辑可以是从服务器异步加载组件资源，或者是基于 `import()` 实现的动态加载。
+
+在使用异步组件时，通过在组件渲染时动态加载组件资源的方式来提高应用程序性能和响应速度。在Vue中，通常在路由中使用异步组件：
+```js
+const router = new VueRouter({
+  routes: [
+    {
+      path: '/home',
+      component: () => import('../views/Home.vue')
+    },
+    {
+      path: '/about',
+      component: () => import('../views/About.vue')
+    }
+  ]
+})
+```
+以上代码中，路由路径为 `/home` 的页面将会使用异步组件加载 `Home.vue` 组件，而路由路径为 `/about` 的页面将会使用异步组件加载 `About.vue` 组件。
 
 
 ## 207、你有使用做过vue与原生app交互吗？说说vue与app交互的方法
